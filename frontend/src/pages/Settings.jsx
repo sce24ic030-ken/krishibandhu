@@ -84,7 +84,7 @@ function Settings() {
               password: 'Farmer123',
             },
             {
-              role: 'Trader (Swetha)',
+              role: 'Trader',
               email: 'swetha@krishibandhu.com',
               password: 'Swetha123',
             },
