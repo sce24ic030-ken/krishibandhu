@@ -68,31 +68,29 @@ async function api(method, url, body) {
 }
 
 async function main() {
-  // 1) find the owner/team id (API can return {cursor, owner} or {owners: [...]})
+  // 1) find the owner/team id (API may return {cursor, owner}, {owners:[...]}, or a flat array)
   const owners = await api('GET', '/owners');
-  const list = Array.isArray(owners.json)
-    ? owners.json
-    : owners.json?.owners
-      ? owners.json.owners
-      : owners.json?.owner
-        ? [owners.json.owner]
-        : [];
-  const owner = list.find((o) => o.type === 'personal') || list[0];
+  let rawList = [];
+  if (Array.isArray(owners.json)) rawList = owners.json;
+  else if (owners.json?.owners) rawList = owners.json.owners;
+  else if (owners.json?.owner) rawList = [owners.json];
+  // unwrap {cursor, owner:{...}} wrappers
+  const unwrapped = rawList.map((o) => o.owner || o);
+  const owner = unwrapped.find((o) => o.type === 'personal') || unwrapped[0];
   if (!owner?.id) {
-    console.error('✖ Could not find an owner for this account:', JSON.stringify(list).slice(0, 500));
+    console.error('✖ Could not find an owner for this account:', JSON.stringify(rawList).slice(0, 500));
     process.exit(1);
   }
   console.log(`✔ Owner: ${owner.name} (${owner.id})`);
 
   // 2) backend web service
   const backend = await api('POST', '/services', {
-    type: 'web',
+    type: 'web_service',
     name: 'krishibandhu-api',
     ownerId: owner.id,
     repo: REPO,
     branch: 'main',
-    region: 'singapore',
-    plan: 'free',
+    autoDeploy: 'yes',
     rootDir: 'backend',
     envVars: [
       { key: 'NODE_ENV', value: 'production' },
@@ -100,15 +98,19 @@ async function main() {
       ...secrets,
     ],
     serviceDetails: {
-      env: 'node',
-      buildCommand: 'npm install',
-      startCommand: 'node server.js',
+      runtime: 'node',
+      envSpecificDetails: {
+        buildCommand: 'npm install',
+        startCommand: 'node server.js',
+      },
       healthCheckPath: '/api/health',
-      autoDeploy: true,
+      numInstances: 1,
+      plan: 'free',
+      region: 'singapore',
     },
   });
-  const backendId = backend.json?.id;
-  const backendUrl = backend.json?.serviceDetails?.url;
+  const backendId = backend.json?.service?.id;
+  const backendUrl = backend.json?.service?.serviceDetails?.url;
   console.log(`✔ Backend service: ${backendId} -> ${backendUrl || '(creating…)'}`);
 
   // 3) frontend static site
@@ -118,21 +120,18 @@ async function main() {
     ownerId: owner.id,
     repo: REPO,
     branch: 'main',
-    region: 'singapore',
-    plan: 'free',
+    autoDeploy: 'yes',
     rootDir: 'frontend',
     envVars: [
       { key: 'VITE_API_URL', value: 'https://krishibandhu-api.onrender.com/api' },
     ],
     serviceDetails: {
-      env: 'static',
       buildCommand: 'npm install && npm run build',
-      staticPublishPath: 'dist',
-      autoDeploy: true,
+      publishPath: 'dist',
     },
   });
-  const frontendId = frontend.json?.id;
-  const frontendUrl = frontend.json?.serviceDetails?.url;
+  const frontendId = frontend.json?.service?.id;
+  const frontendUrl = frontend.json?.service?.serviceDetails?.url;
   console.log(`✔ Frontend service: ${frontendId} -> ${frontendUrl || '(creating…)'}`);
 
   console.log('\n==== DONE ====');
