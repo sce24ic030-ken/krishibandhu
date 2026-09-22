@@ -365,6 +365,41 @@ function Crops() {
         <div className="crops-page-card">
 
           {/* ==================================
+              All crops catalog (top)
+          ================================== */}
+
+          <div className="crops-catalog">
+
+            <div className="crops-section-header crops-catalog-header">
+
+              <div>
+
+                <h2>
+                  {t('All Crops')}
+                </h2>
+
+                <p>
+                  {t('Choose any crop from the list to add it to your farm.')}
+                </p>
+
+              </div>
+
+            </div>
+
+            <CropPicker
+              onAdd={handleCatalogAdd}
+              priceMap={priceMap}
+            />
+
+          </div>
+
+          {/* ==================================
+              Your crops (below)
+          ================================== */}
+
+          <div className="crops-my">
+
+          {/* ==================================
               Stats strip
           ================================== */}
 
@@ -688,33 +723,6 @@ function Crops() {
               </div>
 
             )}
-
-          {/* ==================================
-              All crops catalog
-          ================================== */}
-
-          <div className="crops-catalog">
-
-            <div className="crops-section-header crops-catalog-header">
-
-              <div>
-
-                <h2>
-                  {t('All Crops')}
-                </h2>
-
-                <p>
-                  {t('Choose any crop from the list to add it to your farm.')}
-                </p>
-
-              </div>
-
-            </div>
-
-            <CropPicker
-              onAdd={handleCatalogAdd}
-              priceMap={priceMap}
-            />
 
           </div>
 

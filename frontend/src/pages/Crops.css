@@ -37,17 +37,21 @@
 }
 
 /* =========================================
-   All crops catalog
+   All crops catalog (top section)
 ========================================= */
-
-.crops-catalog {
-  margin-top: 40px;
-  padding-top: 32px;
-  border-top: 1px solid #edf1ee;
-}
 
 .crops-catalog-header {
   margin-bottom: 18px;
+}
+
+/* =========================================
+   Your crops (below the catalog)
+========================================= */
+
+.crops-my {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid #edf1ee;
 }
 
 /* =========================================
