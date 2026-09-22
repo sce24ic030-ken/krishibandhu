@@ -20,7 +20,7 @@
 | Role | Email | Password |
 |---|---|---|
 | Farmer | `farmer@krishibandhu.com` | `Farmer123` |
-| Trader | `swetha@krishibandhu.com` | `Swetha123` |
+| Trader | `trader@krishibandhu.com` | `Trader123` |
 | Admin | `admin@krishibandhu.com` | `Admin123` |
 
 Key IDs: farmer (Ramesh Patil) `6ab140e79a4a35d4bc7e2df0` · trader `6ab251ca50febbe8ce2f677d` · Pune APMC `6ab140ec74e8ec7a9a1c6be2`
@@ -32,9 +32,10 @@ Dashboard `/dashboard` · Glut Watch `/market?tab=glut` ⭐ · Market `/market` 
 ## 4. ✅ Work delivered (each requirement → what was done)
 
 ### A. Trader demo account (generic role, not a named person)
-- `users` doc name = `Trader`; email `swetha@krishibandhu.com`, password `Swetha123` (working login, unchanged).
+- `users` doc name = `Trader`; email `trader@krishibandhu.com`, password `Trader123` (verified login).
+- The old secondary trader account "Sunil Traders" (2 bids, 3 backhauls) was holding `trader@krishibandhu.com`; it was moved to `sunil@krishibandhu.com` (password `Trader123`) — no data changed, login preserved.
 - Display name shows as **Trader** in the navbar greeting and in Parchi/Bid records (1 parchi populated name verified = "Trader"; no stale name snapshots anywhere).
-- Settings page demo card shows role **Trader** (login `swetha@krishibandhu.com` / `Swetha123`); label is the generic role, not the person's name.
+- Settings page demo card shows role **Trader** (login `trader@krishibandhu.com` / `Trader123`); label is the generic role, not the person's name.
 
 ### B. Glut engine (mandi arrival intelligence)
 - Third tab on Market page: **"Arrival / Glut Watch"** → `/market?tab=glut`; Dashboard shortcut card links there.

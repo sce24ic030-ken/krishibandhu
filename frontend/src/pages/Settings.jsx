@@ -85,8 +85,8 @@ function Settings() {
             },
             {
               role: 'Trader',
-              email: 'swetha@krishibandhu.com',
-              password: 'Swetha123',
+              email: 'trader@krishibandhu.com',
+              password: 'Trader123',
             },
             {
               role: 'Admin',
