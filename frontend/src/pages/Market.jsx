@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
+import { useSearchParams } from 'react-router-dom';
 
 import PageHeader from '../components/PageHeader';
 import AddMarketForm from '../components/AddMarketForm';
+import GlutWatch from '../components/GlutWatch';
 
 import API_URL from '../config/api';
 
@@ -12,7 +19,13 @@ import './Market.css';
 function Market() {
   const { t, lang } = useLanguage();
 
-  const [activeTab, setActiveTab] = useState('markets');
+  const [searchParams] = useSearchParams();
+
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') === 'glut'
+      ? 'glut'
+      : 'markets',
+  );
 
   const [markets, setMarkets] = useState([]);
   const [loadingMarkets, setLoadingMarkets] = useState(true);
@@ -409,6 +422,29 @@ function Market() {
               <strong>{t('Items & Prices')}</strong>
               <small>
                 {t('View latest commodity prices')}
+              </small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`market-tab ${
+              activeTab === 'glut'
+                ? 'active'
+                : ''
+            }`}
+            onClick={() =>
+              setActiveTab('glut')
+            }
+          >
+            <span className="market-tab-icon">
+              📊
+            </span>
+
+            <span>
+              <strong>{t('Arrival / Glut Watch')}</strong>
+              <small>
+                {t('How much is already in each mandi today')}
               </small>
             </span>
           </button>
@@ -865,6 +901,15 @@ function Market() {
                       )}
                     </div>
                   )}
+              </section>
+            )}
+          {/* =================================
+                GLUT WATCH TAB (Arrival Intelligence)
+            ================================= */}
+
+            {activeTab === 'glut' && (
+              <section className="market-tab-content">
+                <GlutWatch />
               </section>
             )}
           </>

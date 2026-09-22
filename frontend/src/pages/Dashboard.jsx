@@ -11,6 +11,7 @@ import {
   Bell,
   BookOpen,
   ShieldCheck,
+  Archive,
 } from 'lucide-react';
 
 import GreetingCard from '../components/GreetingCard';
@@ -34,6 +35,11 @@ const formatCurrency = (amount) =>
     maximumFractionDigits: 0,
   }).format(Number(amount || 0));
 
+const formatKg = (value) =>
+  `${Math.round(Number(value || 0)).toLocaleString(
+    'en-IN',
+  )} kg`;
+
 const SIGNAL_LABELS = {
   GLUT_WARNING: 'Glut warning',
   GOOD_SOWING_WINDOW: 'Good sowing window',
@@ -56,6 +62,8 @@ function Dashboard() {
   const [netRealization, setNetRealization] = useState(null);
   const [creditScore, setCreditScore] = useState(null);
   const [ready, setReady] = useState(false);
+  const [glutTotal, setGlutTotal] = useState(null);
+  const [glutCommodity, setGlutCommodity] = useState('');
 
   /* =========================================
      Load real data
@@ -71,6 +79,38 @@ function Dashboard() {
 
         setMarketPrices(pricesRes.data || []);
         setTransactions(txnRes.data || []);
+
+        const topCommodity = (pricesRes.data || []).reduce(
+          (best, entry) =>
+            Number(entry.modalPrice || 0) >
+            Number(best?.modalPrice || 0)
+              ? entry
+              : best,
+          null,
+        );
+
+        if (topCommodity?.commodity) {
+          try {
+            const glut = await fetch(
+              `${API_URL}/market-glut?commodity=${encodeURIComponent(
+                topCommodity.commodity,
+              )}`,
+            ).then((r) => r.json());
+
+            if (
+              glut.data?.totals?.totalArrivalKg != null
+            ) {
+              setGlutTotal(
+                glut.data.totals.totalArrivalKg,
+              );
+              setGlutCommodity(
+                topCommodity.commodity,
+              );
+            }
+          } catch {
+            // card falls back to neutral
+          }
+        }
       } catch {
         // keep empty states
       }
@@ -218,6 +258,30 @@ function Dashboard() {
           description={t('Compare prices across nearby mandis.')}
           action={t('Compare')}
           to="/market"
+        />
+
+        <DashboardCard
+          icon={<Archive size={21} />}
+          title={t('Mandi Glut Watch')}
+          value={
+            glutTotal != null
+              ? formatKg(glutTotal)
+              : glutCommodity
+                ? '—'
+                : t('Check arrivals')
+          }
+          description={
+            glutTotal != null
+              ? t(
+                  '{0} has already arrived across Maharashtra mandis today.',
+                  glutCommodity,
+                )
+              : t(
+                  'See how many kg of your crop are already in each mandi today — before you decide where to sell.',
+                )
+          }
+          action={t('Check arrivals')}
+          to="/market?tab=glut"
         />
 
         <DashboardCard

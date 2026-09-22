@@ -13,6 +13,7 @@ const cropRoutes = require('./routes/cropRoutes');
 const weatherRoutes = require('./routes/weatherRoutes');
 const marketRoutes = require('./routes/marketRoutes');
 const marketPriceRoutes = require('./routes/marketPriceRoutes');
+const marketGlutRoutes = require('./routes/marketGlutRoutes');
 const bidRoutes = require('./routes/bidRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const aiRoutes = require('./routes/aiRoutes');
@@ -216,6 +217,11 @@ app.use(
 app.use(
   '/api/market-prices',
   marketPriceRoutes,
+);
+
+app.use(
+  '/api/market-glut',
+  marketGlutRoutes,
 );
 
 app.use(
