@@ -465,6 +465,16 @@
   color: #727872;
 }
 
+.bid-action.qr {
+  border-color: #bcdacd;
+  background: #eef7f2;
+  color: #1c5c3b;
+}
+
+.bid-action.qr:hover {
+  background: #e2f1e8;
+}
+
 .bid-action.delete:hover {
   border-color: #d4d4d4;
   background: #f7f7f7;

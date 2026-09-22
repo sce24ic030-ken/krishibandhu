@@ -16,6 +16,7 @@ import {
 
 import PageHeader from '../components/PageHeader';
 import API_BASE_URL from '../config/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const API_URL = `${API_BASE_URL}/transactions`;
 
@@ -28,6 +29,8 @@ const emptyForm = {
 };
 
 function Passbook() {
+  const { t } = useLanguage();
+
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,7 +49,7 @@ function Passbook() {
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.message || 'Failed to load transactions.',
+          result.message || t('Failed to load transactions.'),
         );
       }
 
@@ -54,7 +57,7 @@ function Passbook() {
     } catch (err) {
       setError(
         err.message ||
-          'Unable to connect to the transaction server.',
+          t('Unable to connect to the transaction server.'),
       );
     } finally {
       setLoading(false);
@@ -156,12 +159,12 @@ function Passbook() {
     event.preventDefault();
 
     if (!form.category.trim()) {
-      setError('Please enter a transaction category.');
+      setError(t('Please enter a transaction category.'));
       return;
     }
 
     if (!form.amount || Number(form.amount) <= 0) {
-      setError('Please enter a valid amount.');
+      setError(t('Please enter a valid amount.'));
       return;
     }
 
@@ -195,7 +198,7 @@ function Passbook() {
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.message || 'Failed to save transaction.',
+          result.message || t('Failed to save transaction.'),
         );
       }
 
@@ -206,7 +209,7 @@ function Passbook() {
       setForm(emptyForm);
     } catch (err) {
       setError(
-        err.message || 'Unable to save transaction.',
+        err.message || t('Unable to save transaction.'),
       );
     } finally {
       setSaving(false);
@@ -215,7 +218,7 @@ function Passbook() {
 
   const handleDelete = async (transactionId) => {
     const confirmed = window.confirm(
-      'Are you sure you want to delete this transaction?',
+      t('Are you sure you want to delete this transaction?'),
     );
 
     if (!confirmed) return;
@@ -234,7 +237,7 @@ function Passbook() {
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.message || 'Failed to delete transaction.',
+          result.message || t('Failed to delete transaction.'),
         );
       }
 
@@ -246,7 +249,7 @@ function Passbook() {
       );
     } catch (err) {
       setError(
-        err.message || 'Unable to delete transaction.',
+        err.message || t('Unable to delete transaction.'),
       );
     }
   };
@@ -254,8 +257,8 @@ function Passbook() {
   return (
     <main className="dashboard passbook-page">
       <PageHeader
-        title="Passbook"
-        description="Track your agricultural income and expenses."
+        title={t('Passbook')}
+        description={t('Track your agricultural income and expenses.')}
       />
 
       <div className="passbook-actions">
@@ -266,7 +269,7 @@ function Passbook() {
           disabled={loading}
         >
           <RefreshCw size={17} />
-          Refresh
+          {t('Refresh')}
         </button>
 
         <button
@@ -275,7 +278,7 @@ function Passbook() {
           onClick={openAddForm}
         >
           <Plus size={18} />
-          Add Transaction
+          {t('Add Transaction')}
         </button>
       </div>
 
@@ -292,7 +295,7 @@ function Passbook() {
           </div>
 
           <div>
-            <span>Current Balance</span>
+            <span>{t('Current Balance')}</span>
             <strong>{formatCurrency(totals.balance)}</strong>
           </div>
         </div>
@@ -303,7 +306,7 @@ function Passbook() {
           </div>
 
           <div>
-            <span>Total Income</span>
+            <span>{t('Total Income')}</span>
             <strong>{formatCurrency(totals.income)}</strong>
           </div>
         </div>
@@ -314,7 +317,7 @@ function Passbook() {
           </div>
 
           <div>
-            <span>Total Expenses</span>
+            <span>{t('Total Expenses')}</span>
             <strong>{formatCurrency(totals.expense)}</strong>
           </div>
         </div>
@@ -323,12 +326,12 @@ function Passbook() {
       <section className="passbook-history-card">
         <div className="passbook-history-header">
           <div>
-            <h2>Transaction History</h2>
+            <h2>{t('Transaction History')}</h2>
             <p>
               {transactions.length}{' '}
               {transactions.length === 1
-                ? 'transaction'
-                : 'transactions'}
+                ? t('transaction')
+                : t('transactions')}
             </p>
           </div>
         </div>
@@ -336,15 +339,14 @@ function Passbook() {
         {loading ? (
           <div className="passbook-state">
             <RefreshCw size={24} className="spin" />
-            <p>Loading transactions...</p>
+            <p>{t('Loading transactions...')}</p>
           </div>
         ) : transactions.length === 0 ? (
           <div className="passbook-state">
             <Wallet size={38} />
-            <h3>No transactions yet</h3>
+            <h3>{t('No transactions yet')}</h3>
             <p>
-              Add your first income or expense to start
-              your passbook.
+              {t('Add your first income or expense to start your passbook.')}
             </p>
 
             <button
@@ -353,7 +355,7 @@ function Passbook() {
               onClick={openAddForm}
             >
               <Plus size={18} />
-              Add Transaction
+              {t('Add Transaction')}
             </button>
           </div>
         ) : (
@@ -389,14 +391,14 @@ function Passbook() {
                         }`}
                       >
                         {isIncome
-                          ? 'Income'
-                          : 'Expense'}
+                          ? t('Income')
+                          : t('Expense')}
                       </span>
                     </div>
 
                     <p>
                       {transaction.description ||
-                        'No description'}
+                        t('No description')}
                     </p>
 
                     <div className="transaction-meta">
@@ -436,7 +438,7 @@ function Passbook() {
                     <div className="transaction-actions">
                       <button
                         type="button"
-                        title="Edit transaction"
+                        title={t('Edit transaction')}
                         onClick={() =>
                           openEditForm(transaction)
                         }
@@ -446,7 +448,7 @@ function Passbook() {
 
                       <button
                         type="button"
-                        title="Delete transaction"
+                        title={t('Delete transaction')}
                         onClick={() =>
                           handleDelete(transaction._id)
                         }
@@ -479,12 +481,12 @@ function Passbook() {
               <div>
                 <h2>
                   {editingId
-                    ? 'Edit Transaction'
-                    : 'Add Transaction'}
+                    ? t('Edit Transaction')
+                    : t('Add Transaction')}
                 </h2>
 
                 <p>
-                  Record your farm income or expense.
+                  {t('Record your farm income or expense.')}
                 </p>
               </div>
 
@@ -518,7 +520,7 @@ function Passbook() {
                   }
                 >
                   <ArrowUpCircle size={18} />
-                  Income
+                  {t('Income')}
                 </button>
 
                 <button
@@ -536,30 +538,30 @@ function Passbook() {
                   }
                 >
                   <ArrowDownCircle size={18} />
-                  Expense
+                  {t('Expense')}
                 </button>
               </div>
 
               <label>
-                Category
+                {t('Category')}
                 <input
                   type="text"
                   name="category"
                   value={form.category}
                   onChange={handleInputChange}
-                  placeholder="e.g. Crop Sale, Fertilizer"
+                  placeholder={t('e.g. Crop Sale, Fertilizer')}
                   maxLength={100}
                   required
                 />
               </label>
 
               <label>
-                Description
+                {t('Description')}
                 <textarea
                   name="description"
                   value={form.description}
                   onChange={handleInputChange}
-                  placeholder="Add a short description..."
+                  placeholder={t('Add a short description...')}
                   maxLength={300}
                   rows={3}
                 />
@@ -567,7 +569,7 @@ function Passbook() {
 
               <div className="passbook-form-row">
                 <label>
-                  Amount (₹)
+                  {t('Amount (₹)')}
                   <div className="amount-input">
                     <IndianRupee size={17} />
 
@@ -585,7 +587,7 @@ function Passbook() {
                 </label>
 
                 <label>
-                  Date
+                  {t('Date')}
                   <input
                     type="date"
                     name="transactionDate"
@@ -603,7 +605,7 @@ function Passbook() {
                   onClick={closeForm}
                   disabled={saving}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </button>
 
                 <button
@@ -612,10 +614,10 @@ function Passbook() {
                   disabled={saving}
                 >
                   {saving
-                    ? 'Saving...'
+                    ? t('Saving...')
                     : editingId
-                      ? 'Update Transaction'
-                      : 'Save Transaction'}
+                      ? t('Update Transaction')
+                      : t('Save Transaction')}
                 </button>
               </div>
             </form>

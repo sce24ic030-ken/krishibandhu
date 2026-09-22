@@ -5,8 +5,11 @@ import {
 
 import PageHeader from '../components/PageHeader';
 import CropForm from '../components/CropForm';
+import QrModal from '../components/QrModal';
 
 import { useAuth } from '../context/AuthContext';
+
+import { useLanguage } from '../context/LanguageContext';
 
 import API_URL from '../config/api';
 
@@ -19,6 +22,8 @@ function Crops() {
     token,
     user,
   } = useAuth();
+
+  const { t } = useLanguage();
 
   const [crops, setCrops] = useState([]);
 
@@ -35,6 +40,9 @@ function Crops() {
     useState(null);
 
   const [deletingCropId, setDeletingCropId] =
+    useState(null);
+
+  const [qrTarget, setQrTarget] =
     useState(null);
 
   // ==========================================
@@ -67,8 +75,8 @@ function Crops() {
 
       if (!response.ok) {
         throw new Error(
-          result.message ||
-            'Failed to fetch crops.',
+          t(result.message) ||
+            t('Failed to fetch crops.'),
         );
       }
 
@@ -76,8 +84,8 @@ function Crops() {
         setCrops(result.data);
       } else {
         throw new Error(
-          result.message ||
-            'Failed to fetch crops.',
+          t(result.message) ||
+            t('Failed to fetch crops.'),
         );
       }
     } catch (err) {
@@ -87,8 +95,8 @@ function Crops() {
       );
 
       setError(
-        err.message ||
-          'Unable to load crops. Please try again.',
+        t(err.message) ||
+          t('Unable to load crops. Please try again.'),
       );
     } finally {
       setLoading(false);
@@ -173,7 +181,7 @@ function Crops() {
   ) => {
     const confirmed =
       window.confirm(
-        'Are you sure you want to delete this crop?',
+        t('Are you sure you want to delete this crop?'),
       );
 
     if (!confirmed) {
@@ -203,8 +211,8 @@ function Crops() {
         !result.success
       ) {
         throw new Error(
-          result.message ||
-            'Failed to delete crop.',
+          t(result.message) ||
+            t('Failed to delete crop.'),
         );
       }
 
@@ -222,8 +230,8 @@ function Crops() {
       );
 
       setError(
-        err.message ||
-          'Unable to delete crop.',
+        t(err.message) ||
+          t('Unable to delete crop.'),
       );
     } finally {
       setDeletingCropId(null);
@@ -238,8 +246,8 @@ function Crops() {
     <main className="dashboard">
 
       <PageHeader
-        title="My Crops"
-        description="Manage and monitor your crops."
+        title={t('My Crops')}
+        description={t('Manage and monitor your crops.')}
       />
 
       {showForm ? (
@@ -271,21 +279,21 @@ function Crops() {
             <div>
 
               <h2>
-                Your Crops
+                {t('Your Crops')}
               </h2>
 
               {!loading &&
                 !error && (
                   <p>
                     {user?.name
-                      ? `${user.name}, you currently have `
-                      : 'You currently have '}
+                      ? t('{0}, you currently have', user.name)
+                      : t('You currently have')}
 
-                    {crops.length}{' '}
+                    {' '}{crops.length}{' '}
 
                     {crops.length === 1
-                      ? 'crop'
-                      : 'crops'}.
+                      ? t('crop')
+                      : t('crops')}.
                   </p>
                 )}
 
@@ -299,7 +307,7 @@ function Crops() {
                 setShowForm(true);
               }}
             >
-              + Add Crop
+              + {t('Add Crop')}
             </button>
 
           </div>
@@ -311,7 +319,7 @@ function Crops() {
           {loading && (
             <div className="crops-message">
               <p>
-                Loading your crops...
+                {t('Loading your crops...')}
               </p>
             </div>
           )}
@@ -331,7 +339,7 @@ function Crops() {
                 className="primary-button"
                 onClick={fetchCrops}
               >
-                Try Again
+                {t('Try Again')}
               </button>
             </div>
           )}
@@ -351,13 +359,11 @@ function Crops() {
                 </div>
 
                 <h3>
-                  No crops added yet
+                  {t('No crops added yet')}
                 </h3>
 
                 <p>
-                  Add your first crop to
-                  start managing your farm
-                  information.
+                  {t('Add your first crop to start managing your farm information.')}
                 </p>
 
                 <button
@@ -368,7 +374,7 @@ function Crops() {
                     setShowForm(true);
                   }}
                 >
-                  Add Your First Crop
+                  {t('Add Your First Crop')}
                 </button>
 
               </div>
@@ -426,7 +432,7 @@ function Crops() {
                         <div className="crop-detail">
 
                           <span className="detail-label">
-                            Area
+                            {t('Area')}
                           </span>
 
                           <strong>
@@ -441,7 +447,7 @@ function Crops() {
                           <div className="crop-detail">
 
                             <span className="detail-label">
-                              Sowing Date
+                              {t('Sowing Date')}
                             </span>
 
                             <strong>
@@ -459,7 +465,7 @@ function Crops() {
                           <div className="crop-detail">
 
                             <span className="detail-label">
-                              Expected Harvest
+                              {t('Expected Harvest')}
                             </span>
 
                             <strong>
@@ -490,12 +496,22 @@ function Crops() {
 
                         <button
                           type="button"
+                          className="qr-crop-button"
+                          onClick={() =>
+                            setQrTarget(crop)
+                          }
+                        >
+                          {t('📱 Lot QR')}
+                        </button>
+
+                        <button
+                          type="button"
                           className="edit-crop-button"
                           onClick={() =>
                             handleEdit(crop)
                           }
                         >
-                          ✏️ Edit
+                          {t('✏️ Edit')}
                         </button>
 
                         <button
@@ -513,8 +529,8 @@ function Crops() {
                         >
                           {deletingCropId ===
                           crop._id
-                            ? 'Deleting...'
-                            : '🗑️ Delete'}
+                            ? t('Deleting...')
+                            : t('🗑️ Delete')}
                         </button>
 
                       </div>
@@ -531,6 +547,15 @@ function Crops() {
         </div>
 
       )}
+
+      <QrModal
+        open={Boolean(qrTarget)}
+        onClose={() => setQrTarget(null)}
+        entityType="crop"
+        entityId={qrTarget?._id}
+        title={t('Crop Lot QR')}
+        description={t('Track this crop lot from sowing to sale. Print or share this QR for traceability.')}
+      />
 
     </main>
   );

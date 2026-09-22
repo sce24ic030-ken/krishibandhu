@@ -352,6 +352,47 @@ const getMyBackhaul =
   };
 
 /* =========================================================
+   GET ALL BACKHAUL (ADMIN)
+========================================================= */
+
+const getAllBackhaul =
+  async (
+    req,
+    res,
+  ) => {
+    try {
+      const backhauls =
+        await populateBackhaul(
+          Backhaul.find({}),
+        ).sort({
+          createdAt: -1,
+        });
+
+      return res
+        .status(200)
+        .json({
+          success: true,
+          count:
+            backhauls.length,
+          data: backhauls,
+        });
+    } catch (error) {
+      console.error(
+        'Get all backhaul error:',
+        error,
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            'Failed to fetch transport records.',
+        });
+    }
+  };
+
+/* =========================================================
    CREATE BACKHAUL
 ========================================================= */
 
@@ -1341,6 +1382,7 @@ const cancelBackhaul =
 module.exports = {
   getAvailableBackhaul,
   getMyBackhaul,
+  getAllBackhaul,
   createBackhaul,
   selectTraderTransport,
   updateBackhaulStatus,

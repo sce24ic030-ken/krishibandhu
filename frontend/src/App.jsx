@@ -7,6 +7,8 @@ import {
 
 import { useAuth } from './context/AuthContext';
 
+import { useLanguage } from './context/LanguageContext';
+
 import MainLayout from './layouts/MainLayout';
 
 import Dashboard from './pages/Dashboard';
@@ -32,8 +34,15 @@ import AdminUsers from './pages/AdminUsers';
 import AdminMarkets from './pages/AdminMarkets';
 import AdminCrops from './pages/AdminCrops';
 import AdminStorageRequests from './pages/AdminStorageRequests';
+import AdminBids from './pages/AdminBids';
+import AdminParchi from './pages/AdminParchi';
+import AdminTransactions from './pages/AdminTransactions';
+import AdminPayments from './pages/AdminPayments';
+import AdminBackhaul from './pages/AdminBackhaul';
 
 const AuthLoading = () => {
+  const { t } = useLanguage();
+
   return (
     <div
       style={{
@@ -47,7 +56,7 @@ const AuthLoading = () => {
         fontWeight: '600',
       }}
     >
-      Loading KrishiBandhu...
+      {t('Loading KrishiBandhu...')}
     </div>
   );
 };
@@ -338,6 +347,8 @@ function App() {
             <RoleRoute
               allowedRoles={[
                 'farmer',
+                'trader',
+                'admin',
               ]}
             >
               <MainLayout>
@@ -550,6 +561,101 @@ function App() {
             >
               <MainLayout>
                 <AdminStorageRequests />
+              </MainLayout>
+            </RoleRoute>
+          }
+        />
+
+        {/* ============================== */}
+        {/* ADMIN BIDS                     */}
+        {/* ============================== */}
+
+        <Route
+          path="/admin/bids"
+          element={
+            <RoleRoute
+              allowedRoles={[
+                'admin',
+              ]}
+            >
+              <MainLayout>
+                <AdminBids />
+              </MainLayout>
+            </RoleRoute>
+          }
+        />
+
+        {/* ============================== */}
+        {/* ADMIN PARCHI                   */}
+        {/* ============================== */}
+
+        <Route
+          path="/admin/parchi"
+          element={
+            <RoleRoute
+              allowedRoles={[
+                'admin',
+              ]}
+            >
+              <MainLayout>
+                <AdminParchi />
+              </MainLayout>
+            </RoleRoute>
+          }
+        />
+
+        {/* ============================== */}
+        {/* ADMIN TRANSACTIONS             */}
+        {/* ============================== */}
+
+        <Route
+          path="/admin/transactions"
+          element={
+            <RoleRoute
+              allowedRoles={[
+                'admin',
+              ]}
+            >
+              <MainLayout>
+                <AdminTransactions />
+              </MainLayout>
+            </RoleRoute>
+          }
+        />
+
+        {/* ============================== */}
+        {/* ADMIN PAYMENTS                 */}
+        {/* ============================== */}
+
+        <Route
+          path="/admin/payments"
+          element={
+            <RoleRoute
+              allowedRoles={[
+                'admin',
+              ]}
+            >
+              <MainLayout>
+                <AdminPayments />
+              </MainLayout>
+            </RoleRoute>
+          }
+        />
+
+        {/* ============================== */}
+        {/* ADMIN BACKHAUL                 */}
+        {/* ============================== */}
+
+        <Route
+          path="/admin/backhaul"
+          element={
+            <RoleRoute
+              allowedRoles={[
+                'admin',
+              ]}
+            >
+              <MainLayout>
+                <AdminBackhaul />
               </MainLayout>
             </RoleRoute>
           }

@@ -188,6 +188,33 @@
   gap: 8px;
 }
 
+.parchi-qr-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 6px 10px;
+
+  border: 1px solid #bcdacd;
+  border-radius: 999px;
+
+  background: #eef7f2;
+  color: #1c5c3b;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.parchi-qr-button:hover {
+  background: #e2f1e8;
+}
+
 .parchi-status,
 .parchi-payment-status {
   padding: 6px 10px;

@@ -22,6 +22,8 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import API_URL from '../config/api';
 
 import './AdminUsers.css';
@@ -29,6 +31,8 @@ import './AdminUsers.css';
 const API_BASE_URL = API_URL;
 
 function AdminUsers() {
+  const { t } = useLanguage();
+
   const {
     token,
     user: currentUser,
@@ -115,7 +119,7 @@ function AdminUsers() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to fetch users.',
+            t('Unable to fetch users.'),
         );
       }
 
@@ -147,7 +151,7 @@ function AdminUsers() {
 
       setError(
         err.message ||
-          'Unable to load users.',
+          t('Unable to load users.'),
       );
     } finally {
       setLoading(false);
@@ -258,7 +262,7 @@ function AdminUsers() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to update user role.',
+            t('Unable to update user role.'),
         );
       }
 
@@ -295,7 +299,7 @@ function AdminUsers() {
 
       setError(
         err.message ||
-          'Unable to update user role.',
+          t('Unable to update user role.'),
       );
 
       /*
@@ -366,7 +370,7 @@ function AdminUsers() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to update user status.',
+            t('Unable to update user status.'),
         );
       }
 
@@ -393,7 +397,7 @@ function AdminUsers() {
 
       setError(
         err.message ||
-          'Unable to update user status.',
+          t('Unable to update user status.'),
       );
     } finally {
       setUpdatingUserId(null);
@@ -444,7 +448,7 @@ function AdminUsers() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              'Unable to update verification.',
+              t('Unable to update verification.'),
           );
         }
 
@@ -471,7 +475,7 @@ function AdminUsers() {
 
         setError(
           err.message ||
-            'Unable to update verification.',
+            t('Unable to update verification.'),
         );
       } finally {
         setUpdatingUserId(null);
@@ -516,14 +520,14 @@ function AdminUsers() {
     role,
   ) => {
     if (role === 'farmer') {
-      return 'Farmer';
+      return t('Farmer');
     }
 
     if (role === 'trader') {
-      return 'Trader';
+      return t('Trader');
     }
 
-    return 'Admin';
+    return t('Admin');
   };
 
   /*
@@ -563,16 +567,15 @@ function AdminUsers() {
         <div>
 
           <p className="admin-users-label">
-            Administration
+            {t('Administration')}
           </p>
 
           <h1>
-            User Management
+            {t('User Management')}
           </h1>
 
           <p>
-            View and manage Farmer,
-            Trader and Admin accounts.
+            {t('View and manage Farmer, Trader and Admin accounts.')}
           </p>
 
         </div>
@@ -588,7 +591,7 @@ function AdminUsers() {
             </strong>
 
             <span>
-              Users shown
+              {t('Users shown')}
             </span>
 
           </div>
@@ -624,7 +627,7 @@ function AdminUsers() {
               size={15}
             />
 
-            Retry
+            {t('Retry')}
           </button>
 
         </div>
@@ -655,11 +658,11 @@ function AdminUsers() {
                 event.target.value,
               )
             }
-            placeholder="Search by name, email or phone..."
+            placeholder={t('Search by name, email or phone...')}
           />
 
           <button type="submit">
-            Search
+            {t('Search')}
           </button>
 
         </form>
@@ -669,7 +672,7 @@ function AdminUsers() {
           <div className="admin-filter-group">
 
             <label>
-              Role
+              {t('Role')}
             </label>
 
             <select
@@ -684,19 +687,19 @@ function AdminUsers() {
             >
 
               <option value="all">
-                All Roles
+                {t('All Roles')}
               </option>
 
               <option value="farmer">
-                Farmers
+                {t('Farmers')}
               </option>
 
               <option value="trader">
-                Traders
+                {t('Traders')}
               </option>
 
               <option value="admin">
-                Admins
+                {t('Admins')}
               </option>
 
             </select>
@@ -706,7 +709,7 @@ function AdminUsers() {
           <div className="admin-filter-group">
 
             <label>
-              Status
+              {t('Status')}
             </label>
 
             <select
@@ -723,15 +726,15 @@ function AdminUsers() {
             >
 
               <option value="all">
-                All Status
+                {t('All Status')}
               </option>
 
               <option value="active">
-                Active
+                {t('Active')}
               </option>
 
               <option value="inactive">
-                Inactive
+                {t('Inactive')}
               </option>
 
             </select>
@@ -758,7 +761,7 @@ function AdminUsers() {
               }
             />
 
-            Refresh
+            {t('Refresh')}
 
           </button>
 
@@ -777,13 +780,11 @@ function AdminUsers() {
           <div>
 
             <h2>
-              Platform Users
+              {t('Platform Users')}
             </h2>
 
             <p>
-              Passwords and sensitive
-              credentials are never
-              displayed.
+              {t('Passwords and sensitive credentials are never displayed.')}
             </p>
 
           </div>
@@ -801,7 +802,7 @@ function AdminUsers() {
             />
 
             <p>
-              Loading users...
+              {t('Loading users...')}
             </p>
 
           </div>
@@ -811,12 +812,11 @@ function AdminUsers() {
             <Users size={30} />
 
             <h3>
-              No users found
+              {t('No users found')}
             </h3>
 
             <p>
-              Try changing your
-              search or filters.
+              {t('Try changing your search or filters.')}
             </p>
 
           </div>
@@ -830,35 +830,35 @@ function AdminUsers() {
                 <tr>
 
                   <th>
-                    User
+                    {t('User')}
                   </th>
 
                   <th>
-                    Role
+                    {t('Role')}
                   </th>
 
                   <th>
-                    Contact
+                    {t('Contact')}
                   </th>
 
                   <th>
-                    Location
+                    {t('Location')}
                   </th>
 
                   <th>
-                    Status
+                    {t('Status')}
                   </th>
 
                   <th>
-                    Verification
+                    {t('Verification')}
                   </th>
 
                   <th>
-                    Joined
+                    {t('Joined')}
                   </th>
 
                   <th>
-                    Actions
+                    {t('Actions')}
                   </th>
 
                 </tr>
@@ -920,7 +920,7 @@ function AdminUsers() {
 
                               {isCurrentUser && (
                                 <span className="admin-you-badge">
-                                  You
+                                  {t('You')}
                                 </span>
                               )}
 
@@ -974,11 +974,11 @@ function AdminUsers() {
                               >
 
                                 <option value="farmer">
-                                  Farmer
+                                  {t('Farmer')}
                                 </option>
 
                                 <option value="trader">
-                                  Trader
+                                  {t('Trader')}
                                 </option>
 
                               </select>
@@ -995,7 +995,7 @@ function AdminUsers() {
                                       item,
                                     )
                                   }
-                                  title="Save role"
+                                  title={t('Save role')}
                                 >
 
                                   {isUpdating ? (
@@ -1106,7 +1106,7 @@ function AdminUsers() {
                                   size={14}
                                 />
 
-                                Active
+                                {t('Active')}
                               </>
                             ) : (
                               <>
@@ -1114,7 +1114,7 @@ function AdminUsers() {
                                   size={14}
                                 />
 
-                                Inactive
+                                {t('Inactive')}
                               </>
                             )}
 
@@ -1135,7 +1135,7 @@ function AdminUsers() {
                                 size={14}
                               />
 
-                              Verified
+                              {t('Verified')}
 
                             </span>
                           ) : (
@@ -1145,7 +1145,7 @@ function AdminUsers() {
                                 size={14}
                               />
 
-                              Not verified
+                              {t('Not verified')}
 
                             </span>
                           )}
@@ -1201,9 +1201,9 @@ function AdminUsers() {
                                     className="admin-spin"
                                   />
                                 ) : item.isActive ? (
-                                  'Deactivate'
+                                  t('Deactivate')
                                 ) : (
-                                  'Activate'
+                                  t('Activate')
                                 )}
 
                               </button>
@@ -1226,8 +1226,8 @@ function AdminUsers() {
                               >
 
                                 {item.isVerified
-                                  ? 'Unverify'
-                                  : 'Verify'}
+                                  ? t('Unverify')
+                                  : t('Verify')}
 
                               </button>
                             )}

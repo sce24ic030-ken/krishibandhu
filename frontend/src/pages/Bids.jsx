@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   CheckCircle2,
   Clock3,
+  QrCode,
   RefreshCw,
   ShoppingBag,
   X,
@@ -10,7 +11,9 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import API_URL from '../config/api';
+import QrModal from '../components/QrModal';
 
 import './Bids.css';
 
@@ -67,6 +70,10 @@ const formatCurrency = (amount) => {
 function Bids() {
   const { token } = useAuth();
 
+  const { t } = useLanguage();
+
+  const [qrTarget, setQrTarget] = useState(null);
+
   const [bids, setBids] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -89,7 +96,7 @@ function Bids() {
       if (!token) {
         setLoading(false);
         setError(
-          'Your login session has expired. Please login again.',
+          t('Your login session has expired. Please login again.'),
         );
         return;
       }
@@ -116,8 +123,8 @@ function Bids() {
 
         if (!response.ok || !result.success) {
           throw new Error(
-            result.message ||
-              'Failed to fetch bids.',
+            t(result.message) ||
+              t('Failed to fetch bids.'),
           );
         }
 
@@ -129,8 +136,8 @@ function Bids() {
         );
 
         setError(
-          err.message ||
-            'Unable to load bids. Please make sure the backend is running.',
+          t(err.message) ||
+            t('Unable to load bids. Please make sure the backend is running.'),
         );
       } finally {
         setLoading(false);
@@ -160,7 +167,9 @@ function Bids() {
         : 'reject';
 
     const confirmed = window.confirm(
-      `Are you sure you want to ${action} this bid?`,
+      status === 'accepted'
+        ? t('Are you sure you want to accept this bid?')
+        : t('Are you sure you want to reject this bid?'),
     );
 
     if (!confirmed) {
@@ -169,7 +178,7 @@ function Bids() {
 
     if (!token) {
       setError(
-        'Your login session has expired. Please login again.',
+        t('Your login session has expired. Please login again.'),
       );
       return;
     }
@@ -198,8 +207,8 @@ function Bids() {
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.message ||
-            'Failed to update bid status.',
+          t(result.message) ||
+            t('Failed to update bid status.'),
         );
       }
 
@@ -217,8 +226,8 @@ function Bids() {
       );
 
       setError(
-        err.message ||
-          'Failed to update the bid status.',
+        t(err.message) ||
+          t('Failed to update the bid status.'),
       );
     } finally {
       setUpdatingBidId('');
@@ -259,12 +268,11 @@ function Bids() {
           </p>
 
           <h1>
-            Bids Received
+            {t('Bids Received')}
           </h1>
 
           <p className="bids-subtitle">
-            Review buyer offers for your crops
-            and decide which bids to accept.
+            {t('Review buyer offers for your crops and decide which bids to accept.')}
           </p>
 
         </div>
@@ -292,8 +300,8 @@ function Bids() {
             />
 
             {refreshing
-              ? 'Refreshing...'
-              : 'Refresh'}
+              ? t('Refreshing...')
+              : t('Refresh')}
 
           </button>
 
@@ -317,7 +325,7 @@ function Bids() {
           <div>
 
             <span>
-              Total Bids
+              {t('Total Bids')}
             </span>
 
             <strong>
@@ -338,7 +346,7 @@ function Bids() {
           <div>
 
             <span>
-              Pending
+              {t('Pending')}
             </span>
 
             <strong>
@@ -359,7 +367,7 @@ function Bids() {
           <div>
 
             <span>
-              Accepted
+              {t('Accepted')}
             </span>
 
             <strong>
@@ -380,7 +388,7 @@ function Bids() {
           <div>
 
             <span>
-              Rejected
+              {t('Rejected')}
             </span>
 
             <strong>
@@ -424,12 +432,11 @@ function Bids() {
           <div className="bids-loader" />
 
           <h3>
-            Loading bids...
+            {t('Loading bids...')}
           </h3>
 
           <p>
-            Fetching the latest buyer offers
-            for your crops.
+            {t('Fetching the latest buyer offers for your crops.')}
           </p>
 
         </div>
@@ -447,13 +454,11 @@ function Bids() {
           </div>
 
           <h3>
-            No bids yet
+            {t('No bids yet')}
           </h3>
 
           <p>
-            Buyer offers will appear here when
-            traders place bids on your crop
-            listings.
+            {t('Buyer offers will appear here when traders place bids on your crop listings.')}
           </p>
 
         </div>
@@ -487,13 +492,13 @@ function Bids() {
 
                     <h2>
                       {bid.crop?.name ||
-                        'Unknown Crop'}
+                        t('Unknown Crop')}
                     </h2>
 
                     <p>
                       {bid.crop?.variety
                         ? bid.crop.variety
-                        : 'Variety not specified'}
+                        : t('Variety not specified')}
                     </p>
 
                   </div>
@@ -506,9 +511,9 @@ function Bids() {
                     bid.status,
                   )}
                 >
-                  {getStatusLabel(
+                  {t(getStatusLabel(
                     bid.status,
-                  )}
+                  ))}
                 </span>
 
               </div>
@@ -521,12 +526,12 @@ function Bids() {
                 <div className="bid-detail">
 
                   <span>
-                    Market
+                    {t('Market')}
                   </span>
 
                   <strong>
                     {bid.market?.name ||
-                      'Unknown Market'}
+                      t('Unknown Market')}
                   </strong>
 
                 </div>
@@ -535,13 +540,13 @@ function Bids() {
                 <div className="bid-detail">
 
                   <span>
-                    Buyer
+                    {t('Buyer')}
                   </span>
 
                   <strong>
                     {bid.buyer?.name ||
                       bid.buyerName ||
-                      'Unknown Buyer'}
+                      t('Unknown Buyer')}
                   </strong>
 
                 </div>
@@ -550,7 +555,7 @@ function Bids() {
                 <div className="bid-detail">
 
                   <span>
-                    Contact
+                    {t('Contact')}
                   </span>
 
                   <strong>
@@ -565,7 +570,7 @@ function Bids() {
                 <div className="bid-detail">
 
                   <span>
-                    Quantity
+                    {t('Quantity')}
                   </span>
 
                   <strong>
@@ -580,7 +585,7 @@ function Bids() {
                 <div className="bid-detail">
 
                   <span>
-                    Price / Unit
+                    {t('Price / Unit')}
                   </span>
 
                   <strong>
@@ -595,7 +600,7 @@ function Bids() {
                 <div className="bid-detail highlight">
 
                   <span>
-                    Total Offer
+                    {t('Total Offer')}
                   </span>
 
                   <strong>
@@ -616,7 +621,7 @@ function Bids() {
                 <div className="bid-message">
 
                   <span>
-                    Message
+                    {t('Message')}
                   </span>
 
                   <p>
@@ -634,11 +639,7 @@ function Bids() {
 
                 <span className="bid-date">
 
-                  Received{' '}
-
-                  {formatDate(
-                    bid.createdAt,
-                  )}
+                  {t('Received {0}', formatDate(bid.createdAt))}
 
                 </span>
 
@@ -671,8 +672,8 @@ function Bids() {
 
                         {updatingBidId ===
                         bid._id
-                          ? 'Updating...'
-                          : 'Accept'}
+                          ? t('Updating...')
+                          : t('Accept')}
 
                       </button>
 
@@ -696,13 +697,24 @@ function Bids() {
                           size={17}
                         />
 
-                        Reject
+                        {t('Reject')}
 
                       </button>
 
                     </>
 
                   )}
+
+                  <button
+                    type="button"
+                    className="bid-action qr"
+                    onClick={() =>
+                      setQrTarget(bid)
+                    }
+                  >
+                    <QrCode size={17} />
+                    {t('Match QR')}
+                  </button>
 
                 </div>
 
@@ -715,6 +727,15 @@ function Bids() {
         </div>
 
       )}
+
+      <QrModal
+        open={Boolean(qrTarget)}
+        onClose={() => setQrTarget(null)}
+        entityType="bid"
+        entityId={qrTarget?._id}
+        title={t('Bid Match QR')}
+        description={t('Weighbridge and lot-match verification for this bid. Scan to confirm the delivery matches the accepted offer.')}
+      />
 
     </div>
   );

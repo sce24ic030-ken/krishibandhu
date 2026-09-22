@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import API_URL from '../config/api';
 
 import './Backhaul.css';
@@ -33,6 +34,8 @@ function Backhaul() {
     token,
     user,
   } = useAuth();
+
+  const { t } = useLanguage();
 
   /* =========================================
      MARKETS
@@ -181,7 +184,7 @@ function Backhaul() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Failed to load markets.',
+            t('Failed to load markets.'),
         );
       }
 
@@ -203,7 +206,7 @@ function Backhaul() {
 
       setMarketsError(
         error.message ||
-          'Unable to load markets.',
+          t('Unable to load markets.'),
       );
     } finally {
       setMarketsLoading(false);
@@ -445,14 +448,14 @@ function Backhaul() {
 
     if (!sourceMarket) {
       setSearchError(
-        'Please select a source market.',
+        t('Please select a source market.'),
       );
       return;
     }
 
     if (!destinationMarket) {
       setSearchError(
-        'Please select a destination market.',
+        t('Please select a destination market.'),
       );
       return;
     }
@@ -462,7 +465,7 @@ function Backhaul() {
       destinationMarket
     ) {
       setSearchError(
-        'Source and destination markets must be different.',
+        t('Source and destination markets must be different.'),
       );
       return;
     }
@@ -472,7 +475,7 @@ function Backhaul() {
       Number(quantity) <= 0
     ) {
       setSearchError(
-        'Please enter a valid quantity.',
+        t('Please enter a valid quantity.'),
       );
       return;
     }
@@ -520,7 +523,7 @@ function Backhaul() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Failed to search available transport.',
+            t('Failed to search available transport.'),
         );
       }
 
@@ -556,7 +559,7 @@ function Backhaul() {
         0
       ) {
         setMessage(
-          'No available trader transport has enough capacity for your quantity on this route.',
+          t('No available trader transport has enough capacity for your quantity on this route.'),
         );
       }
     } catch (error) {
@@ -567,7 +570,7 @@ function Backhaul() {
 
       setSearchError(
         error.message ||
-          'Unable to find available transport.',
+          t('Unable to find available transport.'),
       );
 
       setTransports([]);
@@ -586,7 +589,7 @@ function Backhaul() {
     ) => {
       if (!token) {
         setSelectionMessage(
-          'Your session has expired. Please log in again.',
+          t('Your session has expired. Please log in again.'),
         );
         return;
       }
@@ -595,7 +598,7 @@ function Backhaul() {
         quantityInKg <= 0
       ) {
         setSelectionMessage(
-          'Please enter a valid quantity before selecting transport.',
+          t('Please enter a valid quantity before selecting transport.'),
         );
         return;
       }
@@ -634,7 +637,7 @@ function Backhaul() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              'Failed to select transport.',
+              t('Failed to select transport.'),
           );
         }
 
@@ -650,7 +653,7 @@ function Backhaul() {
 
         setSelectionMessage(
           data.message ||
-            'Trader transport selected successfully.',
+            t('Trader transport selected successfully.'),
         );
 
         setTransports(
@@ -669,7 +672,7 @@ function Backhaul() {
 
         setSelectionMessage(
           error.message ||
-            'Unable to select this transport.',
+            t('Unable to select this transport.'),
         );
       } finally {
         setSelectingId(
@@ -692,21 +695,21 @@ function Backhaul() {
 
       if (!token) {
         setOwnTransportMessage(
-          'Your session has expired. Please log in again.',
+          t('Your session has expired. Please log in again.'),
         );
         return;
       }
 
       if (!sourceMarket) {
         setOwnTransportMessage(
-          'Please select a source market.',
+          t('Please select a source market.'),
         );
         return;
       }
 
       if (!destinationMarket) {
         setOwnTransportMessage(
-          'Please select a destination market.',
+          t('Please select a destination market.'),
         );
         return;
       }
@@ -716,7 +719,7 @@ function Backhaul() {
         destinationMarket
       ) {
         setOwnTransportMessage(
-          'Source and destination markets must be different.',
+          t('Source and destination markets must be different.'),
         );
         return;
       }
@@ -726,7 +729,7 @@ function Backhaul() {
         Number(quantity) <= 0
       ) {
         setOwnTransportMessage(
-          'Please enter the crop quantity.',
+          t('Please enter the crop quantity.'),
         );
         return;
       }
@@ -735,7 +738,7 @@ function Backhaul() {
         !ownVehicleNumber.trim()
       ) {
         setOwnTransportMessage(
-          'Please enter the vehicle number.',
+          t('Please enter the vehicle number.'),
         );
         return;
       }
@@ -744,7 +747,7 @@ function Backhaul() {
         !ownVehicleType.trim()
       ) {
         setOwnTransportMessage(
-          'Please enter the vehicle type.',
+          t('Please enter the vehicle type.'),
         );
         return;
       }
@@ -753,7 +756,7 @@ function Backhaul() {
         !ownDriverName.trim()
       ) {
         setOwnTransportMessage(
-          'Please enter the driver name.',
+          t('Please enter the driver name.'),
         );
         return;
       }
@@ -762,7 +765,7 @@ function Backhaul() {
         !ownDriverPhone.trim()
       ) {
         setOwnTransportMessage(
-          'Please enter the driver phone number.',
+          t('Please enter the driver phone number.'),
         );
         return;
       }
@@ -772,7 +775,7 @@ function Backhaul() {
         Number(ownCapacity) <= 0
       ) {
         setOwnTransportMessage(
-          'Please enter a valid vehicle capacity.',
+          t('Please enter a valid vehicle capacity.'),
         );
         return;
       }
@@ -788,7 +791,7 @@ function Backhaul() {
         quantityInKg
       ) {
         setOwnTransportMessage(
-          'Vehicle capacity must be at least equal to the crop quantity.',
+          t('Vehicle capacity must be at least equal to the crop quantity.'),
         );
         return;
       }
@@ -797,7 +800,7 @@ function Backhaul() {
         !ownDepartureDate
       ) {
         setOwnTransportMessage(
-          'Please select the departure date.',
+          t('Please select the departure date.'),
         );
         return;
       }
@@ -806,7 +809,7 @@ function Backhaul() {
         !ownDepartureTime
       ) {
         setOwnTransportMessage(
-          'Please select the departure time.',
+          t('Please select the departure time.'),
         );
         return;
       }
@@ -817,7 +820,7 @@ function Backhaul() {
           0
       ) {
         setOwnTransportMessage(
-          'Please enter a valid estimated transport cost.',
+          t('Please enter a valid estimated transport cost.'),
         );
         return;
       }
@@ -904,7 +907,7 @@ function Backhaul() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              'Failed to publish own transport.',
+              t('Failed to publish own transport.'),
           );
         }
 
@@ -915,7 +918,7 @@ function Backhaul() {
 
         setOwnTransportMessage(
           data.message ||
-            'Own transport published successfully.',
+            t('Own transport published successfully.'),
         );
       } catch (error) {
         console.error(
@@ -925,7 +928,7 @@ function Backhaul() {
 
         setOwnTransportMessage(
           error.message ||
-            'Unable to publish own transport.',
+            t('Unable to publish own transport.'),
         );
       } finally {
         setPublishingOwn(
@@ -1021,12 +1024,11 @@ function Backhaul() {
 
             <div>
               <h1>
-                Backhaul Transport
+                {t('Backhaul Transport')}
               </h1>
 
               <p>
-                Find affordable return
-                transport for your crops.
+                {t('Find affordable return transport for your crops.')}
               </p>
             </div>
 
@@ -1035,7 +1037,7 @@ function Backhaul() {
 
         <div className="backhaul-header-badge">
           <Truck size={17} />
-          Return Load
+          {t('Return Load')}
         </div>
 
       </div>
@@ -1054,13 +1056,11 @@ function Backhaul() {
 
           <div>
             <h2>
-              Find Transport
+              {t('Find Transport')}
             </h2>
 
             <p>
-              Tell us where your crop is
-              going and how much you need
-              to transport.
+              {t('Tell us where your crop is going and how much you need to transport.')}
             </p>
           </div>
 
@@ -1079,7 +1079,7 @@ function Backhaul() {
 
               <label>
                 <MapPin size={15} />
-                Source Market
+                {t('Source Market')}
               </label>
 
               <select
@@ -1098,8 +1098,8 @@ function Backhaul() {
 
                 <option value="">
                   {marketsLoading
-                    ? 'Loading markets...'
-                    : 'Select source market'}
+                    ? t('Loading markets...')
+                    : t('Select source market')}
                 </option>
 
                 {sortedMarkets.map(
@@ -1132,7 +1132,7 @@ function Backhaul() {
 
               <label>
                 <MapPin size={15} />
-                Destination Market
+                {t('Destination Market')}
               </label>
 
               <select
@@ -1151,8 +1151,8 @@ function Backhaul() {
 
                 <option value="">
                   {marketsLoading
-                    ? 'Loading markets...'
-                    : 'Select destination market'}
+                    ? t('Loading markets...')
+                    : t('Select destination market')}
                 </option>
 
                 {sortedMarkets.map(
@@ -1181,7 +1181,7 @@ function Backhaul() {
 
               <label>
                 <Package size={15} />
-                Your Quantity
+                {t('Your Quantity')}
               </label>
 
               <div className="quantity-input-group">
@@ -1190,7 +1190,7 @@ function Backhaul() {
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="Enter quantity"
+                  placeholder={t('Enter quantity')}
                   value={
                     quantity
                   }
@@ -1213,15 +1213,15 @@ function Backhaul() {
                 >
 
                   <option value="kg">
-                    kg
+                    {t('kg')}
                   </option>
 
                   <option value="quintal">
-                    quintal
+                    {t('quintal')}
                   </option>
 
                   <option value="ton">
-                    ton
+                    {t('ton')}
                   </option>
 
                 </select>
@@ -1244,7 +1244,7 @@ function Backhaul() {
                   {quantityInKg.toLocaleString(
                     'en-IN',
                   )}{' '}
-                  kg required
+                  {t('kg required')}
                 </small>
               )}
 
@@ -1259,7 +1259,7 @@ function Backhaul() {
           <div className="transport-choice-section">
 
             <div className="transport-choice-title">
-              Choose Transport
+              {t('Choose Transport')}
             </div>
 
             <div className="transport-choice-grid">
@@ -1285,11 +1285,11 @@ function Backhaul() {
 
                 <div>
                   <strong>
-                    Own Transport
+                    {t('Own Transport')}
                   </strong>
 
                   <span>
-                    Use your own vehicle
+                    {t('Use your own vehicle')}
                   </span>
                 </div>
 
@@ -1324,12 +1324,11 @@ function Backhaul() {
 
                 <div>
                   <strong>
-                    Trader Transport
+                    {t('Trader Transport')}
                   </strong>
 
                   <span>
-                    Find available return
-                    trucks
+                    {t('Find available return trucks')}
                   </span>
                 </div>
 
@@ -1368,15 +1367,15 @@ function Backhaul() {
                     size={18}
                     className="spin"
                   />
-                  Searching...
+                  {t('Searching...')}
                 </>
               ) : (
                 <>
                   <Truck size={18} />
                   {transportType ===
                   'own'
-                    ? 'Continue with Own Transport'
-                    : 'Find Transport'}
+                    ? t('Continue with Own Transport')
+                    : t('Find Transport')}
                 </>
               )}
 
@@ -1427,7 +1426,7 @@ function Backhaul() {
               <RefreshCw
                 size={15}
               />
-              Retry
+              {t('Retry')}
             </button>
 
           </div>
@@ -1479,12 +1478,11 @@ function Backhaul() {
 
             <div>
               <h2>
-                Own Transport Details
+                {t('Own Transport Details')}
               </h2>
 
               <p>
-                Enter your vehicle and
-                journey details.
+                {t('Enter your vehicle and journey details.')}
               </p>
             </div>
 
@@ -1513,12 +1511,12 @@ function Backhaul() {
 
                 <label>
                   <Truck size={15} />
-                  Vehicle Number
+                  {t('Vehicle Number')}
                 </label>
 
                 <input
                   type="text"
-                  placeholder="e.g. MH12AB1234"
+                  placeholder={t('e.g. MH12AB1234')}
                   value={
                     ownVehicleNumber
                   }
@@ -1537,12 +1535,12 @@ function Backhaul() {
 
                 <label>
                   <Truck size={15} />
-                  Vehicle Type
+                  {t('Vehicle Type')}
                 </label>
 
                 <input
                   type="text"
-                  placeholder="e.g. Tractor / Pickup / Truck"
+                  placeholder={t('e.g. Tractor / Pickup / Truck')}
                   value={
                     ownVehicleType
                   }
@@ -1561,12 +1559,12 @@ function Backhaul() {
 
                 <label>
                   <UserRound size={15} />
-                  Driver Name
+                  {t('Driver Name')}
                 </label>
 
                 <input
                   type="text"
-                  placeholder="Enter driver name"
+                  placeholder={t('Enter driver name')}
                   value={
                     ownDriverName
                   }
@@ -1585,12 +1583,12 @@ function Backhaul() {
 
                 <label>
                   <Phone size={15} />
-                  Driver Phone
+                  {t('Driver Phone')}
                 </label>
 
                 <input
                   type="tel"
-                  placeholder="Enter phone number"
+                  placeholder={t('Enter phone number')}
                   value={
                     ownDriverPhone
                   }
@@ -1609,7 +1607,7 @@ function Backhaul() {
 
                 <label>
                   <Package size={15} />
-                  Vehicle Capacity
+                  {t('Vehicle Capacity')}
                 </label>
 
                 <div className="quantity-input-group">
@@ -1618,7 +1616,7 @@ function Backhaul() {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="Capacity"
+                    placeholder={t('Capacity')}
                     value={
                       ownCapacity
                     }
@@ -1641,15 +1639,15 @@ function Backhaul() {
                   >
 
                     <option value="kg">
-                      kg
+                      {t('kg')}
                     </option>
 
                     <option value="quintal">
-                      quintal
+                      {t('quintal')}
                     </option>
 
                     <option value="ton">
-                      ton
+                      {t('ton')}
                     </option>
 
                   </select>
@@ -1664,7 +1662,7 @@ function Backhaul() {
 
                 <label>
                   <Route size={15} />
-                  Estimated Distance
+                  {t('Estimated Distance')}
                 </label>
 
                 <div className="quantity-input-group">
@@ -1673,7 +1671,7 @@ function Backhaul() {
                     type="number"
                     min="0"
                     step="0.1"
-                    placeholder="Distance"
+                    placeholder={t('Distance')}
                     value={
                       ownDistance
                     }
@@ -1708,7 +1706,7 @@ function Backhaul() {
                         '#fafcfb',
                     }}
                   >
-                    km
+                    {t('km')}
                   </div>
 
                 </div>
@@ -1723,7 +1721,7 @@ function Backhaul() {
                   <CalendarDays
                     size={15}
                   />
-                  Departure Date
+                  {t('Departure Date')}
                 </label>
 
                 <input
@@ -1746,7 +1744,7 @@ function Backhaul() {
 
                 <label>
                   <Clock size={15} />
-                  Departure Time
+                  {t('Departure Time')}
                 </label>
 
                 <input
@@ -1771,14 +1769,14 @@ function Backhaul() {
                   <IndianRupee
                     size={15}
                   />
-                  Estimated Transport Cost
+                  {t('Estimated Transport Cost')}
                 </label>
 
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="e.g. 2500"
+                  placeholder={t('e.g. 2500')}
                   value={
                     ownEstimatedCost
                   }
@@ -1804,11 +1802,11 @@ function Backhaul() {
             >
 
               <label>
-                Notes
+                {t('Notes')}
               </label>
 
               <textarea
-                placeholder="Add any additional transport details..."
+                placeholder={t('Add any additional transport details...')}
                 value={
                   ownNotes
                 }
@@ -1887,8 +1885,7 @@ function Backhaul() {
                           '14px',
                       }}
                     >
-                      Estimated Transport
-                      Cost
+                      {t('Estimated Transport Cost')}
                     </strong>
 
                   </div>
@@ -1917,7 +1914,7 @@ function Backhaul() {
                             '10px',
                         }}
                       >
-                        Vehicle Capacity
+                        {t('Vehicle Capacity')}
                       </span>
 
                       <strong
@@ -1946,7 +1943,7 @@ function Backhaul() {
                             '10px',
                         }}
                       >
-                        Crop Quantity
+                        {t('Crop Quantity')}
                       </span>
 
                       <strong
@@ -1960,7 +1957,7 @@ function Backhaul() {
                         {quantityInKg.toLocaleString(
                           'en-IN',
                         )}{' '}
-                        kg
+                        {t('kg')}
                       </strong>
                     </div>
 
@@ -1975,7 +1972,7 @@ function Backhaul() {
                             '10px',
                         }}
                       >
-                        Estimated Cost
+                        {t('Estimated Cost')}
                       </span>
 
                       <strong
@@ -2051,14 +2048,14 @@ function Backhaul() {
                       size={18}
                       className="spin"
                     />
-                    Publishing...
+                    {t('Publishing...')}
                   </>
                 ) : (
                   <>
                     <Truck
                       size={18}
                     />
-                    Publish Own Transport
+                    {t('Publish Own Transport')}
                   </>
                 )}
 
@@ -2097,7 +2094,7 @@ function Backhaul() {
           >
 
             <strong>
-              Own Transport Published
+              {t('Own Transport Published')}
             </strong>
 
             <p>
@@ -2105,10 +2102,10 @@ function Backhaul() {
                 ownVehicleNumber}
               {' · '}
               {selectedSource?.name ||
-                'Source'}
+                t('Source')}
               {' → '}
               {selectedDestination?.name ||
-                'Destination'}
+                t('Destination')}
             </p>
 
             <div
@@ -2140,7 +2137,7 @@ function Backhaul() {
                     650,
                 }}
               >
-                Capacity:{' '}
+                {t('Capacity:')}{' '}
                 {formatCapacity(
                   ownTransportResult.capacity,
                   ownTransportResult.capacityUnit,
@@ -2163,7 +2160,7 @@ function Backhaul() {
                     650,
                 }}
               >
-                Status:{' '}
+                {t('Status:')}{' '}
                 {ownTransportResult.status ||
                   'selected'}
               </span>
@@ -2184,7 +2181,7 @@ function Backhaul() {
                     700,
                 }}
               >
-                Estimated Cost:{' '}
+                {t('Estimated Cost:')}{' '}
                 {formatCurrency(
                   ownTransportResult.estimatedCost,
                 )}
@@ -2223,20 +2220,20 @@ function Backhaul() {
           >
 
             <strong>
-              Trader Transport Selected
+              {t('Trader Transport Selected')}
             </strong>
 
             <p>
               {selectedTransport.vehicleNumber ||
-                'Selected vehicle'}
+                t('Selected vehicle')}
               {' · '}
               {selectedSource?.name ||
                 selectedTransport.sourceMarket?.name ||
-                'Source'}
+                t('Source')}
               {' → '}
               {selectedDestination?.name ||
                 selectedTransport.destinationMarket?.name ||
-                'Destination'}
+                t('Destination')}
             </p>
 
             {allocation && (
@@ -2269,7 +2266,7 @@ function Backhaul() {
                       650,
                   }}
                 >
-                  Allocated:{' '}
+                  {t('Allocated:')}{' '}
                   {
                     allocation.requestedQuantity
                   }{' '}
@@ -2294,7 +2291,7 @@ function Backhaul() {
                       650,
                   }}
                 >
-                  Remaining:{' '}
+                  {t('Remaining:')}{' '}
                   {
                     allocation.remainingCapacity
                   }{' '}
@@ -2319,7 +2316,7 @@ function Backhaul() {
                       700,
                   }}
                 >
-                  Estimated Share:{' '}
+                  {t('Estimated Share:')}{' '}
                   {formatCurrency(
                     allocation.farmerTransportCost,
                   )}
@@ -2373,19 +2370,13 @@ function Backhaul() {
 
             <div>
               <h2>
-                Available Transport
+                {t('Available Transport')}
               </h2>
 
               <p>
                 {searched
-                  ? `Return trucks available from ${
-                      selectedSource?.name ||
-                      'your source'
-                    } to ${
-                      selectedDestination?.name ||
-                      'your destination'
-                    }.`
-                  : 'Return trucks matching your route will appear here.'}
+                  ? t('Return trucks available from {0} to {1}.', selectedSource?.name || t('your source'), selectedDestination?.name || t('your destination'))
+                  : t('Return trucks matching your route will appear here.')}
               </p>
             </div>
 
@@ -2402,12 +2393,11 @@ function Backhaul() {
               </div>
 
               <h3>
-                Finding available trucks...
+                {t('Finding available trucks...')}
               </h3>
 
               <p>
-                Checking trader return
-                transport for your route.
+                {t('Checking trader return transport for your route.')}
               </p>
 
             </div>
@@ -2422,14 +2412,11 @@ function Backhaul() {
                 </div>
 
                 <h3>
-                  No transport searched yet
+                  {t('No transport searched yet')}
                 </h3>
 
                 <p>
-                  Select your markets,
-                  enter your quantity and
-                  choose Trader Transport
-                  to find available trucks.
+                  {t('Select your markets, enter your quantity and choose Trader Transport to find available trucks.')}
                 </p>
 
               </div>
@@ -2446,18 +2433,11 @@ function Backhaul() {
                 </div>
 
                 <h3>
-                  No suitable trucks found
+                  {t('No suitable trucks found')}
                 </h3>
 
                 <p>
-                  There are currently no
-                  available trader trucks
-                  with enough remaining
-                  capacity for{' '}
-                  {quantityInKg.toLocaleString(
-                    'en-IN',
-                  )}{' '}
-                  kg on this route.
+                  {t('There are currently no available trader trucks with enough remaining capacity for {0} kg on this route.', quantityInKg.toLocaleString('en-IN'))}
                 </p>
 
                 <button
@@ -2474,7 +2454,7 @@ function Backhaul() {
                   <RefreshCw
                     size={17}
                   />
-                  Search Again
+                  {t('Search Again')}
                 </button>
 
               </div>
@@ -2563,7 +2543,7 @@ function Backhaul() {
                                   '0.04em',
                               }}
                             >
-                              Available
+                              {t('Available')}
                             </span>
 
                             <h3
@@ -2577,7 +2557,7 @@ function Backhaul() {
                               }}
                             >
                               {transport.vehicleNumber ||
-                                'Vehicle unavailable'}
+                                t('Vehicle unavailable')}
                             </h3>
 
                             <p
@@ -2590,7 +2570,7 @@ function Backhaul() {
                               }}
                             >
                               {transport.vehicleType ||
-                                'Truck'}
+                                t('Truck')}
                             </p>
 
                           </div>
@@ -2612,7 +2592,7 @@ function Backhaul() {
                                   '10px',
                               }}
                             >
-                              Estimated share
+                              {t('Estimated share')}
                             </span>
 
                             <strong
@@ -2671,7 +2651,7 @@ function Backhaul() {
                             }}
                           >
                             {transport.sourceMarket?.name ||
-                              'Source'}
+                              t('Source')}
                           </span>
 
                           <ArrowRight
@@ -2690,7 +2670,7 @@ function Backhaul() {
                             }}
                           >
                             {transport.destinationMarket?.name ||
-                              'Destination'}
+                              t('Destination')}
                           </span>
 
                         </div>
@@ -2722,7 +2702,7 @@ function Backhaul() {
                                   '3px',
                               }}
                             >
-                              Available Capacity
+                              {t('Available Capacity')}
                             </span>
 
                             <strong
@@ -2755,7 +2735,7 @@ function Backhaul() {
                                   '3px',
                               }}
                             >
-                              Truck Capacity
+                              {t('Truck Capacity')}
                             </span>
 
                             <strong
@@ -2795,7 +2775,7 @@ function Backhaul() {
                               <CalendarDays
                                 size={12}
                               />
-                              Departure
+                              {t('Departure')}
                             </span>
 
                             <strong
@@ -2834,7 +2814,7 @@ function Backhaul() {
                               <Clock
                                 size={12}
                               />
-                              Time
+                              {t('Time')}
                             </span>
 
                             <strong
@@ -2913,7 +2893,7 @@ function Backhaul() {
                                   '10px',
                               }}
                             >
-                              Driver
+                              {t('Driver')}
                             </span>
 
                             <strong
@@ -2927,7 +2907,7 @@ function Backhaul() {
                               }}
                             >
                               {transport.driverName ||
-                                'Driver unavailable'}
+                                t('Driver unavailable')}
                             </strong>
 
                           </div>
@@ -2955,7 +2935,7 @@ function Backhaul() {
                               <Phone
                                 size={14}
                               />
-                              Call
+                              {t('Call')}
                             </a>
                           )}
 
@@ -2998,8 +2978,7 @@ function Backhaul() {
                                   '11px',
                               }}
                             >
-                              Full truck estimated
-                              cost
+                              {t('Full truck estimated cost')}
                             </span>
 
                             <strong
@@ -3031,10 +3010,7 @@ function Backhaul() {
                                 1.45,
                             }}
                           >
-                            Your estimated share is
-                            based on your requested
-                            quantity and the truck's
-                            total capacity.
+                            {t("Your estimated share is based on your requested quantity and the truck's total capacity.")}
                           </p>
 
                         </div>
@@ -3081,14 +3057,14 @@ function Backhaul() {
                                 size={17}
                                 className="spin"
                               />
-                              Selecting...
+                              {t('Selecting...')}
                             </>
                           ) : (
                             <>
                               <CheckCircle2
                                 size={17}
                               />
-                              Select Transport
+                              {t('Select Transport')}
                             </>
                           )}
 
@@ -3119,14 +3095,11 @@ function Backhaul() {
 
           <div>
             <strong>
-              Estimated Cost
+              {t('Estimated Cost')}
             </strong>
 
             <p>
-              Transport costs shown are
-              estimates based on the
-              published truck cost and
-              requested quantity.
+              {t('Transport costs shown are estimates based on the published truck cost and requested quantity.')}
             </p>
           </div>
 
@@ -3140,13 +3113,11 @@ function Backhaul() {
 
           <div>
             <strong>
-              Return Trips
+              {t('Return Trips')}
             </strong>
 
             <p>
-              Find trucks returning
-              between markets with
-              available capacity.
+              {t('Find trucks returning between markets with available capacity.')}
             </p>
           </div>
 
@@ -3160,13 +3131,11 @@ function Backhaul() {
 
           <div>
             <strong>
-              Driver Details
+              {t('Driver Details')}
             </strong>
 
             <p>
-              Vehicle and driver
-              information is displayed
-              before selecting transport.
+              {t('Vehicle and driver information is displayed before selecting transport.')}
             </p>
           </div>
 
@@ -3191,9 +3160,9 @@ function Backhaul() {
               'right',
           }}
         >
-          Logged in as{' '}
+          {t('Logged in as')}{' '}
           {user.name ||
-            'User'}{' '}
+            t('User')}{' '}
           ·{' '}
           {user.role ||
             'farmer'}

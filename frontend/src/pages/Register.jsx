@@ -20,12 +20,16 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import './Register.css';
 
 const Register = () => {
   const navigate = useNavigate();
 
   const { register } = useAuth();
+
+  const { t } = useLanguage();
 
   const [role, setRole] = useState('farmer');
 
@@ -88,7 +92,7 @@ const Register = () => {
       !formData.password
     ) {
       setError(
-        'Please fill in all required fields.',
+        t('Please fill in all required fields.'),
       );
 
       return;
@@ -97,7 +101,7 @@ const Register = () => {
     // Password
     if (formData.password.length < 6) {
       setError(
-        'Password must contain at least 6 characters.',
+        t('Password must contain at least 6 characters.'),
       );
 
       return;
@@ -109,7 +113,7 @@ const Register = () => {
 
     if (cleanPhone.length < 10) {
       setError(
-        'Please enter a valid phone number.',
+        t('Please enter a valid phone number.'),
       );
 
       return;
@@ -140,8 +144,8 @@ const Register = () => {
 
       if (!data.success) {
         throw new Error(
-          data.message ||
-            'Registration failed.',
+          t(data.message) ||
+            t('Registration failed.'),
         );
       }
 
@@ -160,8 +164,8 @@ const Register = () => {
       }
     } catch (registrationError) {
       setError(
-        registrationError.message ||
-          'Unable to create your account.',
+        t(registrationError.message) ||
+          t('Unable to create your account.'),
       );
     } finally {
       setLoading(false);
@@ -200,7 +204,7 @@ const Register = () => {
             </h1>
 
             <p>
-              Smart farming platform
+              {t('Smart farming platform')}
             </p>
           </div>
 
@@ -215,12 +219,11 @@ const Register = () => {
           <div className="register-header">
 
             <h2>
-              Create your account 🌱
+              {t('Create your account 🌱')}
             </h2>
 
             <p>
-              Join KrishiBandhu and connect
-              with the agricultural marketplace.
+              {t('Join KrishiBandhu and connect with the agricultural marketplace.')}
             </p>
 
           </div>
@@ -242,7 +245,7 @@ const Register = () => {
           <div className="role-section">
 
             <label className="role-label">
-              I am a...
+              {t('I am a...')}
             </label>
 
             <div className="role-options">
@@ -270,12 +273,11 @@ const Register = () => {
                 <div className="role-content">
 
                   <strong>
-                    Farmer
+                    {t('Farmer')}
                   </strong>
 
                   <span>
-                    Sell crops and track
-                    agricultural transactions
+                    {t('Sell crops and track agricultural transactions')}
                   </span>
 
                 </div>
@@ -313,12 +315,11 @@ const Register = () => {
                 <div className="role-content">
 
                   <strong>
-                    Trader
+                    {t('Trader')}
                   </strong>
 
                   <span>
-                    Find crops, place bids
-                    and purchase produce
+                    {t('Find crops, place bids and purchase produce')}
                   </span>
 
                 </div>
@@ -351,7 +352,7 @@ const Register = () => {
             <div className="register-field">
 
               <label htmlFor="name">
-                Full name
+                {t('Full name')}
               </label>
 
               <div className="register-input-wrapper">
@@ -362,7 +363,7 @@ const Register = () => {
                   id="name"
                   name="name"
                   type="text"
-                  placeholder="Enter your full name"
+                  placeholder={t('Enter your full name')}
                   value={formData.name}
                   onChange={handleChange}
                   autoComplete="name"
@@ -377,7 +378,7 @@ const Register = () => {
             <div className="register-field">
 
               <label htmlFor="email">
-                Email address
+                {t('Email address')}
               </label>
 
               <div className="register-input-wrapper">
@@ -388,7 +389,7 @@ const Register = () => {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('Enter your email')}
                   value={formData.email}
                   onChange={handleChange}
                   autoComplete="email"
@@ -403,7 +404,7 @@ const Register = () => {
             <div className="register-field">
 
               <label htmlFor="phone">
-                Phone number
+                {t('Phone number')}
               </label>
 
               <div className="register-input-wrapper">
@@ -415,7 +416,7 @@ const Register = () => {
                   name="phone"
                   type="tel"
                   inputMode="numeric"
-                  placeholder="Enter your phone number"
+                  placeholder={t('Enter your phone number')}
                   value={formData.phone}
                   onChange={handleChange}
                   autoComplete="tel"
@@ -431,7 +432,7 @@ const Register = () => {
             <div className="register-field">
 
               <label htmlFor="password">
-                Password
+                {t('Password')}
               </label>
 
               <div className="register-input-wrapper">
@@ -446,7 +447,7 @@ const Register = () => {
                       ? 'text'
                       : 'password'
                   }
-                  placeholder="Create a password"
+                  placeholder={t('Create a password')}
                   value={formData.password}
                   onChange={handleChange}
                   autoComplete="new-password"
@@ -463,8 +464,8 @@ const Register = () => {
                   }
                   aria-label={
                     showPassword
-                      ? 'Hide password'
-                      : 'Show password'
+                      ? t('Hide password')
+                      : t('Show password')
                   }
                 >
 
@@ -479,7 +480,7 @@ const Register = () => {
               </div>
 
               <small>
-                Minimum 6 characters
+                {t('Minimum 6 characters')}
               </small>
 
             </div>
@@ -493,11 +494,11 @@ const Register = () => {
               <MapPin size={17} />
 
               <span>
-                Location
+                {t('Location')}
               </span>
 
               <small>
-                Optional
+                {t('Optional')}
               </small>
 
             </div>
@@ -509,7 +510,7 @@ const Register = () => {
               <div className="register-field">
 
                 <label htmlFor="city">
-                  City
+                  {t('City')}
                 </label>
 
                 <input
@@ -517,7 +518,7 @@ const Register = () => {
                   id="city"
                   name="city"
                   type="text"
-                  placeholder="City"
+                  placeholder={t('City')}
                   value={formData.city}
                   onChange={handleChange}
                 />
@@ -529,7 +530,7 @@ const Register = () => {
               <div className="register-field">
 
                 <label htmlFor="district">
-                  District
+                  {t('District')}
                 </label>
 
                 <input
@@ -537,7 +538,7 @@ const Register = () => {
                   id="district"
                   name="district"
                   type="text"
-                  placeholder="District"
+                  placeholder={t('District')}
                   value={formData.district}
                   onChange={handleChange}
                 />
@@ -551,7 +552,7 @@ const Register = () => {
             <div className="register-field">
 
               <label htmlFor="state">
-                State
+                {t('State')}
               </label>
 
               <input
@@ -559,7 +560,7 @@ const Register = () => {
                 id="state"
                 name="state"
                 type="text"
-                placeholder="State"
+                placeholder={t('State')}
                 value={formData.state}
                 onChange={handleChange}
               />
@@ -576,8 +577,8 @@ const Register = () => {
               disabled={loading}
             >
               {loading
-                ? 'Creating account...'
-                : 'Create Account'}
+                ? t('Creating account...')
+                : t('Create Account')}
             </button>
 
           </form>
@@ -589,11 +590,11 @@ const Register = () => {
           <div className="register-login">
 
             <span>
-              Already have an account?
+              {t('Already have an account?')}
             </span>
 
             <Link to="/login">
-              Login
+              {t('Login')}
             </Link>
 
           </div>

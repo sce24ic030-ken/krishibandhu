@@ -22,11 +22,15 @@ import {
   XCircle,
   Navigation,
   CircleDollarSign,
+  QrCode,
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_URL from '../config/api';
+
+import QrModal from '../components/QrModal';
 
 import './Backhaul.css';
 
@@ -35,6 +39,8 @@ function TraderBackhaul() {
     token,
     user,
   } = useAuth();
+
+  const { t } = useLanguage();
 
   /* =========================================
      MARKETS
@@ -123,6 +129,8 @@ function TraderBackhaul() {
 
   const [cancellingId, setCancellingId] =
     useState(null);
+
+  const [qrTarget, setQrTarget] = useState(null);
 
   /* =========================================
      HELPERS
@@ -259,7 +267,7 @@ function TraderBackhaul() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Failed to load markets.',
+            t('Failed to load markets.'),
         );
       }
 
@@ -285,7 +293,7 @@ function TraderBackhaul() {
 
       setMarketsError(
         error.message ||
-          'Unable to load markets.',
+          t('Unable to load markets.'),
       );
     } finally {
       setMarketsLoading(false);
@@ -329,7 +337,7 @@ function TraderBackhaul() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              'Failed to load your transport.',
+              t('Failed to load your transport.'),
           );
         }
 
@@ -348,7 +356,7 @@ function TraderBackhaul() {
 
         setMyBackhaulError(
           error.message ||
-            'Unable to load your transport.',
+            t('Unable to load your transport.'),
         );
       } finally {
         setLoadingMyBackhaul(
@@ -418,21 +426,21 @@ function TraderBackhaul() {
 
       if (!token) {
         setPublishError(
-          'Your session has expired. Please log in again.',
+          t('Your session has expired. Please log in again.'),
         );
         return;
       }
 
       if (!sourceMarket) {
         setPublishError(
-          'Please select the source market.',
+          t('Please select the source market.'),
         );
         return;
       }
 
       if (!destinationMarket) {
         setPublishError(
-          'Please select the destination market.',
+          t('Please select the destination market.'),
         );
         return;
       }
@@ -442,7 +450,7 @@ function TraderBackhaul() {
         destinationMarket
       ) {
         setPublishError(
-          'Source and destination markets must be different.',
+          t('Source and destination markets must be different.'),
         );
         return;
       }
@@ -451,7 +459,7 @@ function TraderBackhaul() {
         !vehicleNumber.trim()
       ) {
         setPublishError(
-          'Please enter the vehicle number.',
+          t('Please enter the vehicle number.'),
         );
         return;
       }
@@ -460,7 +468,7 @@ function TraderBackhaul() {
         !vehicleType.trim()
       ) {
         setPublishError(
-          'Please enter the vehicle type.',
+          t('Please enter the vehicle type.'),
         );
         return;
       }
@@ -469,7 +477,7 @@ function TraderBackhaul() {
         !driverName.trim()
       ) {
         setPublishError(
-          'Please enter the driver name.',
+          t('Please enter the driver name.'),
         );
         return;
       }
@@ -478,7 +486,7 @@ function TraderBackhaul() {
         !driverPhone.trim()
       ) {
         setPublishError(
-          'Please enter the driver phone number.',
+          t('Please enter the driver phone number.'),
         );
         return;
       }
@@ -488,7 +496,7 @@ function TraderBackhaul() {
         Number(capacity) <= 0
       ) {
         setPublishError(
-          'Please enter a valid truck capacity.',
+          t('Please enter a valid truck capacity.'),
         );
         return;
       }
@@ -500,28 +508,28 @@ function TraderBackhaul() {
         ) <= 0
       ) {
         setPublishError(
-          'Please enter the available return capacity.',
+          t('Please enter the available return capacity.'),
         );
         return;
       }
 
       if (!capacityValid) {
         setPublishError(
-          'Available capacity cannot be greater than total truck capacity.',
+          t('Available capacity cannot be greater than total truck capacity.'),
         );
         return;
       }
 
       if (!departureDate) {
         setPublishError(
-          'Please select the departure date.',
+          t('Please select the departure date.'),
         );
         return;
       }
 
       if (!departureTime) {
         setPublishError(
-          'Please select the departure time.',
+          t('Please select the departure time.'),
         );
         return;
       }
@@ -531,7 +539,7 @@ function TraderBackhaul() {
         Number(estimatedCost) < 0
       ) {
         setPublishError(
-          'Please enter a valid estimated transport cost.',
+          t('Please enter a valid estimated transport cost.'),
         );
         return;
       }
@@ -614,13 +622,13 @@ function TraderBackhaul() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              'Failed to publish return transport.',
+              t('Failed to publish return transport.'),
           );
         }
 
         setPublishMessage(
           data.message ||
-            'Trader transport published successfully.',
+            t('Trader transport published successfully.'),
         );
 
         /* Reset form */
@@ -651,7 +659,7 @@ function TraderBackhaul() {
 
         setPublishError(
           error.message ||
-            'Unable to publish return transport.',
+            t('Unable to publish return transport.'),
         );
       } finally {
         setPublishing(false);
@@ -672,7 +680,7 @@ function TraderBackhaul() {
 
       const confirmed =
         window.confirm(
-          `Cancel return transport ${backhaul.vehicleNumber || ''}?`,
+          t('Cancel return transport {0}?', backhaul.vehicleNumber || ''),
         );
 
       if (!confirmed) {
@@ -702,7 +710,7 @@ function TraderBackhaul() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              'Failed to cancel transport.',
+              t('Failed to cancel transport.'),
           );
         }
 
@@ -715,7 +723,7 @@ function TraderBackhaul() {
 
         setMyBackhaulError(
           error.message ||
-            'Unable to cancel transport.',
+            t('Unable to cancel transport.'),
         );
       } finally {
         setCancellingId(
@@ -803,12 +811,11 @@ function TraderBackhaul() {
 
             <div>
               <h1>
-                Trader Backhaul
+                {t('Trader Backhaul')}
               </h1>
 
               <p>
-                Publish your return truck
-                and earn from unused capacity.
+                {t('Publish your return truck and earn from unused capacity.')}
               </p>
             </div>
 
@@ -817,7 +824,7 @@ function TraderBackhaul() {
 
         <div className="backhaul-header-badge">
           <Truck size={17} />
-          Return Load
+          {t('Return Load')}
         </div>
 
       </div>
@@ -836,13 +843,11 @@ function TraderBackhaul() {
 
           <div>
             <h2>
-              Publish Return Transport
+              {t('Publish Return Transport')}
             </h2>
 
             <p>
-              Tell farmers where your truck
-              is going and how much space is
-              available.
+              {t('Tell farmers where your truck is going and how much space is available.')}
             </p>
           </div>
 
@@ -865,7 +870,7 @@ function TraderBackhaul() {
 
               <label>
                 <MapPin size={15} />
-                Source Market
+                {t('Source Market')}
               </label>
 
               <select
@@ -884,8 +889,8 @@ function TraderBackhaul() {
 
                 <option value="">
                   {marketsLoading
-                    ? 'Loading markets...'
-                    : 'Select source market'}
+                    ? t('Loading markets...')
+                    : t('Select source market')}
                 </option>
 
                 {sortedMarkets.map(
@@ -918,7 +923,7 @@ function TraderBackhaul() {
 
               <label>
                 <MapPin size={15} />
-                Destination Market
+                {t('Destination Market')}
               </label>
 
               <select
@@ -937,8 +942,8 @@ function TraderBackhaul() {
 
                 <option value="">
                   {marketsLoading
-                    ? 'Loading markets...'
-                    : 'Select destination market'}
+                    ? t('Loading markets...')
+                    : t('Select destination market')}
                 </option>
 
                 {sortedMarkets.map(
@@ -986,12 +991,12 @@ function TraderBackhaul() {
 
               <label>
                 <Truck size={15} />
-                Vehicle Number
+                {t('Vehicle Number')}
               </label>
 
               <input
                 type="text"
-                placeholder="e.g. MH12AB1234"
+                placeholder={t('e.g. MH12AB1234')}
                 value={
                   vehicleNumber
                 }
@@ -1008,12 +1013,12 @@ function TraderBackhaul() {
 
               <label>
                 <Truck size={15} />
-                Vehicle Type
+                {t('Vehicle Type')}
               </label>
 
               <input
                 type="text"
-                placeholder="e.g. 10-Wheeler Truck"
+                placeholder={t('e.g. 10-Wheeler Truck')}
                 value={
                   vehicleType
                 }
@@ -1030,12 +1035,12 @@ function TraderBackhaul() {
 
               <label>
                 <UserRound size={15} />
-                Driver Name
+                {t('Driver Name')}
               </label>
 
               <input
                 type="text"
-                placeholder="Enter driver name"
+                placeholder={t('Enter driver name')}
                 value={
                   driverName
                 }
@@ -1052,12 +1057,12 @@ function TraderBackhaul() {
 
               <label>
                 <Phone size={15} />
-                Driver Phone
+                {t('Driver Phone')}
               </label>
 
               <input
                 type="tel"
-                placeholder="Enter driver phone"
+                placeholder={t('Enter driver phone')}
                 value={
                   driverPhone
                 }
@@ -1093,7 +1098,7 @@ function TraderBackhaul() {
 
               <label>
                 <Package size={15} />
-                Total Truck Capacity
+                {t('Total Truck Capacity')}
               </label>
 
               <div className="quantity-input-group">
@@ -1102,7 +1107,7 @@ function TraderBackhaul() {
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="e.g. 10"
+                  placeholder={t('e.g. 10')}
                   value={
                     capacity
                   }
@@ -1125,15 +1130,15 @@ function TraderBackhaul() {
                 >
 
                   <option value="kg">
-                    kg
+                    {t('kg')}
                   </option>
 
                   <option value="quintal">
-                    quintal
+                    {t('quintal')}
                   </option>
 
                   <option value="ton">
-                    ton
+                    {t('ton')}
                   </option>
 
                 </select>
@@ -1146,7 +1151,7 @@ function TraderBackhaul() {
 
               <label>
                 <Package size={15} />
-                Available Return Capacity
+                {t('Available Return Capacity')}
               </label>
 
               <div className="quantity-input-group">
@@ -1155,7 +1160,7 @@ function TraderBackhaul() {
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="e.g. 2"
+                  placeholder={t('e.g. 2')}
                   value={
                     availableCapacity
                   }
@@ -1225,15 +1230,14 @@ function TraderBackhaul() {
             >
               {capacityValid ? (
                 <>
-                  Available return
-                  capacity:{' '}
+                  {t('Available return capacity:')}{' '}
                   <strong>
                     {formatCapacity(
                       availableCapacity,
                       capacityUnit,
                     )}
                   </strong>{' '}
-                  of{' '}
+                  {t('of')}{' '}
                   <strong>
                     {formatCapacity(
                       capacity,
@@ -1243,9 +1247,7 @@ function TraderBackhaul() {
                 </>
               ) : (
                 <>
-                  Available capacity
-                  cannot exceed the
-                  total truck capacity.
+                  {t('Available capacity cannot exceed the total truck capacity.')}
                 </>
               )}
             </div>
@@ -1274,7 +1276,7 @@ function TraderBackhaul() {
                 <CalendarDays
                   size={15}
                 />
-                Departure Date
+                {t('Departure Date')}
               </label>
 
               <input
@@ -1295,7 +1297,7 @@ function TraderBackhaul() {
 
               <label>
                 <Clock size={15} />
-                Departure Time
+                {t('Departure Time')}
               </label>
 
               <input
@@ -1316,14 +1318,14 @@ function TraderBackhaul() {
 
               <label>
                 <Route size={15} />
-                Estimated Distance
+                {t('Estimated Distance')}
               </label>
 
               <input
                 type="number"
                 min="0"
                 step="0.1"
-                placeholder="e.g. 150"
+                placeholder={t('e.g. 150')}
                 value={
                   estimatedDistance
                 }
@@ -1346,7 +1348,7 @@ function TraderBackhaul() {
                     'block',
                 }}
               >
-                Kilometres
+                {t('Kilometres')}
               </small>
 
             </div>
@@ -1357,14 +1359,14 @@ function TraderBackhaul() {
                 <IndianRupee
                   size={15}
                 />
-                Estimated Transport Cost
+                {t('Estimated Transport Cost')}
               </label>
 
               <input
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="e.g. 2500"
+                placeholder={t('e.g. 2500')}
                 value={
                   estimatedCost
                 }
@@ -1392,11 +1394,11 @@ function TraderBackhaul() {
           >
 
             <label>
-              Notes
+              {t('Notes')}
             </label>
 
             <textarea
-              placeholder="Add details about the return trip..."
+              placeholder={t('Add details about the return trip...')}
               value={
                 notes
               }
@@ -1475,7 +1477,7 @@ function TraderBackhaul() {
                       '14px',
                   }}
                 >
-                  Published Transport Cost
+                  {t('Published Transport Cost')}
                 </strong>
 
                 <strong
@@ -1505,10 +1507,7 @@ function TraderBackhaul() {
                     '10px',
                 }}
               >
-                This is an estimated
-                truck cost. Farmers will
-                see it as an estimated
-                transport amount.
+                {t("This is an estimated truck cost. Farmers will see it as an estimated transport amount.")}
               </p>
 
             </div>
@@ -1585,12 +1584,12 @@ function TraderBackhaul() {
                     size={18}
                     className="spin"
                   />
-                  Publishing...
+                  {t('Publishing...')}
                 </>
               ) : (
                 <>
                   <Truck size={18} />
-                  Publish Return Truck
+                  {t('Publish Return Truck')}
                 </>
               )}
 
@@ -1637,12 +1636,11 @@ function TraderBackhaul() {
 
             <div>
               <h2>
-                My Published Trucks
+                {t('My Published Trucks')}
               </h2>
 
               <p>
-                Manage your return
-                transport listings.
+                {t('Manage your return transport listings.')}
               </p>
             </div>
 
@@ -1691,7 +1689,7 @@ function TraderBackhaul() {
               }
             />
 
-            Refresh
+            {t('Refresh')}
 
           </button>
 
@@ -1728,12 +1726,11 @@ function TraderBackhaul() {
             </div>
 
             <h3>
-              Loading your trucks...
+              {t('Loading your trucks...')}
             </h3>
 
             <p>
-              Fetching your published
-              return transport.
+              {t('Fetching your published return transport.')}
             </p>
 
           </div>
@@ -1746,12 +1743,11 @@ function TraderBackhaul() {
             </div>
 
             <h3>
-              No published trucks
+              {t('No published trucks')}
             </h3>
 
             <p>
-              Your published return
-              transport will appear here.
+              {t('Your published return transport will appear here.')}
             </p>
 
           </div>
@@ -1850,7 +1846,7 @@ function TraderBackhaul() {
                           }}
                         >
                           {transport.vehicleNumber ||
-                            'Vehicle'}
+                            t('Vehicle')}
                         </h3>
 
                         <p
@@ -1863,7 +1859,7 @@ function TraderBackhaul() {
                           }}
                         >
                           {transport.vehicleType ||
-                            'Truck'}
+                            t('Truck')}
                         </p>
 
                       </div>
@@ -1885,7 +1881,7 @@ function TraderBackhaul() {
                               '10px',
                           }}
                         >
-                          Estimated cost
+                          {t('Estimated cost')}
                         </span>
 
                         <strong
@@ -1946,7 +1942,7 @@ function TraderBackhaul() {
                         }}
                       >
                         {transport.sourceMarket?.name ||
-                          'Source'}
+                          t('Source')}
                       </span>
 
                       <ArrowRight
@@ -1965,7 +1961,7 @@ function TraderBackhaul() {
                         }}
                       >
                         {transport.destinationMarket?.name ||
-                          'Destination'}
+                          t('Destination')}
                       </span>
 
                     </div>
@@ -1999,7 +1995,7 @@ function TraderBackhaul() {
                               '3px',
                           }}
                         >
-                          Total Capacity
+                          {t('Total Capacity')}
                         </span>
 
                         <strong
@@ -2032,7 +2028,7 @@ function TraderBackhaul() {
                               '3px',
                           }}
                         >
-                          Available
+                          {t('Available')}
                         </span>
 
                         <strong
@@ -2065,7 +2061,7 @@ function TraderBackhaul() {
                               '3px',
                           }}
                         >
-                          Allocated
+                          {t('Allocated')}
                         </span>
 
                         <strong
@@ -2098,7 +2094,7 @@ function TraderBackhaul() {
                               '3px',
                           }}
                         >
-                          Departure
+                          {t('Departure')}
                         </span>
 
                         <strong
@@ -2184,7 +2180,7 @@ function TraderBackhaul() {
                               '10px',
                           }}
                         >
-                          Driver
+                          {t('Driver')}
                         </span>
 
                         <strong
@@ -2198,7 +2194,7 @@ function TraderBackhaul() {
                           }}
                         >
                           {transport.driverName ||
-                            'Driver'}
+                            t('Driver')}
                         </strong>
 
                       </div>
@@ -2226,7 +2222,7 @@ function TraderBackhaul() {
                           <Phone
                             size={14}
                           />
-                          Call
+                          {t('Call')}
                         </a>
                       )}
 
@@ -2255,15 +2251,14 @@ function TraderBackhaul() {
                         }}
                       >
                         <strong>
-                          Farmer allocation:
+                          {t('Farmer allocation:')}
                         </strong>{' '}
                         {formatCapacity(
                           transport.allocatedQuantity,
                           transport.allocatedQuantityUnit,
                         )}
                         {' · '}
-                        Farmer transport
-                        cost:{' '}
+                        {t('Farmer transport cost:')}{' '}
                         {formatCurrency(
                           transport.farmerTransportCost,
                         )}
@@ -2323,19 +2318,59 @@ function TraderBackhaul() {
                               size={15}
                               className="spin"
                             />
-                            Cancelling...
+                            {t('Cancelling...')}
                           </>
                         ) : (
                           <>
                             <XCircle
                               size={15}
                             />
-                            Cancel Transport
+                            {t('Cancel Transport')}
                           </>
                         )}
 
                       </button>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQrTarget(transport)
+                      }
+                      style={{
+                        width:
+                          '100%',
+                        marginTop:
+                          '10px',
+                        border:
+                          '1px solid #bcdacd',
+                        background:
+                          '#eef7f2',
+                        color:
+                          '#1c5c3b',
+                        borderRadius:
+                          '9px',
+                        padding:
+                          '10px',
+                        cursor:
+                          'pointer',
+                        display:
+                          'flex',
+                        alignItems:
+                          'center',
+                        justifyContent:
+                          'center',
+                        gap:
+                          '7px',
+                        fontSize:
+                          '12px',
+                        fontWeight:
+                          650,
+                      }}
+                    >
+                      <QrCode size={15} />
+                      {t('Logistics QR')}
+                    </button>
 
                   </article>
                 );
@@ -2346,6 +2381,15 @@ function TraderBackhaul() {
         )}
 
       </section>
+
+      <QrModal
+        open={Boolean(qrTarget)}
+        onClose={() => setQrTarget(null)}
+        entityType="backhaul"
+        entityId={qrTarget?._id}
+        title={t('Logistics QR')}
+        description={t('Verify this transport consignment at pickup, weighbridge and drop-off for a tamper-proof logistics trail.')}
+      />
 
       {/* =====================================
           INFO
@@ -2361,13 +2405,11 @@ function TraderBackhaul() {
 
           <div>
             <strong>
-              Use Empty Capacity
+              {t('Use Empty Capacity')}
             </strong>
 
             <p>
-              Publish unused truck space
-              for farmers travelling on
-              the same route.
+              {t('Publish unused truck space for farmers travelling on the same route.')}
             </p>
           </div>
 
@@ -2383,13 +2425,11 @@ function TraderBackhaul() {
 
           <div>
             <strong>
-              Estimated Cost
+              {t('Estimated Cost')}
             </strong>
 
             <p>
-              Farmers see the published
-              transport cost as an
-              estimated amount.
+              {t('Farmers see the published transport cost as an estimated amount.')}
             </p>
           </div>
 
@@ -2403,13 +2443,11 @@ function TraderBackhaul() {
 
           <div>
             <strong>
-              Driver Details
+              {t('Driver Details')}
             </strong>
 
             <p>
-              Provide vehicle and driver
-              information so farmers can
-              identify the return truck.
+              {t('Provide vehicle and driver information so farmers can identify the return truck.')}
             </p>
           </div>
 
@@ -2430,10 +2468,10 @@ function TraderBackhaul() {
               'right',
           }}
         >
-          Logged in as{' '}
+          {t('Logged in as')}{' '}
           {user.name ||
-            'Trader'}{' '}
-          · trader
+            t('Trader')}{' '}
+          · {t('Trader')}
         </div>
       )}
 

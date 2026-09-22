@@ -1,0 +1,45 @@
+{
+  "name": "KrishiBandhu — Smart Farming Platform",
+  "short_name": "KrishiBandhu",
+  "description": "Farmer-first agri-commerce: market prices, bids, trusted parchi settlements, storage and backhaul on one platform.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f7f6",
+  "theme_color": "#2f6f52",
+  "lang": "en",
+  "categories": ["agriculture", "finance", "business"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Market Prices",
+      "url": "/market",
+      "description": "Check today's mandi prices"
+    },
+    {
+      "name": "Passbook",
+      "url": "/passbook",
+      "description": "View your transactions"
+    }
+  ]
+}

@@ -22,6 +22,10 @@ import {
   useAuth,
 } from '../context/AuthContext';
 
+import {
+  useLanguage,
+} from '../context/LanguageContext';
+
 import './Sidebar.css';
 
 function Sidebar() {
@@ -29,54 +33,58 @@ function Sidebar() {
     user,
   } = useAuth();
 
+  const {
+    t,
+  } = useLanguage();
+
   const farmerMenu = [
     {
-      label: 'Dashboard',
+      label: t('Dashboard'),
       icon: LayoutDashboard,
       path: '/dashboard',
     },
     {
-      label: 'Crops',
+      label: t('Crops'),
       icon: Sprout,
       path: '/crops',
     },
     {
-      label: 'Market',
+      label: t('Market'),
       icon: Store,
       path: '/market',
     },
     {
-      label: 'Bids',
+      label: t('Bids'),
       icon: Gavel,
       path: '/bids',
     },
     {
-      label: 'Weather',
+      label: t('Weather'),
       icon: CloudSun,
       path: '/weather',
     },
     {
-      label: 'AI Assistant',
+      label: t('AI Assistant'),
       icon: Bot,
       path: '/ai-assistant',
     },
     {
-      label: 'Passbook',
+      label: t('Passbook'),
       icon: WalletCards,
       path: '/passbook',
     },
     {
-      label: 'Parchi',
+      label: t('Parchi'),
       icon: FileText,
       path: '/parchi',
     },
     {
-      label: 'Backhaul',
+      label: t('Backhaul'),
       icon: Truck,
       path: '/backhaul',
     },
     {
-      label: 'Storage',
+      label: t('Storage'),
       icon: Warehouse,
       path: '/storage',
     },
@@ -84,37 +92,42 @@ function Sidebar() {
 
   const traderMenu = [
     {
-      label: 'Dashboard',
+      label: t('Dashboard'),
       icon: LayoutDashboard,
       path: '/trader',
     },
     {
-      label: 'Market',
+      label: t('Market'),
       icon: Store,
       path: '/market',
     },
     {
-      label: 'Bids',
+      label: t('Bids'),
       icon: Gavel,
       path: '/bids',
     },
     {
-      label: 'Parchi',
+      label: t('AI Assistant'),
+      icon: Bot,
+      path: '/ai-assistant',
+    },
+    {
+      label: t('Parchi'),
       icon: FileText,
       path: '/parchi',
     },
     {
-      label: 'Backhaul',
+      label: t('Backhaul'),
       icon: Truck,
       path: '/trader/backhaul',
     },
     {
-      label: 'Transactions',
+      label: t('Transactions'),
       icon: WalletCards,
       path: '/passbook',
     },
     {
-      label: 'Payments',
+      label: t('Payments'),
       icon: CreditCard,
       path: '/parchi',
     },
@@ -122,52 +135,57 @@ function Sidebar() {
 
   const adminMenu = [
     {
-      label: 'Dashboard',
+      label: t('Dashboard'),
       icon: LayoutDashboard,
       path: '/admin',
     },
     {
-      label: 'Users',
+      label: t('Users'),
       icon: Users,
       path: '/admin/users',
     },
     {
-      label: 'Markets',
+      label: t('Markets'),
       icon: Store,
       path: '/admin/markets',
     },
     {
-      label: 'Crops',
+      label: t('Crops'),
       icon: Sprout,
       path: '/admin/crops',
     },
     {
-      label: 'Bids',
+      label: t('Bids'),
       icon: Gavel,
       path: '/admin/bids',
     },
     {
-      label: 'Parchi',
+      label: t('AI Assistant'),
+      icon: Bot,
+      path: '/ai-assistant',
+    },
+    {
+      label: t('Parchi'),
       icon: FileText,
       path: '/admin/parchi',
     },
     {
-      label: 'Backhaul',
+      label: t('Backhaul'),
       icon: Truck,
-      path: '/trader/backhaul',
+      path: '/admin/backhaul',
     },
     {
-      label: 'Storage',
+      label: t('Storage'),
       icon: Warehouse,
-      path: '/storage',
+      path: '/admin/storage-requests',
     },
     {
-      label: 'Transactions',
+      label: t('Transactions'),
       icon: WalletCards,
       path: '/admin/transactions',
     },
     {
-      label: 'Payments',
+      label: t('Payments'),
       icon: CreditCard,
       path: '/admin/payments',
     },
@@ -240,7 +258,7 @@ function Sidebar() {
           />
 
           <span>
-            Settings
+            {t('Settings')}
           </span>
 
         </NavLink>

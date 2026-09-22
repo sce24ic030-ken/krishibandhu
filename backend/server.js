@@ -31,6 +31,20 @@ const storageRoutes = require('./routes/storageRoutes');
 
 const backhaulRoutes = require('./routes/backhaulRoutes');
 
+const traceRoutes = require('./routes/traceRoutes');
+
+const analyticsRoutes = require('./routes/analyticsRoutes');
+
+const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
+
+const { sanitizePayload } = require('./middleware/sanitize');
+
+const {
+  authLimiter,
+  aiLimiter,
+  apiLimiter,
+} = require('./middleware/rateLimiter');
+
 const app = express();
 
 connectDB();
@@ -105,6 +119,18 @@ app.use(
 );
 
 // ==========================================
+// SANITIZE  (prototype-pollution guard)
+// ==========================================
+
+app.use(sanitizePayload);
+
+// ==========================================
+// RATE LIMITING
+// ==========================================
+
+app.use('/api', apiLimiter);
+
+// ==========================================
 // LOGGER
 // ==========================================
 
@@ -163,6 +189,7 @@ app.get(
 
 app.use(
   '/api/auth',
+  authLimiter,
   authRoutes,
 );
 
@@ -198,12 +225,29 @@ app.use(
 
 app.use(
   '/api/ai',
+  aiLimiter,
   aiRoutes,
 );
 
 app.use(
   '/api/ai/image',
+  aiLimiter,
   aiImageRoutes,
+);
+
+app.use(
+  '/api/trace',
+  traceRoutes,
+);
+
+app.use(
+  '/api/analytics',
+  analyticsRoutes,
+);
+
+app.use(
+  '/api/admin/analytics',
+  adminAnalyticsRoutes,
 );
 
 app.use(
@@ -400,7 +444,16 @@ app.listen(
       `💰 Market Prices: http://localhost:${PORT}/api/market-prices`,
     );
     console.log(
+      `🔗 Trace/QR: http://localhost:${PORT}/api/trace`,
+    );
+    console.log(
+      `📊 Analytics: http://localhost:${PORT}/api/analytics`,
+    );
+    console.log(
       `🛡️ Admin: http://localhost:${PORT}/api/admin`,
+    );
+    console.log(
+      `📐 Admin Analytics: http://localhost:${PORT}/api/admin/analytics`,
     );
     console.log(
       `👥 Admin Users: http://localhost:${PORT}/api/admin/users`,
@@ -425,6 +478,9 @@ app.listen(
     );
     console.log(
       `📎 Uploads: http://localhost:${PORT}/uploads`,
+    );
+    console.log(
+      `🎤 Voice Transcribe: http://localhost:${PORT}/api/ai/transcribe`,
     );
     console.log('');
     console.log(

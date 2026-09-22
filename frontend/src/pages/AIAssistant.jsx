@@ -4,18 +4,22 @@ import React, {
   useState,
 } from 'react';
 
+import { useLocation } from 'react-router-dom';
+
 import {
   Camera,
   CheckCircle2,
   ChevronDown,
   CircleAlert,
   ImagePlus,
+  Leaf,
   Loader2,
   MapPin,
-  MessageCircle,
+  Mic,
   Send,
   Sparkles,
   Sprout,
+  Square,
   X,
 } from 'lucide-react';
 
@@ -23,6 +27,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import API_URL from '../config/api';
+
+import { useLanguage } from '../context/LanguageContext';
 
 import './AIAssistant.css';
 
@@ -201,6 +207,8 @@ function parseAnalysis(
 ========================================================= */
 
 function AIAssistant() {
+  const { t, lang } = useLanguage();
+
   /* =======================================================
      CHAT STATE
   ======================================================= */
@@ -211,8 +219,7 @@ function AIAssistant() {
   ] = useState([
     {
       role: 'assistant',
-      content:
-        "Hello! I'm KrishiBandhu AI 🌾 Ask me anything about crops, farming, market prices, or agricultural practices.",
+      content: t("Hello! I'm KrishiBandhu AI 🌾 Ask me anything about crops, farming, market prices, or agricultural practices."),
     },
   ]);
 
@@ -225,6 +232,25 @@ function AIAssistant() {
     chatLoading,
     setChatLoading,
   ] = useState(false);
+
+  /* =======================================================
+     VOICE STATE
+  ======================================================= */
+
+  const [
+    isRecording,
+    setIsRecording,
+  ] = useState(false);
+
+  const [
+    isTranscribing,
+    setIsTranscribing,
+  ] = useState(false);
+
+  const [
+    recordingSeconds,
+    setRecordingSeconds,
+  ] = useState(0);
 
   /* =======================================================
      IMAGE STATE
@@ -249,6 +275,11 @@ function AIAssistant() {
     imageLoading,
     setImageLoading,
   ] = useState(false);
+
+  const [
+    imageHint,
+    setImageHint,
+  ] = useState('');
 
   const [
     analysisResult,
@@ -286,8 +317,35 @@ function AIAssistant() {
   const fileInputRef =
     useRef(null);
 
-  const chatEndRef =
+  const chatListRef =
     useRef(null);
+
+  const lastAssistantMsgRef =
+    useRef(null);
+
+  const prevLoadingRef =
+    useRef(false);
+
+  const chatSectionRef =
+    useRef(null);
+
+  const chatTextareaRef =
+    useRef(null);
+
+  const mediaRecorderRef =
+    useRef(null);
+
+  const mediaStreamRef =
+    useRef(null);
+
+  const recordingTimerRef =
+    useRef(null);
+
+  const recordingChunksRef =
+    useRef([]);
+
+  const discardRecordingRef =
+    useRef(false);
 
   /* =======================================================
      LOAD MARKETS
@@ -312,8 +370,8 @@ function AIAssistant() {
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            'Unable to load markets.',
+          t(data.message) ||
+            t('Unable to load markets.'),
         );
       }
 
@@ -364,8 +422,8 @@ function AIAssistant() {
       );
 
       setMarketsError(
-        error.message ||
-          'Unable to load markets.',
+        t(error.message) ||
+          t('Unable to load markets.'),
       );
     } finally {
       setMarketsLoading(false);
@@ -377,12 +435,86 @@ function AIAssistant() {
   ======================================================= */
 
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({
+    const list =
+      chatListRef.current;
+
+    if (!list) return;
+
+    if (chatLoading) {
+      // Show the newest content
+      // (user message + Thinking…).
+      list.scrollTo({
+        top: list.scrollHeight,
         behavior: 'smooth',
       });
+    } else if (
+      prevLoadingRef.current
+    ) {
+      // New reply just arrived -
+      // show the START of the
+      // response, not the tail.
+      const replyEl =
+        lastAssistantMsgRef.current;
+
+      if (replyEl) {
+        const replyTop =
+          replyEl.offsetTop -
+          list.offsetTop;
+
+        list.scrollTo({
+          top: Math.max(
+            0,
+            replyTop - 8,
+          ),
+          behavior: 'smooth',
+        });
+      }
     }
-  }, [chatMessages]);
+
+    prevLoadingRef.current =
+      chatLoading;
+  }, [chatLoading]);
+
+  /* =======================================================
+     SCROLL TO CHAT ON ARRIVAL (?chat=1)
+  ======================================================= */
+
+  const { search: urlSearch } =
+    useLocation();
+
+  useEffect(() => {
+    if (
+      urlSearch &&
+      urlSearch.includes(
+        'chat=1',
+      )
+    ) {
+      let second;
+
+      const first =
+        setTimeout(() => {
+          chatSectionRef.current?.scrollIntoView(
+            {
+              behavior: 'smooth',
+              block: 'start',
+            },
+          );
+
+          second =
+            setTimeout(() => {
+              chatTextareaRef.current?.focus();
+            }, 650);
+        }, 250);
+
+      return () => {
+        clearTimeout(first);
+
+        if (second) {
+          clearTimeout(second);
+        }
+      };
+    }
+  }, [urlSearch]);
 
   /* =======================================================
      IMAGE SELECT
@@ -412,18 +544,18 @@ function AIAssistant() {
       )
     ) {
       alert(
-        'Please upload a JPEG, PNG, WebP, HEIC or HEIF image.',
+        t('Please upload a JPEG, PNG, WebP, HEIC or HEIF image.'),
       );
 
       return;
     }
 
     const maxSize =
-      12 * 1024 * 1024;
+      25 * 1024 * 1024;
 
     if (file.size > maxSize) {
       alert(
-        'Image size must be 12MB or less.',
+        t('Image size must be 25MB or less.'),
       );
 
       return;
@@ -437,13 +569,96 @@ function AIAssistant() {
 
     setAnalysisResult(null);
 
+    setImageHint('');
+
     const reader =
       new FileReader();
 
     reader.onload = () => {
-      setImagePreview(
-        reader.result,
-      );
+      const dataUrl =
+        reader.result;
+
+      if (
+        /heic|heif/i.test(
+          file.type,
+        )
+      ) {
+        // Convert HEIC to JPEG in the browser when
+        // the device can decode it (Chrome/Safari),
+        // so preview and analysis always work.
+        const probe =
+          new Image();
+
+        probe.onload = () => {
+          try {
+            const canvas =
+              document.createElement(
+                'canvas',
+              );
+
+            canvas.width =
+              probe.naturalWidth ||
+              probe.width;
+
+            canvas.height =
+              probe.naturalHeight ||
+              probe.height;
+
+            const ctx =
+              canvas.getContext(
+                '2d',
+              );
+
+            ctx.drawImage(
+              probe,
+              0,
+              0,
+            );
+
+            const jpeg =
+              canvas.toDataURL(
+                'image/jpeg',
+                0.9,
+              );
+
+            setImagePreview(
+              jpeg,
+            );
+
+            setImageMimeType(
+              'image/jpeg',
+            );
+
+            setImageHint(
+              t('HEIC image converted to JPEG.'),
+            );
+          } catch (error) {
+            setImagePreview(
+              dataUrl,
+            );
+
+            setImageHint(
+              t('HEIC preview may not display in this browser.'),
+            );
+          }
+        };
+
+        probe.onerror = () => {
+          setImagePreview(
+            dataUrl,
+          );
+
+          setImageHint(
+            t('HEIC preview may not display in this browser.'),
+          );
+        };
+
+        probe.src = dataUrl;
+      } else {
+        setImagePreview(
+          dataUrl,
+        );
+      }
     };
 
     reader.readAsDataURL(file);
@@ -458,6 +673,7 @@ function AIAssistant() {
     setImagePreview('');
     setImageMimeType('');
     setAnalysisResult(null);
+    setImageHint('');
 
     if (fileInputRef.current) {
       fileInputRef.current.value =
@@ -472,7 +688,7 @@ function AIAssistant() {
   const analyzeImage = async () => {
     if (!selectedImage) {
       alert(
-        'Please select a crop image first.',
+        t('Please select a crop image first.'),
       );
 
       return;
@@ -480,7 +696,7 @@ function AIAssistant() {
 
     if (!selectedMarketId) {
       alert(
-        'Please select the market where you plan to sell the crop.',
+        t('Please select the market where you plan to sell the crop.'),
       );
 
       return;
@@ -533,9 +749,9 @@ function AIAssistant() {
 
       if (!response.ok) {
         throw new Error(
-          data.error ||
-            data.message ||
-            'Unable to analyze image.',
+          t(data.error) ||
+            t(data.message) ||
+            t('Unable to analyze image.'),
         );
       }
 
@@ -549,8 +765,8 @@ function AIAssistant() {
       );
 
       alert(
-        error.message ||
-          'Unable to analyze the crop image.',
+        t(error.message) ||
+          t('Unable to analyze the crop image.'),
       );
     } finally {
       setImageLoading(false);
@@ -608,11 +824,17 @@ function AIAssistant() {
               headers: {
                 'Content-Type':
                   'application/json',
+                Authorization: `Bearer ${
+                  localStorage.getItem(
+                    'krishibandhu_token',
+                  ) || ''
+                }`,
               },
 
               body: JSON.stringify({
                 message,
                 history,
+                language: lang,
               }),
             },
           );
@@ -622,9 +844,9 @@ function AIAssistant() {
 
         if (!response.ok) {
           throw new Error(
-            data.error ||
-              data.message ||
-              'Unable to get AI response.',
+            t(data.error) ||
+              t(data.message) ||
+              t('Unable to get AI response.'),
           );
         }
 
@@ -635,8 +857,8 @@ function AIAssistant() {
               role:
                 'assistant',
               content:
-                data.message ||
-                'I could not generate a response.',
+                t(data.message) ||
+                t('I could not generate a response.'),
             },
           ],
         );
@@ -653,7 +875,7 @@ function AIAssistant() {
               role:
                 'assistant',
               content:
-                `Sorry, I couldn't process that request.\n\n**Error:** ${error.message}`,
+                `${t("Sorry, I couldn't process that request.")}\n\n**Error:** ${error.message}`,
             },
           ],
         );
@@ -678,6 +900,332 @@ function AIAssistant() {
       sendChatMessage();
     }
   };
+
+  /* =======================================================
+     VOICE RECORDING
+  ======================================================= */
+
+  const clearRecordingTimer =
+    () => {
+      if (
+        recordingTimerRef.current
+      ) {
+        clearInterval(
+          recordingTimerRef.current,
+        );
+
+        recordingTimerRef.current =
+          null;
+      }
+    };
+
+  const stopMediaTracks =
+    () => {
+      if (
+        mediaStreamRef.current
+      ) {
+        mediaStreamRef.current
+          .getTracks()
+          .forEach((track) =>
+            track.stop(),
+          );
+
+        mediaStreamRef.current =
+          null;
+      }
+    };
+
+  const startVoiceRecording =
+    async () => {
+      if (
+        isRecording ||
+        isTranscribing ||
+        chatLoading
+      ) {
+        return;
+      }
+
+      try {
+        const stream =
+          await navigator.mediaDevices.getUserMedia(
+            {
+              audio: true,
+            },
+          );
+
+        mediaStreamRef.current =
+          stream;
+
+        const mimeType =
+          MediaRecorder.isTypeSupported(
+            'audio/webm;codecs=opus',
+          )
+            ? 'audio/webm;codecs=opus'
+            : MediaRecorder.isTypeSupported(
+                  'audio/webm',
+                )
+              ? 'audio/webm'
+              : MediaRecorder.isTypeSupported(
+                    'audio/mp4',
+                  )
+                ? 'audio/mp4'
+                : '';
+
+        const recorder =
+          new MediaRecorder(
+            stream,
+            mimeType
+              ? { mimeType }
+              : undefined,
+          );
+
+        recordingChunksRef.current =
+          [];
+
+        recorder.ondataavailable = (
+          event,
+        ) => {
+          if (
+            event.data &&
+            event.data.size > 0
+          ) {
+            recordingChunksRef.current.push(
+              event.data,
+            );
+          }
+        };
+
+        recorder.onstop = () => {
+          void handleRecordingStop();
+        };
+
+        recorder.start();
+
+        mediaRecorderRef.current =
+          recorder;
+
+        discardRecordingRef.current =
+          false;
+
+        setIsRecording(true);
+        setRecordingSeconds(0);
+
+        recordingTimerRef.current =
+          setInterval(() => {
+            setRecordingSeconds(
+              (seconds) =>
+                seconds + 1,
+            );
+          }, 1000);
+      } catch (error) {
+        console.error(
+          'Mic Access Error:',
+          error,
+        );
+
+        const denied =
+          error.name ===
+            'NotAllowedError' ||
+          error.name ===
+            'PermissionDeniedError';
+
+        alert(
+          denied
+            ? t('Microphone access was denied. Please allow microphone access in your browser and try again.')
+            : t('Unable to access the microphone on this device.'),
+        );
+      }
+    };
+
+  const handleRecordingStop =
+    async () => {
+      clearRecordingTimer();
+
+      setIsRecording(false);
+
+      stopMediaTracks();
+
+      mediaRecorderRef.current =
+        null;
+
+      const chunks =
+        recordingChunksRef.current;
+
+      recordingChunksRef.current =
+        [];
+
+      setRecordingSeconds(0);
+
+      if (
+        discardRecordingRef.current
+      ) {
+        discardRecordingRef.current =
+          false;
+
+        return;
+      }
+
+      if (!chunks.length) {
+        return;
+      }
+
+      const mimeType =
+        chunks[0].type ||
+        'audio/webm';
+
+      const blob = new Blob(
+        chunks,
+        { type: mimeType },
+      );
+
+      /*
+        Extremely short recordings are almost
+        always silence — drop them silently.
+      */
+
+      if (blob.size < 800) {
+        return;
+      }
+
+      await transcribeBlob(
+        blob,
+        mimeType,
+      );
+    };
+
+  const stopVoiceRecording =
+    () => {
+      discardRecordingRef.current =
+        false;
+
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !==
+          'inactive'
+      ) {
+        mediaRecorderRef.current.stop();
+      }
+    };
+
+  const cancelVoiceRecording =
+    () => {
+      discardRecordingRef.current =
+        true;
+
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !==
+          'inactive'
+      ) {
+        mediaRecorderRef.current.stop();
+      }
+    };
+
+  const transcribeBlob =
+    async (blob, mimeType) => {
+      try {
+        setIsTranscribing(true);
+
+        const formData =
+          new FormData();
+
+        const extension = mimeType.includes(
+          'mp4',
+        )
+          ? 'm4a'
+          : mimeType.includes('ogg')
+            ? 'ogg'
+            : 'webm';
+
+        formData.append(
+          'audio',
+          new File(
+            [blob],
+            `voice-${Date.now()}.${extension}`,
+            { type: mimeType },
+          ),
+        );
+
+        formData.append(
+          'language',
+          lang,
+        );
+
+        const response =
+          await fetch(
+            `${API_BASE_URL}/ai/transcribe`,
+            {
+              method: 'POST',
+              body: formData,
+            },
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            t(data.error) ||
+              t(data.message) ||
+              t('Unable to transcribe audio.'),
+          );
+        }
+
+        const transcript =
+          data?.transcript;
+
+        if (
+          transcript &&
+          transcript.trim()
+        ) {
+          setChatInput(
+            transcript.trim(),
+          );
+
+          chatTextareaRef.current?.focus();
+        } else {
+          alert(
+            t("Sorry, I couldn't hear anything in that recording. Please try again."),
+          );
+        }
+      } catch (error) {
+        console.error(
+          'Transcription Error:',
+          error,
+        );
+
+        alert(
+          t(error.message) ||
+            t('Unable to transcribe the voice note.'),
+        );
+      } finally {
+        setIsTranscribing(false);
+      }
+    };
+
+  /* =======================================================
+     VOICE CLEANUP
+  ======================================================= */
+
+  useEffect(() => {
+    return () => {
+      clearRecordingTimer();
+
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !==
+          'inactive'
+      ) {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch {
+          /* ignore */
+        }
+      }
+
+      stopMediaTracks();
+    };
+  }, []);
 
   /* =======================================================
      RESULT DATA
@@ -750,8 +1298,7 @@ function AIAssistant() {
             </h1>
 
             <p>
-              Your intelligent farming
-              companion 🌾
+              {t('Your intelligent farming companion 🌾')}
             </p>
           </div>
 
@@ -770,19 +1317,15 @@ function AIAssistant() {
           <div>
 
             <span className="ai-section-eyebrow">
-              AI VISION
+              {t('AI VISION')}
             </span>
 
             <h2>
-              Analyze Your Crop
+              {t('Analyze Your Crop')}
             </h2>
 
             <p>
-              Upload a crop image to
-              assess visible quality
-              and get an indicative
-              market-price range in
-              ₹/kg.
+              {t('Upload a crop image to assess visible quality and get an indicative market-price range in ₹/kg.')}
             </p>
 
           </div>
@@ -815,7 +1358,7 @@ function AIAssistant() {
                 </div>
 
                 <strong>
-                  Upload Crop Image
+                  {t('Upload Crop Image')}
                 </strong>
 
                 <span>
@@ -823,7 +1366,7 @@ function AIAssistant() {
                 </span>
 
                 <small>
-                  Maximum 12MB
+                  {t('Maximum 25MB')}
                 </small>
 
               </button>
@@ -832,7 +1375,7 @@ function AIAssistant() {
 
                 <img
                   src={imagePreview}
-                  alt="Selected crop"
+                  alt={t('Selected crop')}
                   className="ai-image-preview"
                 />
 
@@ -842,12 +1385,18 @@ function AIAssistant() {
                   onClick={
                     clearImage
                   }
-                  aria-label="Remove image"
+                  aria-label={t('Remove image')}
                 >
                   <X size={18} />
                 </button>
 
               </div>
+            )}
+
+            {imageHint && (
+              <p className="ai-upload-hint">
+                {imageHint}
+              </p>
             )}
 
             <input
@@ -877,12 +1426,11 @@ function AIAssistant() {
               <div>
 
                 <strong>
-                  Select Selling Market
+                  {t('Select Selling Market')}
                 </strong>
 
                 <span>
-                  Choose the market where
-                  you plan to sell this crop.
+                  {t('Choose the market where you plan to sell this crop.')}
                 </span>
 
               </div>
@@ -909,8 +1457,8 @@ function AIAssistant() {
 
                 <option value="">
                   {marketsLoading
-                    ? 'Loading markets...'
-                    : 'Select a market'}
+                    ? t('Loading markets...')
+                    : t('Select a market')}
                 </option>
 
                 {markets.map(
@@ -977,7 +1525,7 @@ function AIAssistant() {
                     fetchMarkets
                   }
                 >
-                  Retry
+                  {t('Retry')}
                 </button>
 
               </div>
@@ -1009,7 +1557,7 @@ function AIAssistant() {
                   className="spin"
                 />
 
-                Analyzing Crop...
+                {t('Analyzing Crop...')}
               </>
             ) : (
               <>
@@ -1017,7 +1565,7 @@ function AIAssistant() {
                   size={19}
                 />
 
-                Analyze Crop
+                {t('Analyze Crop')}
               </>
             )}
 
@@ -1039,11 +1587,11 @@ function AIAssistant() {
                 <div>
 
                   <span className="ai-section-eyebrow">
-                    ANALYSIS COMPLETE
+                    {t('ANALYSIS COMPLETE')}
                   </span>
 
                   <h3>
-                    Crop Assessment
+                    {t('Crop Assessment')}
                   </h3>
 
                 </div>
@@ -1064,7 +1612,7 @@ function AIAssistant() {
                 <div className="ai-score-card">
 
                   <span>
-                    Visual Quality
+                    {t('Visual Quality')}
                   </span>
 
                   <strong>
@@ -1076,7 +1624,7 @@ function AIAssistant() {
                 <div className="ai-condition-card">
 
                   <span>
-                    Overall Condition
+                    {t('Overall Condition')}
                   </span>
 
                   <strong>
@@ -1089,13 +1637,13 @@ function AIAssistant() {
                 <div className="ai-crop-card">
 
                   <span>
-                    Crop Identified
+                    {t('Crop Identified')}
                   </span>
 
                   <strong>
                     {analysisResult.crop ||
                       parsedAnalysis?.crop ||
-                      'Unable to determine'}
+                      t('Unable to determine')}
                   </strong>
 
                 </div>
@@ -1115,11 +1663,11 @@ function AIAssistant() {
                     <div>
 
                       <span className="ai-price-eyebrow">
-                        INDICATIVE SELLING PRICE
+                        {t('INDICATIVE SELLING PRICE')}
                       </span>
 
                       <h3>
-                        Expected Market Range
+                        {t('Expected Market Range')}
                       </h3>
 
                     </div>
@@ -1155,7 +1703,7 @@ function AIAssistant() {
                     </span>
 
                     <small>
-                      / kg
+                      {t('/ kg')}
                     </small>
 
                   </div>
@@ -1169,7 +1717,7 @@ function AIAssistant() {
                     <span>
                       {marketData.market?.name ||
                         selectedMarket?.name ||
-                        'Selected market'}
+                        t('Selected market')}
                     </span>
 
                   </div>
@@ -1183,7 +1731,7 @@ function AIAssistant() {
                     <div>
 
                       <span>
-                        MSAMB Minimum
+                        {t('MSAMB Minimum')}
                       </span>
 
                       <strong>
@@ -1199,7 +1747,7 @@ function AIAssistant() {
                     <div>
 
                       <span>
-                        MSAMB Modal
+                        {t('MSAMB Modal')}
                       </span>
 
                       <strong>
@@ -1215,7 +1763,7 @@ function AIAssistant() {
                     <div>
 
                       <span>
-                        MSAMB Maximum
+                        {t('MSAMB Maximum')}
                       </span>
 
                       <strong>
@@ -1237,13 +1785,13 @@ function AIAssistant() {
                   <div className="ai-price-meta">
 
                     <span>
-                      Source:{' '}
+                      {t('Source:')}{' '}
                       {marketData.source ||
                         'MSAMB'}
                     </span>
 
                     <span>
-                      Price date:{' '}
+                      {t('Price date:')}{' '}
                       {marketData.priceDate
                         ? new Date(
                             marketData.priceDate,
@@ -1254,7 +1802,7 @@ function AIAssistant() {
                     </span>
 
                     <span>
-                      Unit:{' '}
+                      {t('Unit:')}{' '}
                       ₹/kg
                     </span>
 
@@ -1271,17 +1819,7 @@ function AIAssistant() {
                     />
 
                     <span>
-                      This is an indicative
-                      estimate based on
-                      visible crop quality
-                      and the latest
-                      available MSAMB
-                      market prices. Actual
-                      selling prices may
-                      vary by lot quality,
-                      quantity, buyer,
-                      arrivals and auction
-                      conditions.
+                      {t('This is an indicative estimate based on visible crop quality and the latest available MSAMB market prices. Actual selling prices may vary by lot quality, quantity, buyer, arrivals and auction conditions.')}
                     </span>
 
                   </div>
@@ -1297,15 +1835,11 @@ function AIAssistant() {
                   <div>
 
                     <strong>
-                      Market price unavailable
+                      {t('Market price unavailable')}
                     </strong>
 
                     <p>
-                      We analyzed the crop,
-                      but couldn't find a
-                      matching verified price
-                      for this crop at the
-                      selected market.
+                      {t("We analyzed the crop, but couldn't find a matching verified price for this crop at the selected market.")}
                     </p>
 
                   </div>
@@ -1328,14 +1862,14 @@ function AIAssistant() {
                     />
 
                     <h4>
-                      Produce Condition
+                      {t('Produce Condition')}
                     </h4>
 
                   </div>
 
                   <p>
                     {parsedAnalysis?.produceCondition ||
-                      'No additional visual assessment available.'}
+                      t('No additional visual assessment available.')}
                   </p>
 
                 </div>
@@ -1349,14 +1883,14 @@ function AIAssistant() {
                     />
 
                     <h4>
-                      Visible Concerns
+                      {t('Visible Concerns')}
                     </h4>
 
                   </div>
 
                   <p>
                     {parsedAnalysis?.concerns ||
-                      'No major visible concerns reported.'}
+                      t('No major visible concerns reported.')}
                   </p>
 
                 </div>
@@ -1370,14 +1904,14 @@ function AIAssistant() {
                     />
 
                     <h4>
-                      Possible Issues
+                      {t('Possible Issues')}
                     </h4>
 
                   </div>
 
                   <p>
                     {parsedAnalysis?.issues ||
-                      'No possible issues identified from the image.'}
+                      t('No possible issues identified from the image.')}
                   </p>
 
                 </div>
@@ -1391,7 +1925,7 @@ function AIAssistant() {
                     />
 
                     <h4>
-                      Confidence
+                      {t('Confidence')}
                     </h4>
 
                   </div>
@@ -1419,7 +1953,7 @@ function AIAssistant() {
                     />
 
                     <h4>
-                      Recommendations
+                      {t('Recommendations')}
                     </h4>
 
                   </div>
@@ -1462,31 +1996,34 @@ function AIAssistant() {
           AI CHAT
       ================================================= */}
 
-      <section className="ai-chat-section">
+      <section
+          ref={chatSectionRef}
+          className="ai-chat-section"
+        >
 
         <div className="ai-section-header">
 
           <div>
 
             <span className="ai-section-eyebrow">
-              FARMING ASSISTANT
+              {t('FARMING ASSISTANT')}
             </span>
 
             <h2>
-              Ask KrishiBandhu AI
+              {t('Ask KrishiBandhu AI')}
             </h2>
 
             <p>
-              Get help with farming,
-              crops, markets and
-              agricultural practices.
+              {t('Get help with farming, crops, markets and agricultural practices.')}
             </p>
 
           </div>
 
           <div className="ai-section-icon">
-            <MessageCircle
+            {/* Same logo mark as the top KrishiBandhu navbar. */}
+            <Leaf
               size={24}
+              strokeWidth={2.2}
             />
           </div>
 
@@ -1494,7 +2031,10 @@ function AIAssistant() {
 
         <div className="ai-chat-card">
 
-          <div className="ai-chat-messages">
+          <div
+            className="ai-chat-messages"
+            ref={chatListRef}
+          >
 
             {chatMessages.map(
               (message, index) => {
@@ -1510,13 +2050,22 @@ function AIAssistant() {
                     className={
                       messageClass
                     }
+                    ref={
+                      index ===
+                        chatMessages.length -
+                          1 &&
+                      message.role ===
+                        'assistant'
+                        ? lastAssistantMsgRef
+                        : null
+                    }
                   >
 
                     <div className="ai-chat-avatar">
 
                       {message.role ===
                       'user' ? (
-                        'You'
+                        t('You')
                       ) : (
                         <Sparkles
                           size={17}
@@ -1558,16 +2107,12 @@ function AIAssistant() {
                     className="spin"
                   />
 
-                  Thinking...
+                  {t('Thinking...')}
 
                 </div>
 
               </div>
             )}
-
-            <div
-              ref={chatEndRef}
-            />
 
           </div>
 
@@ -1575,9 +2120,86 @@ function AIAssistant() {
               CHAT INPUT
           ========================================= */}
 
+          {(isRecording ||
+            isTranscribing) && (
+            <div
+              className={`ai-voice-status ${
+                isTranscribing
+                  ? 'transcribing'
+                  : ''
+              }`}
+            >
+              {isTranscribing ? (
+                <>
+                  <Loader2
+                    size={14}
+                    className="spin"
+                  />
+                  {t('Transcribing your voice note...')}
+                </>
+              ) : (
+                <>
+                  <span className="ai-voice-pulse" />
+                  <span>
+                    {t('Recording... {0}s', recordingSeconds)}
+                  </span>
+                  <button
+                    type="button"
+                    className="ai-voice-cancel"
+                    onClick={
+                      cancelVoiceRecording
+                    }
+                  >
+                    {t('Cancel')}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           <div className="ai-chat-input-area">
 
+            <button
+              type="button"
+              className={`ai-mic-button ${
+                isRecording
+                  ? 'recording'
+                  : ''
+              }`}
+              onClick={
+                isRecording
+                  ? stopVoiceRecording
+                  : startVoiceRecording
+              }
+              disabled={
+                chatLoading ||
+                isTranscribing
+              }
+              aria-label={
+                isRecording
+                  ? t('Stop recording')
+                  : t('Record a voice message')
+              }
+              title={
+                isRecording
+                  ? t('Stop recording')
+                  : t('Record a voice message')
+              }
+            >
+
+              {isRecording ? (
+                <Square
+                  size={16}
+                  fill="currentColor"
+                />
+              ) : (
+                <Mic size={19} />
+              )}
+
+            </button>
+
             <textarea
+              ref={chatTextareaRef}
               value={chatInput}
               onChange={(event) =>
                 setChatInput(
@@ -1587,7 +2209,7 @@ function AIAssistant() {
               onKeyDown={
                 handleChatKeyDown
               }
-              placeholder="Ask about crops, farming, market prices..."
+              placeholder={t('Ask about crops, farming, market prices...')}
               rows={1}
               disabled={
                 chatLoading
@@ -1603,7 +2225,7 @@ function AIAssistant() {
                 !chatInput.trim() ||
                 chatLoading
               }
-              aria-label="Send message"
+              aria-label={t('Send message')}
             >
 
               {chatLoading ? (

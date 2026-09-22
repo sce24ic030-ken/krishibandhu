@@ -1,0 +1,95 @@
+# ============================================================
+# KrishiBandhu — Render Blueprint
+#
+# One blueprint creates BOTH services:
+#   1. krishibandhu-api      → Node Web Service (backend, :5000)
+#   2. krishibandhu-frontend → Static Site (frontend, built dist/)
+#
+# How to use: Render Dashboard → New → Blueprint →
+# connect this GitHub repo → it reads render.yaml automatically.
+# ============================================================
+
+services:
+  # ──────────────────────────────────────────────
+  # BACKEND — Express API
+  # ──────────────────────────────────────────────
+  - type: web
+    name: krishibandhu-api
+    runtime: node
+    rootDir: backend
+    region: singapore
+    plan: free
+    healthCheckPath: /api/health
+    buildCommand: npm install
+    startCommand: node server.js
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # CORS — comma-separated list of allowed frontends.
+      # Defaults in server.js already include the Render frontend below.
+      - key: FRONTEND_URL
+        value: https://krishibandhu-frontend.onrender.com
+
+      # ── SECRETS — filled in Render dashboard (sync: false) ──
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+      # LLM / Whisper key pools (same values as your local .env)
+      - key: LLM_API_KEYS
+        sync: false
+      - key: GROQ_API_KEYS
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: WHISPER_API_KEYS
+        sync: false
+      - key: WHISPER_API_KEY
+        sync: false
+      - key: WHISPER_MODEL
+        sync: false
+      - key: GROQ_MODEL
+        sync: false
+      - key: VISION_LLM_API_KEYS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: ANCHORED_GENESIS_HASH
+        sync: false
+
+      # Optional notification vendors (leave blank if unused)
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false
+      - key: EXOTEL_API_KEY
+        sync: false
+      - key: EXOTEL_API_ID
+        sync: false
+      - key: REDIS_URL
+        sync: false
+
+  # ──────────────────────────────────────────────
+  # FRONTEND — Vite static site
+  # ──────────────────────────────────────────────
+  - type: web
+    name: krishibandhu-frontend
+    runtime: static
+    rootDir: frontend
+    region: singapore
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+
+    envVars:
+      # Built into the bundle at build time — must point at the backend above.
+      - key: VITE_API_URL
+        value: https://krishibandhu-api.onrender.com/api

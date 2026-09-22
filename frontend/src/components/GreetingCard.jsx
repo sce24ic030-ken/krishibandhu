@@ -1,14 +1,18 @@
+import { useLanguage } from '../context/LanguageContext';
+
 import './GreetingCard.css';
 
 function GreetingCard() {
+  const { t } = useLanguage();
+
   const hour = new Date().getHours();
 
-  let greeting = 'Good morning';
+  let greeting = t('Good morning');
 
   if (hour >= 12 && hour < 17) {
-    greeting = 'Good afternoon';
+    greeting = t('Good afternoon');
   } else if (hour >= 17) {
-    greeting = 'Good evening';
+    greeting = t('Good evening');
   }
 
   return (
@@ -20,11 +24,11 @@ function GreetingCard() {
         </p>
 
         <h2>
-          Welcome to KrishiBandhu
+          {t('Welcome to KrishiBandhu')}
         </h2>
 
         <span>
-          Everything you need to make better farming decisions.
+          {t('Everything you need to make better farming decisions.')}
         </span>
       </div>
 

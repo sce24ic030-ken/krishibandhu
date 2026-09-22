@@ -18,6 +18,8 @@ import {
 
 import API_URL from '../config/api';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import './Weather.css';
 
 const API_BASE_URL = API_URL;
@@ -87,6 +89,8 @@ const getWindDirection = (degrees) => {
 };
 
 const Weather = () => {
+  const { t } = useLanguage();
+
   const [city, setCity] = useState('Pune');
   const [searchCity, setSearchCity] = useState('Pune');
 
@@ -111,7 +115,7 @@ const Weather = () => {
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.message || 'Failed to fetch weather data.',
+          t(result.message) || t('Failed to fetch weather data.'),
         );
       }
 
@@ -123,8 +127,8 @@ const Weather = () => {
 
       setWeather(null);
       setError(
-        err.message ||
-          'Unable to load weather data. Please try again.',
+        t(err.message) ||
+          t('Unable to load weather data. Please try again.'),
       );
     } finally {
       setLoading(false);
@@ -151,9 +155,9 @@ const Weather = () => {
     <div className="weather-page">
       <div className="weather-page-header">
         <div>
-          <h1>Weather</h1>
+          <h1>{t('Weather')}</h1>
           <p>
-            Weather conditions and forecasts for your farm.
+            {t('Weather conditions and forecasts for your farm.')}
           </p>
         </div>
       </div>
@@ -161,10 +165,9 @@ const Weather = () => {
       <section className="weather-container">
         <div className="weather-toolbar">
           <div>
-            <h2>Weather Information</h2>
+            <h2>{t('Weather Information')}</h2>
             <p>
-              Check current weather conditions for locations
-              across Maharashtra.
+              {t('Check current weather conditions for locations across Maharashtra.')}
             </p>
           </div>
 
@@ -177,7 +180,7 @@ const Weather = () => {
               size={17}
               className={loading ? 'weather-spin' : ''}
             />
-            {loading ? 'Updating...' : 'Refresh'}
+            {loading ? t('Updating...') : t('Refresh')}
           </button>
         </div>
 
@@ -194,17 +197,17 @@ const Weather = () => {
               onChange={(event) =>
                 setSearchCity(event.target.value)
               }
-              placeholder="Search city..."
+              placeholder={t('Search city...')}
             />
           </div>
 
           <button type="submit" disabled={loading}>
-            Search
+            {t('Search')}
           </button>
         </form>
 
         <div className="weather-quick-cities">
-          <span>Quick locations:</span>
+          <span>{t('Quick locations:')}</span>
 
           {quickCities.map((quickCity) => (
             <button
@@ -229,10 +232,10 @@ const Weather = () => {
               className="weather-spin"
             />
 
-            <h3>Loading weather...</h3>
+            <h3>{t('Loading weather...')}</h3>
 
             <p>
-              Fetching the latest weather information.
+              {t('Fetching the latest weather information.')}
             </p>
           </div>
         )}
@@ -242,7 +245,7 @@ const Weather = () => {
             <div className="weather-error-icon">!</div>
 
             <div>
-              <h3>Unable to load weather</h3>
+              <h3>{t('Unable to load weather')}</h3>
               <p>{error}</p>
             </div>
 
@@ -250,7 +253,7 @@ const Weather = () => {
               onClick={() => fetchWeather(city)}
               type="button"
             >
-              Try Again
+              {t('Try Again')}
             </button>
           </div>
         )}
@@ -274,8 +277,7 @@ const Weather = () => {
               </div>
 
               <div className="weather-updated">
-                Updated{' '}
-                {formatUpdatedTime(weather.updatedAt)}
+                {t('Updated {0}', formatUpdatedTime(weather.updatedAt))}
               </div>
             </div>
 
@@ -304,7 +306,7 @@ const Weather = () => {
               </div>
 
               <div className="weather-feels">
-                <span>Feels like</span>
+                <span>{t('Feels like')}</span>
 
                 <strong>
                   {Math.round(weather.feelsLike)}°C
@@ -319,7 +321,7 @@ const Weather = () => {
                 </div>
 
                 <div>
-                  <span>Humidity</span>
+                  <span>{t('Humidity')}</span>
                   <strong>{weather.humidity}%</strong>
                 </div>
               </div>
@@ -330,7 +332,7 @@ const Weather = () => {
                 </div>
 
                 <div>
-                  <span>Wind Speed</span>
+                  <span>{t('Wind Speed')}</span>
 
                   <strong>
                     {weather.windSpeed} m/s
@@ -344,7 +346,7 @@ const Weather = () => {
                 </div>
 
                 <div>
-                  <span>Pressure</span>
+                  <span>{t('Pressure')}</span>
 
                   <strong>
                     {weather.pressure} hPa
@@ -358,7 +360,7 @@ const Weather = () => {
                 </div>
 
                 <div>
-                  <span>Visibility</span>
+                  <span>{t('Visibility')}</span>
 
                   <strong>
                     {(weather.visibility / 1000).toFixed(1)} km
@@ -371,12 +373,12 @@ const Weather = () => {
               <div className="weather-detail-card">
                 <div className="weather-detail-header">
                   <Thermometer size={20} />
-                  <h3>Temperature</h3>
+                  <h3>{t('Temperature')}</h3>
                 </div>
 
                 <div className="temperature-range">
                   <div>
-                    <span>Minimum</span>
+                    <span>{t('Minimum')}</span>
 
                     <strong>
                       {Math.round(
@@ -387,7 +389,7 @@ const Weather = () => {
                   </div>
 
                   <div>
-                    <span>Maximum</span>
+                    <span>{t('Maximum')}</span>
 
                     <strong>
                       {Math.round(
@@ -402,12 +404,12 @@ const Weather = () => {
               <div className="weather-detail-card">
                 <div className="weather-detail-header">
                   <Wind size={20} />
-                  <h3>Wind</h3>
+                  <h3>{t('Wind')}</h3>
                 </div>
 
                 <div className="wind-details">
                   <div>
-                    <span>Speed</span>
+                    <span>{t('Speed')}</span>
 
                     <strong>
                       {weather.windSpeed} m/s
@@ -415,7 +417,7 @@ const Weather = () => {
                   </div>
 
                   <div>
-                    <span>Direction</span>
+                    <span>{t('Direction')}</span>
 
                     <strong>
                       {getWindDirection(
@@ -430,7 +432,7 @@ const Weather = () => {
               <div className="weather-detail-card">
                 <div className="weather-detail-header">
                   <Cloud size={20} />
-                  <h3>Cloudiness</h3>
+                  <h3>{t('Cloudiness')}</h3>
                 </div>
 
                 <div className="weather-cloudiness">
@@ -454,14 +456,14 @@ const Weather = () => {
               <div className="weather-detail-card">
                 <div className="weather-detail-header">
                   <Sunrise size={20} />
-                  <h3>Sun</h3>
+                  <h3>{t('Sun')}</h3>
                 </div>
 
                 <div className="sun-times">
                   <div>
                     <Sunrise size={18} />
 
-                    <span>Sunrise</span>
+                    <span>{t('Sunrise')}</span>
 
                     <strong>
                       {formatTime(weather.sunrise)}
@@ -471,7 +473,7 @@ const Weather = () => {
                   <div>
                     <Sunset size={18} />
 
-                    <span>Sunset</span>
+                    <span>{t('Sunset')}</span>
 
                     <strong>
                       {formatTime(weather.sunset)}
@@ -483,13 +485,11 @@ const Weather = () => {
 
             <div className="weather-source">
               <span>
-                Weather data powered by OpenWeather
+                {t('Weather data powered by OpenWeather')}
               </span>
 
               <span>
-                Coordinates:{' '}
-                {weather.location.latitude.toFixed(4)},{' '}
-                {weather.location.longitude.toFixed(4)}
+                {t('Coordinates: {0}, {1}', weather.location.latitude.toFixed(4), weather.location.longitude.toFixed(4))}
               </span>
             </div>
           </>

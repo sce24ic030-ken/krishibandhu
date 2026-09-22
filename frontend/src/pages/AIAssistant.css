@@ -8,6 +8,16 @@
   margin: 0 auto;
   padding: 28px 32px 60px;
   box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  /* Chat sits directly under the hero so the AI tab
+     opens straight onto the assistant, not at the
+     bottom of the page. Image upload follows. */
+  grid-template-areas:
+    'hero'
+    'chat'
+    'analysis';
 }
 
 /* =========================================================
@@ -16,6 +26,8 @@
 
 .ai-hero {
   margin-bottom: 32px;
+
+  grid-area: hero;
 }
 
 .ai-hero-content {
@@ -127,6 +139,8 @@
 
 .ai-analysis-section {
   margin-bottom: 42px;
+
+  grid-area: analysis;
 }
 
 .ai-analysis-card {
@@ -245,6 +259,23 @@
   object-fit: contain;
 
   background: #f5f7f6;
+}
+
+.ai-upload-hint {
+  margin: 10px 2px 0;
+
+  padding: 9px 12px;
+
+  border-radius: 10px;
+
+  background: #fdf3e4;
+
+  border: 1px solid #f0dfbd;
+
+  color: #8a6a2a;
+
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .ai-remove-image {
@@ -1125,6 +1156,12 @@
 
 .ai-chat-section {
   margin-top: 42px;
+
+  margin-bottom: 32px;
+
+  grid-area: chat;
+
+  min-width: 0;
 }
 
 .ai-chat-card {
@@ -1241,7 +1278,7 @@
 
   gap: 10px;
 
-  padding: 13px;
+  padding: 13px 13px 14px;
 
   border-top: 1px solid #e4ebe6;
 
@@ -1321,6 +1358,161 @@
   cursor: not-allowed;
 
   transform: none;
+}
+
+/* =========================================================
+   VOICE INPUT
+========================================================= */
+
+.ai-mic-button {
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #cfe3d6;
+  border-radius: 11px;
+
+  background: #f2f8f4;
+
+  color: #19894d;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ai-mic-button:hover:not(:disabled):not(.recording) {
+  background: #e4f2ea;
+
+  border-color: #9fceb2;
+
+  transform: translateY(-1px);
+}
+
+.ai-mic-button:disabled {
+  background: #edf1ee;
+
+  border-color: #dde4df;
+
+  color: #a8b4ad;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+.ai-mic-button.recording {
+  background: #fbecea;
+
+  border-color: #eba3a3;
+
+  color: #c0392b;
+
+  animation: ai-mic-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes ai-mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.32);
+  }
+
+  50% {
+    box-shadow: 0 0 0 7px rgba(192, 57, 43, 0);
+  }
+}
+
+.ai-voice-status {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 8px 13px;
+
+  border-top: 1px solid #f2dcd4;
+
+  background: #fdf4f1;
+
+  color: #b03a2e;
+
+  font-size: 12px;
+
+  font-weight: 500;
+}
+
+.ai-voice-status.transcribing {
+  border-top-color: #cfe3d6;
+
+  background: #f2f8f4;
+
+  color: #2a6e45;
+}
+
+.ai-voice-pulse {
+  width: 8px;
+  height: 8px;
+
+  flex: 0 0 auto;
+
+  border-radius: 50%;
+
+  background: #c0392b;
+
+  animation: ai-voice-dot 0.9s ease-in-out infinite;
+}
+
+@keyframes ai-voice-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.ai-voice-cancel {
+  margin-left: auto;
+
+  padding: 3px 10px;
+
+  border: 1px solid #e8c4bc;
+
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #b03a2e;
+
+  font-size: 11.5px;
+
+  font-weight: 600;
+
+  font-family: inherit;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.ai-voice-cancel:hover {
+  background: #fbecea;
+
+  border-color: #e0a69a;
 }
 
 /* =========================================================
@@ -1480,6 +1672,6 @@
   }
 
   .ai-chat-input-area {
-    padding: 10px;
+    padding: 10px 10px 12px;
   }
 }

@@ -5,6 +5,8 @@ import {
 
 import API_URL from '../config/api';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import './CropForm.css';
 
 function CropForm({
@@ -14,6 +16,8 @@ function CropForm({
   onCropUpdated,
   onCancel,
 }) {
+  const { t } = useLanguage();
+
   const [formData, setFormData] =
     useState({
       name: '',
@@ -124,7 +128,7 @@ function CropForm({
 
     if (!token) {
       setError(
-        'Your session has expired. Please login again.',
+        t('Your session has expired. Please login again.'),
       );
 
       return;
@@ -139,7 +143,7 @@ function CropForm({
       !formData.name.trim()
     ) {
       setError(
-        'Please enter a crop name.',
+        t('Please enter a crop name.'),
       );
 
       return;
@@ -151,7 +155,7 @@ function CropForm({
       Number(formData.area) <= 0
     ) {
       setError(
-        'Please enter a valid area.',
+        t('Please enter a valid area.'),
       );
 
       return;
@@ -217,12 +221,12 @@ function CropForm({
         !result.success
       ) {
         throw new Error(
-          result.message ||
-            `Failed to ${
+          t(result.message) ||
+            t(
               isEditing
-                ? 'update'
-                : 'create'
-            } crop.`,
+                ? 'Failed to update crop.'
+                : 'Failed to create crop.',
+            ),
         );
       }
 
@@ -250,12 +254,12 @@ function CropForm({
       );
 
       setError(
-        err.message ||
-          `Unable to ${
+        t(err.message) ||
+          t(
             isEditing
-              ? 'update'
-              : 'save'
-          } crop.`,
+              ? 'Unable to update crop.'
+              : 'Unable to save crop.',
+          ),
       );
 
     } finally {
@@ -281,14 +285,14 @@ function CropForm({
 
           <h2>
             {isEditing
-              ? 'Edit Crop'
-              : 'Add Crop'}
+              ? t('Edit Crop')
+              : t('Add Crop')}
           </h2>
 
           <p>
             {isEditing
-              ? 'Update your crop details.'
-              : 'Enter the details of your crop.'}
+              ? t('Update your crop details.')
+              : t('Enter the details of your crop.')}
           </p>
 
         </div>
@@ -298,7 +302,7 @@ function CropForm({
           type="button"
           className="crop-form-close"
           onClick={onCancel}
-          aria-label="Close form"
+          aria-label={t('Close form')}
           disabled={saving}
         >
           ×
@@ -322,7 +326,7 @@ function CropForm({
           <div className="form-group">
 
             <label htmlFor="name">
-              Crop Name{' '}
+              {t('Crop Name')}{' '}
               <span>*</span>
             </label>
 
@@ -330,7 +334,7 @@ function CropForm({
               id="name"
               name="name"
               type="text"
-              placeholder="e.g. Tomato"
+              placeholder={t('e.g. Tomato')}
               value={
                 formData.name
               }
@@ -348,14 +352,14 @@ function CropForm({
           <div className="form-group">
 
             <label htmlFor="variety">
-              Variety
+              {t('Variety')}
             </label>
 
             <input
               id="variety"
               name="variety"
               type="text"
-              placeholder="e.g. Arka Rakshak"
+              placeholder={t('e.g. Arka Rakshak')}
               value={
                 formData.variety
               }
@@ -372,7 +376,7 @@ function CropForm({
           <div className="form-group">
 
             <label htmlFor="area">
-              Area{' '}
+              {t('Area')}{' '}
               <span>*</span>
             </label>
 
@@ -382,7 +386,7 @@ function CropForm({
               type="number"
               min="0"
               step="0.01"
-              placeholder="e.g. 2.5"
+              placeholder={t('e.g. 2.5')}
               value={
                 formData.area
               }
@@ -400,7 +404,7 @@ function CropForm({
           <div className="form-group">
 
             <label htmlFor="areaUnit">
-              Area Unit
+              {t('Area Unit')}
             </label>
 
             <select
@@ -415,15 +419,15 @@ function CropForm({
             >
 
               <option value="acre">
-                Acre
+                {t('Acre')}
               </option>
 
               <option value="hectare">
-                Hectare
+                {t('Hectare')}
               </option>
 
               <option value="gunta">
-                Gunta
+                {t('Gunta')}
               </option>
 
             </select>
@@ -436,7 +440,7 @@ function CropForm({
           <div className="form-group">
 
             <label htmlFor="sowingDate">
-              Sowing Date
+              {t('Sowing Date')}
             </label>
 
             <input
@@ -459,7 +463,7 @@ function CropForm({
           <div className="form-group">
 
             <label htmlFor="expectedHarvestDate">
-              Expected Harvest Date
+              {t('Expected Harvest Date')}
             </label>
 
             <input
@@ -482,7 +486,7 @@ function CropForm({
           <div className="form-group">
 
             <label htmlFor="status">
-              Status
+              {t('Status')}
             </label>
 
             <select
@@ -497,19 +501,19 @@ function CropForm({
             >
 
               <option value="planned">
-                Planned
+                {t('Planned')}
               </option>
 
               <option value="growing">
-                Growing
+                {t('Growing')}
               </option>
 
               <option value="ready">
-                Ready
+                {t('Ready')}
               </option>
 
               <option value="harvested">
-                Harvested
+                {t('Harvested')}
               </option>
 
             </select>
@@ -522,14 +526,14 @@ function CropForm({
           <div className="form-group form-group-full">
 
             <label htmlFor="notes">
-              Notes
+              {t('Notes')}
             </label>
 
             <textarea
               id="notes"
               name="notes"
               rows="4"
-              placeholder="Add any additional notes..."
+              placeholder={t('Add any additional notes...')}
               value={
                 formData.notes
               }
@@ -566,7 +570,7 @@ function CropForm({
             onClick={onCancel}
             disabled={saving}
           >
-            Cancel
+            {t('Cancel')}
           </button>
 
 
@@ -577,11 +581,11 @@ function CropForm({
           >
             {saving
               ? isEditing
-                ? 'Updating...'
-                : 'Saving...'
+                ? t('Updating...')
+                : t('Saving...')
               : isEditing
-                ? 'Update Crop'
-                : 'Save Crop'}
+                ? t('Update Crop')
+                : t('Save Crop')}
           </button>
 
         </div>

@@ -20,6 +20,8 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import API_URL from '../config/api';
 
 import './AdminMarkets.css';
@@ -27,6 +29,8 @@ import './AdminMarkets.css';
 const API_BASE_URL = API_URL;
 
 function AdminMarkets() {
+  const { t } = useLanguage();
+
   const {
     token,
   } = useAuth();
@@ -120,7 +124,7 @@ function AdminMarkets() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to fetch market statistics.',
+            t('Unable to fetch market statistics.'),
         );
       }
 
@@ -142,7 +146,7 @@ function AdminMarkets() {
 
       setError(
         err.message ||
-          'Unable to fetch market statistics.',
+          t('Unable to fetch market statistics.'),
       );
     } finally {
       setStatsLoading(false);
@@ -224,7 +228,7 @@ function AdminMarkets() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to fetch markets.',
+            t('Unable to fetch markets.'),
         );
       }
 
@@ -239,7 +243,7 @@ function AdminMarkets() {
 
       setError(
         err.message ||
-          'Unable to fetch markets.',
+          t('Unable to fetch markets.'),
       );
     } finally {
       setLoading(false);
@@ -311,7 +315,7 @@ function AdminMarkets() {
 
       const confirmed =
         window.confirm(
-          `Are you sure you want to ${actionLabel} "${market.name}"?`,
+          t('Are you sure you want to {0} "{1}"?', actionLabel, market.name),
         );
 
       if (!confirmed) {
@@ -351,7 +355,7 @@ function AdminMarkets() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              'Unable to update market verification.',
+              t('Unable to update market verification.'),
           );
         }
 
@@ -385,7 +389,7 @@ function AdminMarkets() {
 
         setError(
           err.message ||
-            'Unable to update market verification.',
+            t('Unable to update market verification.'),
         );
       } finally {
         setUpdatingMarketId(
@@ -413,7 +417,7 @@ function AdminMarkets() {
 
     const confirmed =
       window.confirm(
-        `Delete the submitted market "${market.name}"? This action cannot be undone.`,
+        t('Delete the submitted market "{0}"? This action cannot be undone.', market.name),
       );
 
     if (!confirmed) {
@@ -446,7 +450,7 @@ function AdminMarkets() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to delete market.',
+            t('Unable to delete market.'),
         );
       }
 
@@ -468,7 +472,7 @@ function AdminMarkets() {
 
       setError(
         err.message ||
-          'Unable to delete market.',
+          t('Unable to delete market.'),
       );
     } finally {
       setUpdatingMarketId(
@@ -519,7 +523,7 @@ function AdminMarkets() {
             <CheckCircle2
               size={14}
             />
-            Verified
+            {t('Verified')}
           </span>
         );
       }
@@ -533,7 +537,7 @@ function AdminMarkets() {
             <XCircle
               size={14}
             />
-            Rejected
+            {t('Rejected')}
           </span>
         );
       }
@@ -543,7 +547,7 @@ function AdminMarkets() {
           <Clock3
             size={14}
           />
-          Pending
+          {t('Pending')}
         </span>
       );
     };
@@ -576,7 +580,7 @@ function AdminMarkets() {
           <UserRound
             size={13}
           />
-          User Submitted
+          {t('User Submitted')}
         </span>
       );
     };
@@ -616,16 +620,15 @@ function AdminMarkets() {
         <div>
 
           <p className="admin-markets-label">
-            Administration
+            {t('Administration')}
           </p>
 
           <h1>
-            Market Management
+            {t('Market Management')}
           </h1>
 
           <p>
-            View and manage Maharashtra
-            market records and submissions.
+            {t('View and manage Maharashtra market records and submissions.')}
           </p>
 
         </div>
@@ -643,7 +646,7 @@ function AdminMarkets() {
             </strong>
 
             <span>
-              Markets
+              {t('Markets')}
             </span>
 
           </div>
@@ -673,7 +676,7 @@ function AdminMarkets() {
             </strong>
 
             <span>
-              Total Markets
+              {t('Total Markets')}
             </span>
 
           </div>
@@ -695,7 +698,7 @@ function AdminMarkets() {
             </strong>
 
             <span>
-              Official MSAMB
+              {t('Official MSAMB')}
             </span>
 
           </div>
@@ -717,7 +720,7 @@ function AdminMarkets() {
             </strong>
 
             <span>
-              Pending Review
+              {t('Pending Review')}
             </span>
 
           </div>
@@ -739,7 +742,7 @@ function AdminMarkets() {
             </strong>
 
             <span>
-              Verified
+              {t('Verified')}
             </span>
 
           </div>
@@ -761,7 +764,7 @@ function AdminMarkets() {
             </strong>
 
             <span>
-              User Submitted
+              {t('User Submitted')}
             </span>
 
           </div>
@@ -799,7 +802,7 @@ function AdminMarkets() {
               size={15}
             />
 
-            Retry
+            {t('Retry')}
           </button>
 
         </div>
@@ -832,13 +835,13 @@ function AdminMarkets() {
                 event.target.value,
               )
             }
-            placeholder="Search by market name..."
+            placeholder={t('Search by market name...')}
           />
 
           <button
             type="submit"
           >
-            Search
+            {t('Search')}
           </button>
 
         </form>
@@ -848,7 +851,7 @@ function AdminMarkets() {
           <div className="admin-market-filter-group">
 
             <label>
-              District
+              {t('District')}
             </label>
 
             <select
@@ -865,7 +868,7 @@ function AdminMarkets() {
             >
 
               <option value="all">
-                All Districts
+                {t('All Districts')}
               </option>
 
               {districts.map(
@@ -888,7 +891,7 @@ function AdminMarkets() {
           <div className="admin-market-filter-group">
 
             <label>
-              Verification
+              {t('Verification')}
             </label>
 
             <select
@@ -905,19 +908,19 @@ function AdminMarkets() {
             >
 
               <option value="all">
-                All Status
+                {t('All Status')}
               </option>
 
               <option value="pending">
-                Pending
+                {t('Pending')}
               </option>
 
               <option value="verified">
-                Verified
+                {t('Verified')}
               </option>
 
               <option value="rejected">
-                Rejected
+                {t('Rejected')}
               </option>
 
             </select>
@@ -927,7 +930,7 @@ function AdminMarkets() {
           <div className="admin-market-filter-group">
 
             <label>
-              Source
+              {t('Source')}
             </label>
 
             <select
@@ -944,7 +947,7 @@ function AdminMarkets() {
             >
 
               <option value="all">
-                All Sources
+                {t('All Sources')}
               </option>
 
               <option value="MSAMB">
@@ -952,7 +955,7 @@ function AdminMarkets() {
               </option>
 
               <option value="user_submitted">
-                User Submitted
+                {t('User Submitted')}
               </option>
 
             </select>
@@ -981,7 +984,7 @@ function AdminMarkets() {
               }
             />
 
-            Refresh
+            {t('Refresh')}
 
           </button>
 
@@ -1000,12 +1003,11 @@ function AdminMarkets() {
           <div>
 
             <h2>
-              Maharashtra Markets
+              {t('Maharashtra Markets')}
             </h2>
 
             <p>
-              Official MSAMB records and
-              user-submitted market requests.
+              {t('Official MSAMB records and user-submitted market requests.')}
             </p>
 
           </div>
@@ -1025,7 +1027,7 @@ function AdminMarkets() {
             />
 
             <p>
-              Loading markets...
+              {t('Loading markets...')}
             </p>
 
           </div>
@@ -1036,12 +1038,11 @@ function AdminMarkets() {
             <Store size={30} />
 
             <h3>
-              No markets found
+              {t('No markets found')}
             </h3>
 
             <p>
-              Try changing your search
-              or filters.
+              {t('Try changing your search or filters.')}
             </p>
 
           </div>
@@ -1055,35 +1056,35 @@ function AdminMarkets() {
                 <tr>
 
                   <th>
-                    Market
+                    {t('Market')}
                   </th>
 
                   <th>
-                    District
+                    {t('District')}
                   </th>
 
                   <th>
-                    Type
+                    {t('Type')}
                   </th>
 
                   <th>
-                    Source
+                    {t('Source')}
                   </th>
 
                   <th>
-                    Verification
+                    {t('Verification')}
                   </th>
 
                   <th>
-                    Location
+                    {t('Location')}
                   </th>
 
                   <th>
-                    Added
+                    {t('Added')}
                   </th>
 
                   <th>
-                    Actions
+                    {t('Actions')}
                   </th>
 
                 </tr>
@@ -1138,7 +1139,7 @@ function AdminMarkets() {
 
                               {isOfficial && (
                                 <span className="admin-market-official-label">
-                                  Official
+                                  {t('Official')}
                                 </span>
                               )}
 
@@ -1174,7 +1175,7 @@ function AdminMarkets() {
                           <span className="admin-market-type">
                             {
                               market.type ||
-                              'Other'
+                              t('Other')
                             }
                           </span>
 
@@ -1265,7 +1266,7 @@ function AdminMarkets() {
                                       />
                                     )}
 
-                                    Verify
+                                    {t('Verify')}
 
                                   </button>
 
@@ -1287,7 +1288,7 @@ function AdminMarkets() {
                                       size={13}
                                     />
 
-                                    Reject
+                                    {t('Reject')}
 
                                   </button>
                                 </>
@@ -1319,14 +1320,14 @@ function AdminMarkets() {
                                     />
                                   )}
 
-                                  Delete
+                                  {t('Delete')}
 
                                 </button>
                               )}
 
                             {isOfficial && (
                               <span className="admin-market-protected-label">
-                                Protected
+                                {t('Protected')}
                               </span>
                             )}
 

@@ -1345,3 +1345,96 @@
     width: 100%;
   }
 }
+
+/* ==========================================
+   Trust & Traceability panel
+========================================== */
+
+.trader-trace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+  gap: 14px;
+}
+
+.trader-trace-card {
+  display: flex;
+
+  gap: 13px;
+
+  padding: 18px;
+
+  background: #f8fbf9;
+
+  border: 1px solid #e3ebe6;
+  border-radius: 14px;
+}
+
+.trader-trace-icon {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+
+  background: #eaf4ee;
+  color: #2f6f52;
+}
+
+.trader-trace-card span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #87918b;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.trader-trace-card strong {
+  display: block;
+
+  color: #243229;
+  font-size: 15px;
+}
+
+.trader-trace-card p {
+  margin: 6px 0 0;
+
+  color: #77827b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.trader-scan-btn {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-top: 11px;
+  padding: 8px 13px;
+
+  border: 1px solid #bcdacd;
+  border-radius: 9px;
+
+  background: #eef7f2;
+  color: #1c5c3b;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.trader-scan-btn:hover {
+  background: #e2f1e8;
+}

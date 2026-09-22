@@ -3,9 +3,11 @@ import {
   Leaf,
   UserCircle,
   LogOut,
+  Languages,
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 import './Navbar.css';
 
@@ -15,14 +17,20 @@ function Navbar() {
     logout,
   } = useAuth();
 
-  const userName = user?.name || 'User';
+  const {
+    lang,
+    setLang,
+    t,
+  } = useLanguage();
+
+  const userName = user?.name || t('User');
 
   const userRole =
     user?.role === 'trader'
-      ? 'Trader'
+      ? t('Trader')
       : user?.role === 'admin'
-        ? 'Admin'
-        : 'Farmer';
+        ? t('Admin')
+        : t('Farmer');
 
   const handleLogout = () => {
     logout();
@@ -47,7 +55,7 @@ function Navbar() {
             </h1>
 
             <span>
-              Smart farming platform
+              {t('Smart farming platform')}
             </span>
           </div>
 
@@ -55,9 +63,34 @@ function Navbar() {
 
         <div className="navbar-actions">
 
+          <div
+            className="lang-switch"
+            title={t('Choose language')}
+          >
+            <Languages size={16} />
+
+            {['en', 'mr', 'hi'].map((code) => (
+              <button
+                key={code}
+                type="button"
+                className={
+                  lang === code ? 'active' : ''
+                }
+                onClick={() => setLang(code)}
+                aria-label={`Language ${code}`}
+              >
+                {code === 'en'
+                  ? 'EN'
+                  : code === 'mr'
+                    ? 'मराठी'
+                    : 'हिंदी'}
+              </button>
+            ))}
+          </div>
+
           <button
             className="icon-button"
-            aria-label="Notifications"
+            aria-label={t('Notifications')}
             type="button"
           >
             <Bell size={20} />
@@ -89,7 +122,7 @@ function Navbar() {
               <LogOut size={17} />
 
               <span>
-                Logout
+                {t('Logout')}
               </span>
             </button>
 

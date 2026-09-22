@@ -355,3 +355,264 @@
     align-items: flex-start;
   }
 }
+
+/* ==========================================
+   Analytics panels (control tower / gov / fraud)
+========================================== */
+
+.admin-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+
+  gap: 18px;
+
+  margin-top: 22px;
+}
+
+/* Keep every analytics panel's body content inside its card —
+   aligned with the 20px padding used by the panel headers and
+   the rest of the admin page. */
+
+.admin-analytics-grid .admin-panel > .admin-chain-summary,
+.admin-analytics-grid .admin-panel > .admin-gov-grid,
+.admin-analytics-grid .admin-panel > .admin-audit-list,
+.admin-analytics-grid .admin-panel > .admin-empty-note {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.admin-analytics-grid .admin-panel > .admin-audit-list:last-child {
+  padding-bottom: 14px;
+}
+
+.admin-chain-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.admin-chain-metric {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 12px;
+
+  background: #f8fbf9;
+
+  border: 1px solid #e3ebe6;
+  border-radius: 12px;
+}
+
+.admin-chain-metric.ok {
+  color: #2f855a;
+}
+
+.admin-chain-metric.bad {
+  color: #c53030;
+}
+
+.admin-chain-metric strong {
+  display: block;
+
+  color: #243229;
+  font-size: 17px;
+}
+
+.admin-chain-metric span {
+  color: #87918b;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.admin-audit-list {
+  margin-top: 16px;
+}
+
+.admin-audit-list h3 {
+  margin-bottom: 10px;
+
+  color: #48564e;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-empty-note {
+  color: #8a9590;
+  font-size: 12.5px;
+}
+
+.admin-audit-row {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 8px 0;
+
+  border-bottom: 1px solid #eef2ef;
+}
+
+.admin-audit-row:last-child {
+  border-bottom: none;
+}
+
+.admin-audit-dot {
+  width: 8px;
+  height: 8px;
+
+  margin-top: 5px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #2f6f52;
+}
+
+.admin-audit-row strong {
+  display: block;
+
+  color: #243229;
+  font-size: 12.5px;
+  text-transform: capitalize;
+}
+
+.admin-audit-row p {
+  margin: 2px 0 0;
+
+  color: #8a9590;
+  font-size: 11px;
+}
+
+.admin-pipeline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 7px 0;
+
+  border-bottom: 1px solid #eef2ef;
+}
+
+.admin-pipeline-row:last-child {
+  border-bottom: none;
+}
+
+.admin-pipeline-row span {
+  color: #5d6b64;
+  font-size: 12.5px;
+  text-transform: capitalize;
+}
+
+.admin-pipeline-row strong {
+  color: #243229;
+  font-size: 13px;
+}
+
+.admin-gov-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 10px;
+}
+
+.admin-gov-item {
+  padding: 12px;
+
+  background: #f8fbf9;
+
+  border: 1px solid #e3ebe6;
+  border-radius: 12px;
+}
+
+.admin-gov-item span {
+  display: block;
+
+  color: #8a9590;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.admin-gov-item strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #243229;
+  font-size: 17px;
+}
+
+.admin-flag-row {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 9px 0;
+
+  border-bottom: 1px solid #f0eaea;
+}
+
+.admin-flag-row:last-child {
+  border-bottom: none;
+}
+
+.admin-flag-severity {
+  flex-shrink: 0;
+
+  padding: 3px 8px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-flag-severity.high {
+  background: #fdeeee;
+  color: #b42318;
+}
+
+.admin-flag-severity.medium {
+  background: #fff4e0;
+  color: #966700;
+}
+
+.admin-flag-severity.low {
+  background: #eef5ff;
+  color: #275b9d;
+}
+
+.admin-flag-row strong {
+  display: block;
+
+  color: #35423b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.admin-flag-row p {
+  margin: 3px 0 0;
+
+  color: #8a9590;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+@media (max-width: 700px) {
+  .admin-chain-summary {
+    grid-template-columns: 1fr;
+  }
+}

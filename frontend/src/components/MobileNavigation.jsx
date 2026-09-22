@@ -9,6 +9,8 @@ import {
 
 import { NavLink } from 'react-router-dom';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import './MobileNavigation.css';
 
 const items = [
@@ -45,6 +47,8 @@ const items = [
 ];
 
 function MobileNavigation() {
+  const { t } = useLanguage();
+
   return (
     <nav className="mobile-navigation">
 
@@ -64,7 +68,7 @@ function MobileNavigation() {
             <Icon size={20} />
 
             <span>
-              {item.label}
+              {t(item.label)}
             </span>
           </NavLink>
         );

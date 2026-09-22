@@ -1,11 +1,9 @@
-const { GoogleGenAI } = require('@google/genai');
+const {
+  generateVision,
+} = require('./visionService');
 
 const Market = require('../models/Market');
 const MarketPrice = require('../models/MarketPrice');
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
 
 /* =========================================================
    GEMINI CROP ANALYSIS INSTRUCTIONS
@@ -312,7 +310,7 @@ const normalizeCropToCommodity = (
         'shimla mirch',
       ],
 
-      commodity: 'Capsicum',
+      commodity: 'Chilly Capsicum',
     },
 
     {
@@ -324,7 +322,7 @@ const normalizeCropToCommodity = (
         'opo squash',
       ],
 
-      commodity: 'Bottle Gourd',
+      commodity: 'Bottle gourd',
     },
 
     {
@@ -357,7 +355,7 @@ const normalizeCropToCommodity = (
         'zingiber officinale',
       ],
 
-      commodity: 'Ginger',
+      commodity: 'Ginger(Green)',
     },
 
     {
@@ -369,7 +367,7 @@ const normalizeCropToCommodity = (
         'oryza sativa',
       ],
 
-      commodity: 'Paddy',
+      commodity: 'Rice',
     },
   ];
 
@@ -771,12 +769,15 @@ async function analyzeCropImage({
   }
 
   /* =======================================================
-     GEMINI VISION
+     GEMINI VISION — key rotation built in
   ======================================================= */
 
-  const response =
-    await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+  const analysis =
+    await generateVision({
+      models: [
+        'gemini-3.6-flash',
+        'gemini-flash-latest',
+      ],
 
       contents: [
         {
@@ -799,12 +800,9 @@ async function analyzeCropImage({
       ],
     });
 
-  const analysis =
-    response.text;
-
   if (!analysis) {
     throw new Error(
-      'Gemini returned an empty crop analysis.',
+      'Vision AI returned an empty crop analysis.',
     );
   }
 

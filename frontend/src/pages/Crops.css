@@ -224,7 +224,8 @@
 }
 
 .edit-crop-button,
-.delete-crop-button {
+.delete-crop-button,
+.qr-crop-button {
   flex: 1;
   padding: 9px 12px;
   border-radius: 8px;
@@ -244,6 +245,16 @@
 
 .edit-crop-button:hover {
   background: #e9f4ed;
+}
+
+.qr-crop-button {
+  border: 1px solid #bcdacd;
+  background: #eef7f2;
+  color: #1c5c3b;
+}
+
+.qr-crop-button:hover {
+  background: #e2f1e8;
 }
 
 .delete-crop-button {

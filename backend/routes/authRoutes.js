@@ -4,6 +4,8 @@ const {
   register,
   login,
   getMe,
+  refreshAccessToken,
+  logout,
 } = require('../controllers/authController');
 
 const {
@@ -20,6 +22,10 @@ const router = express.Router();
 router.post('/register', register);
 
 router.post('/login', login);
+
+router.post('/refresh', refreshAccessToken);
+
+router.post('/logout', logout);
 
 // ==========================================
 // AUTHENTICATED ROUTES

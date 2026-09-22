@@ -19,15 +19,22 @@ import {
   CalendarDays,
   XCircle,
   Send,
+  QrCode,
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 
 import API_URL from '../config/api';
 
+import QrModal from '../components/QrModal';
+
+import { useLanguage } from '../context/LanguageContext';
+
 import './Storage.css';
 
 function Storage() {
+  const { t } = useLanguage();
+
   const { token, user } = useAuth();
 
   const [facilities, setFacilities] = useState([]);
@@ -69,6 +76,8 @@ function Storage() {
 
   const [myRequests, setMyRequests] =
     useState([]);
+
+  const [qrTarget, setQrTarget] = useState(null);
 
   const [requestsLoading, setRequestsLoading] =
     useState(false);
@@ -122,7 +131,7 @@ function Storage() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Failed to load storage facilities.',
+            t('Failed to load storage facilities.'),
         );
       }
 
@@ -135,7 +144,7 @@ function Storage() {
 
       setError(
         err.message ||
-          'Unable to load storage facilities.',
+          t('Unable to load storage facilities.'),
       );
     } finally {
       setLoading(false);
@@ -164,7 +173,7 @@ function Storage() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Failed to load your storage requests.',
+            t('Failed to load your storage requests.'),
         );
       }
 
@@ -745,7 +754,7 @@ function Storage() {
       Number(storageQuantity) <= 0
     ) {
       setRequestError(
-        'Use Find Matching Storage first, then choose a suitable facility.',
+        t('Use Find Matching Storage first, then choose a suitable facility.'),
       );
       return;
     }
@@ -789,14 +798,14 @@ function Storage() {
       quantity <= 0
     ) {
       setRequestError(
-        'Please provide a valid crop and quantity.',
+        t('Please provide a valid crop and quantity.'),
       );
       return;
     }
 
     if (!requestStartDate) {
       setRequestError(
-        'Please select a storage start date.',
+        t('Please select a storage start date.'),
       );
       return;
     }
@@ -806,7 +815,7 @@ function Storage() {
       durationMonths < 1
     ) {
       setRequestError(
-        'Please select a valid storage duration.',
+        t('Please select a valid storage duration.'),
       );
       return;
     }
@@ -840,7 +849,7 @@ function Storage() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to create storage request.',
+            t('Unable to create storage request.'),
         );
       }
 
@@ -848,7 +857,7 @@ function Storage() {
       setRequestNotes('');
       setRequestError('');
       setRequestSuccess(
-        'Storage request submitted successfully. You can track its status below.',
+        t('Storage request submitted successfully. You can track its status below.'),
       );
 
       await fetchMyRequests();
@@ -860,7 +869,7 @@ function Storage() {
 
       setRequestError(
         err.message ||
-          'Unable to create storage request.',
+          t('Unable to create storage request.'),
       );
     } finally {
       setRequestSubmitting(false);
@@ -869,11 +878,11 @@ function Storage() {
 
   const formatRequestStatus = (status) => {
     const labels = {
-      pending: 'Pending',
-      approved: 'Approved',
-      rejected: 'Rejected',
-      cancelled: 'Cancelled',
-      completed: 'Completed',
+      pending: t('Pending'),
+      approved: t('Approved'),
+      rejected: t('Rejected'),
+      cancelled: t('Cancelled'),
+      completed: t('Completed'),
     };
 
     return labels[status] || status;
@@ -913,7 +922,7 @@ function Storage() {
           />
 
           <p>
-            Loading storage facilities...
+            {t('Loading storage facilities...')}
           </p>
 
         </div>
@@ -944,16 +953,15 @@ function Storage() {
           <div>
 
             <p className="storage-eyebrow">
-              KrishiBandhu Storage Network
+              {t('KrishiBandhu Storage Network')}
             </p>
 
             <h1>
-              Storage & Warehouses
+              {t('Storage & Warehouses')}
             </h1>
 
             <p>
-              Find suitable storage facilities
-              for your agricultural produce.
+              {t('Find suitable storage facilities for your agricultural produce.')}
             </p>
 
           </div>
@@ -966,7 +974,7 @@ function Storage() {
           onClick={fetchStorage}
         >
           <RefreshCw size={17} />
-          Refresh
+          {t('Refresh')}
         </button>
 
       </section>
@@ -982,7 +990,7 @@ function Storage() {
                 type="button"
                 onClick={() => setRequestSuccess('')}
               >
-                Dismiss
+                {t('Dismiss')}
               </button>
             </div>
           )}
@@ -994,8 +1002,8 @@ function Storage() {
                   <ClipboardList size={20} />
                 </div>
                 <div>
-                  <h2>My Storage Requests</h2>
-                  <p>Track requests you have submitted to storage facilities.</p>
+                  <h2>{t('My Storage Requests')}</h2>
+                  <p>{t('Track requests you have submitted to storage facilities.')}</p>
                 </div>
               </div>
 
@@ -1013,7 +1021,7 @@ function Storage() {
                       : ''
                   }
                 />
-                Refresh
+                {t('Refresh')}
               </button>
             </div>
 
@@ -1023,13 +1031,13 @@ function Storage() {
                   size={22}
                   className="storage-loading-spin"
                 />
-                Loading your requests...
+                {t('Loading your requests...')}
               </div>
             ) : myRequests.length === 0 ? (
               <div className="storage-requests-empty">
                 <ClipboardList size={25} />
-                <strong>No storage requests yet</strong>
-                <span>Use Smart Storage Finder below to request storage.</span>
+                <strong>{t('No storage requests yet')}</strong>
+                <span>{t('Use Smart Storage Finder below to request storage.')}</span>
               </div>
             ) : (
               <div className="storage-request-list">
@@ -1056,7 +1064,7 @@ function Storage() {
 
                         <span className="storage-request-facility">
                           <Warehouse size={14} />
-                          {request.storageFacility?.name || 'Storage facility'}
+                          {request.storageFacility?.name || t('Storage facility')}
                         </span>
                       </div>
 
@@ -1083,9 +1091,20 @@ function Storage() {
 
                       {request.adminNote && (
                         <div className="storage-request-admin-note">
-                          <strong>Admin Note:</strong> {request.adminNote}
+                          <strong>{t('Admin Note:')}</strong> {request.adminNote}
                         </div>
                       )}
+
+                      <button
+                        type="button"
+                        className="storage-request-qr"
+                        onClick={() =>
+                          setQrTarget(request)
+                        }
+                      >
+                        <QrCode size={14} />
+                        {t('Check-in QR')}
+                      </button>
                     </div>
                   );
                 })}
@@ -1111,7 +1130,7 @@ function Storage() {
           <div>
 
             <span>
-              Cold Storage
+              {t('Cold Storage')}
             </span>
 
             <strong>
@@ -1119,7 +1138,7 @@ function Storage() {
             </strong>
 
             <small>
-              Temperature-controlled facilities
+              {t('Temperature-controlled facilities')}
             </small>
 
           </div>
@@ -1136,7 +1155,7 @@ function Storage() {
           <div>
 
             <span>
-              Warehouses
+              {t('Warehouses')}
             </span>
 
             <strong>
@@ -1144,7 +1163,7 @@ function Storage() {
             </strong>
 
             <small>
-              Dry agricultural storage
+              {t('Dry agricultural storage')}
             </small>
 
           </div>
@@ -1161,7 +1180,7 @@ function Storage() {
           <div>
 
             <span>
-              Total Facilities
+              {t('Total Facilities')}
             </span>
 
             <strong>
@@ -1169,7 +1188,7 @@ function Storage() {
             </strong>
 
             <small>
-              Available through KrishiBandhu
+              {t('Available through KrishiBandhu')}
             </small>
 
           </div>
@@ -1191,7 +1210,7 @@ function Storage() {
 
           <input
             type="text"
-            placeholder="Search facility, district or crop..."
+            placeholder={t('Search facility, district or crop...')}
             value={search}
             onChange={(event) => {
               setSearch(
@@ -1209,7 +1228,7 @@ function Storage() {
                 setSearch('')
               }
               className="storage-clear-search"
-              aria-label="Clear search"
+              aria-label={t('Clear search')}
             >
               <X size={17} />
             </button>
@@ -1222,7 +1241,7 @@ function Storage() {
 
           <div className="storage-filter-label">
             <Filter size={16} />
-            Filters
+            {t('Filters')}
           </div>
 
           <select
@@ -1237,7 +1256,7 @@ function Storage() {
           >
 
             <option value="all">
-              All Districts
+              {t('All Districts')}
             </option>
 
             {districts.map(
@@ -1273,13 +1292,11 @@ function Storage() {
           <div>
 
             <h2>
-              Find Storage for Your Crop
+              {t('Find Storage for Your Crop')}
             </h2>
 
             <p>
-              We'll match your crop,
-              quantity and preferred district
-              with suitable facilities.
+              {t("We'll match your crop, quantity and preferred district with suitable facilities.")}
             </p>
 
           </div>
@@ -1294,7 +1311,7 @@ function Storage() {
           <div className="storage-match-field">
 
             <label>
-              Crop
+              {t('Crop')}
             </label>
 
             <select
@@ -1309,7 +1326,7 @@ function Storage() {
             >
 
               <option value="">
-                Select crop
+                {t('Select crop')}
               </option>
 
               {availableCrops.map(
@@ -1333,7 +1350,7 @@ function Storage() {
           <div className="storage-match-field">
 
             <label>
-              Quantity
+              {t('Quantity')}
             </label>
 
             <div className="storage-quantity-input">
@@ -1342,7 +1359,7 @@ function Storage() {
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="Enter quantity"
+                placeholder={t('Enter quantity')}
                 value={storageQuantity}
                 onChange={(event) => {
                   setStorageQuantity(
@@ -1365,15 +1382,15 @@ function Storage() {
               >
 
                 <option value="kg">
-                  kg
+                  {t('kg')}
                 </option>
 
                 <option value="quintal">
-                  quintal
+                  {t('quintal')}
                 </option>
 
                 <option value="ton">
-                  ton
+                  {t('ton')}
                 </option>
 
               </select>
@@ -1388,7 +1405,7 @@ function Storage() {
           <div className="storage-match-field">
 
             <label>
-              Preferred District
+              {t('Preferred District')}
             </label>
 
             <select
@@ -1403,7 +1420,7 @@ function Storage() {
             >
 
               <option value="all">
-                Any District
+                {t('Any District')}
               </option>
 
               {districts.map(
@@ -1443,7 +1460,7 @@ function Storage() {
 
             <Search size={17} />
 
-            Find Matching Storage
+            {t('Find Matching Storage')}
 
           </button>
 
@@ -1459,7 +1476,7 @@ function Storage() {
 
               <X size={16} />
 
-              Reset
+              {t('Reset')}
 
             </button>
           )}
@@ -1470,7 +1487,7 @@ function Storage() {
         {!selectedCrop &&
           storageQuantity && (
           <p className="storage-finder-hint">
-            Please select a crop.
+            {t('Please select a crop.')}
           </p>
         )}
 
@@ -1492,22 +1509,27 @@ function Storage() {
 
             <strong>
               {matchedFacilities.length > 0
-                ? `${matchedFacilities.length} matching storage ${
+                ? t(
+                    '{0} matching storage {1} found',
+                    matchedFacilities.length,
                     matchedFacilities.length === 1
-                      ? 'facility'
-                      : 'facilities'
-                  } found`
-                : 'No matching storage found'}
+                      ? t('facility')
+                      : t('facilities'),
+                  )
+                : t('No matching storage found')}
             </strong>
 
             <span>
-              {storageQuantity}{' '}
-              {storageUnit} of{' '}
-              {selectedCrop}
+              {t(
+                '{0} {1} of {2}',
+                storageQuantity,
+                storageUnit,
+                selectedCrop,
+              )}
 
               {selectedDistrict !==
                 'all' &&
-                ` in ${selectedDistrict}`}
+                t(' in {0}', selectedDistrict)}
             </span>
 
           </div>
@@ -1535,7 +1557,7 @@ function Storage() {
           }}
         >
           <Package size={17} />
-          All Facilities
+          {t('All Facilities')}
         </button>
 
 
@@ -1556,7 +1578,7 @@ function Storage() {
           }}
         >
           <Snowflake size={17} />
-          Cold Storage
+          {t('Cold Storage')}
         </button>
 
 
@@ -1577,7 +1599,7 @@ function Storage() {
           }}
         >
           <Warehouse size={17} />
-          Warehouses
+          {t('Warehouses')}
         </button>
 
       </section>
@@ -1592,15 +1614,15 @@ function Storage() {
 
           <div>
 
-            Showing{' '}
+            {t('Showing')}{' '}
 
             <strong>
               {displayFacilities.length}
             </strong>{' '}
 
             {finderSubmitted
-              ? 'matching facilities'
-              : `of ${facilities.length} facilities`}
+              ? t('matching facilities')
+              : t('of {0} facilities', facilities.length)}
 
           </div>
 
@@ -1618,7 +1640,7 @@ function Storage() {
                 resetFinder();
               }}
             >
-              Clear Filters
+              {t('Clear Filters')}
             </button>
 
           )}
@@ -1635,7 +1657,7 @@ function Storage() {
         <div className="storage-error">
 
           <strong>
-            Unable to load storage
+            {t('Unable to load storage')}
           </strong>
 
           <p>
@@ -1646,7 +1668,7 @@ function Storage() {
             type="button"
             onClick={fetchStorage}
           >
-            Try Again
+            {t('Try Again')}
           </button>
 
         </div>
@@ -1677,8 +1699,8 @@ function Storage() {
           <h2>
 
             {finderSubmitted
-              ? 'No suitable storage found'
-              : 'No storage facilities found'}
+              ? t('No suitable storage found')
+              : t('No storage facilities found')}
 
           </h2>
 
@@ -1686,8 +1708,13 @@ function Storage() {
           <p>
 
             {finderSubmitted
-              ? `We couldn't find a facility suitable for ${selectedCrop} with ${storageQuantity} ${storageUnit} of required capacity. Try another district, quantity or crop.`
-              : 'Try changing your search or filter options.'}
+              ? t(
+                  "We couldn't find a facility suitable for {0} with {1} {2} of required capacity. Try another district, quantity or crop.",
+                  selectedCrop,
+                  storageQuantity,
+                  storageUnit,
+                )
+              : t('Try changing your search or filter options.')}
 
           </p>
 
@@ -1699,7 +1726,7 @@ function Storage() {
               resetFinder();
             }}
           >
-            Clear Filters
+            {t('Clear Filters')}
           </button>
 
         </div>
@@ -1802,7 +1829,7 @@ function Storage() {
                         <>
                           <Sparkles size={13} />
 
-                          Recommended
+                          {t('Recommended')}
                         </>
                       ) : (
                         <>
@@ -1810,7 +1837,7 @@ function Storage() {
                             size={13}
                           />
 
-                          Match Found
+                          {t('Match Found')}
                         </>
                       )}
 
@@ -1847,8 +1874,8 @@ function Storage() {
 
                       <span>
                         {isColdStorage
-                          ? 'Cold Storage'
-                          : 'Warehouse'}
+                          ? t('Cold Storage')
+                          : t('Warehouse')}
                       </span>
 
 
@@ -1884,7 +1911,7 @@ function Storage() {
                       </strong>
 
                       <span>
-                        Match score
+                        {t('Match score')}
                       </span>
 
                     </div>
@@ -1924,7 +1951,7 @@ function Storage() {
                     <div className="storage-capacity-header">
 
                       <span>
-                        Available Capacity
+                        {t('Available Capacity')}
                       </span>
 
                       <strong>
@@ -1963,8 +1990,8 @@ function Storage() {
 
 
                     <small>
-                      {availability}% capacity
-                      available
+                      {availability}%{' '}
+                      {t('capacity available')}
                     </small>
 
 
@@ -1972,7 +1999,7 @@ function Storage() {
                       <div className="storage-after-capacity">
 
                         <span>
-                          After your storage
+                          {t('After your storage')}
                         </span>
 
                         <strong>
@@ -1988,7 +2015,7 @@ function Storage() {
                             facilityUnit
                           }
 
-                          {' '}remaining
+                          {' '}{t('remaining')}
 
                         </strong>
 
@@ -2104,10 +2131,10 @@ function Storage() {
                             size={14}
                           />
 
-                          Verified
+                          {t('Verified')}
                         </>
                       ) : (
-                        'Demo Facility'
+                        t('Demo Facility')
                       )}
 
                     </div>
@@ -2127,7 +2154,7 @@ function Storage() {
                           }
                         >
                           <Send size={14} />
-                          Request Storage
+                          {t('Request Storage')}
                         </button>
                       )}
 
@@ -2140,7 +2167,7 @@ function Storage() {
                           )
                         }
                       >
-                        View Details
+                        {t('View Details')}
                       </button>
 
                     </div>
@@ -2176,8 +2203,8 @@ function Storage() {
           >
             <div className="storage-request-modal-header">
               <div>
-                <p>Storage Request</p>
-                <h2>Request Storage</h2>
+                <p>{t('Storage Request')}</p>
+                <h2>{t('Request Storage')}</h2>
               </div>
 
               <button
@@ -2209,21 +2236,21 @@ function Storage() {
 
               <div className="storage-request-summary-grid">
                 <div>
-                  <span>Crop</span>
+                  <span>{t('Crop')}</span>
                   <strong>{selectedCrop}</strong>
                 </div>
                 <div>
-                  <span>Quantity</span>
+                  <span>{t('Quantity')}</span>
                   <strong>{storageQuantity} {storageUnit}</strong>
                 </div>
                 <div>
-                  <span>Available Capacity</span>
+                  <span>{t('Available Capacity')}</span>
                   <strong>
                     {requestFacility.availableCapacity} {requestFacility.capacityUnit}
                   </strong>
                 </div>
                 <div>
-                  <span>Storage Charge</span>
+                  <span>{t('Storage Charge')}</span>
                   <strong>
                     {formatCurrency(requestFacility.storageCharges?.amount)} {requestFacility.storageCharges?.unit}
                   </strong>
@@ -2240,7 +2267,7 @@ function Storage() {
               <div className="storage-request-form-grid">
                 <div className="storage-request-field">
                   <label htmlFor="storage-request-start-date">
-                    Start Date
+                    {t('Start Date')}
                   </label>
                   <input
                     id="storage-request-start-date"
@@ -2257,7 +2284,7 @@ function Storage() {
 
                 <div className="storage-request-field">
                   <label htmlFor="storage-request-duration">
-                    Duration
+                    {t('Duration')}
                   </label>
                   <select
                     id="storage-request-duration"
@@ -2277,7 +2304,7 @@ function Storage() {
                         key={months}
                         value={months}
                       >
-                        {months} month{months !== 1 ? 's' : ''}
+                        {months} {months !== 1 ? t('months') : t('month')}
                       </option>
                     ))}
                   </select>
@@ -2286,7 +2313,7 @@ function Storage() {
 
               <div className="storage-request-field">
                 <label htmlFor="storage-request-notes">
-                  Notes <span>(optional)</span>
+                  {t('Notes')} <span>{t('(optional)')}</span>
                 </label>
                 <textarea
                   id="storage-request-notes"
@@ -2298,7 +2325,7 @@ function Storage() {
                       event.target.value,
                     )
                   }
-                  placeholder="Add any special storage requirements or notes..."
+                  placeholder={t('Add any special storage requirements or notes...')}
                   disabled={requestSubmitting}
                 />
                 <small>
@@ -2308,7 +2335,7 @@ function Storage() {
 
               <div className="storage-request-cost-preview">
                 <div>
-                  <span>Estimated Monthly Cost</span>
+                  <span>{t('Estimated Monthly Cost')}</span>
                   <strong>
                     {formatCurrency(
                       (convertToKg(
@@ -2322,7 +2349,7 @@ function Storage() {
                   </strong>
                 </div>
                 <div>
-                  <span>Estimated Total Cost</span>
+                  <span>{t('Estimated Total Cost')}</span>
                   <strong>
                     {formatCurrency(
                       ((convertToKg(
@@ -2348,7 +2375,7 @@ function Storage() {
                 onClick={closeStorageRequest}
                 disabled={requestSubmitting}
               >
-                Cancel
+                {t('Cancel')}
               </button>
 
               <button
@@ -2366,8 +2393,8 @@ function Storage() {
                   <Send size={16} />
                 )}
                 {requestSubmitting
-                  ? 'Submitting...'
-                  : 'Submit Request'}
+                  ? t('Submitting...')
+                  : t('Submit Request')}
               </button>
             </div>
           </div>
@@ -2401,7 +2428,7 @@ function Storage() {
               onClick={() =>
                 setSelectedFacility(null)
               }
-              aria-label="Close"
+              aria-label={t('Close')}
             >
               <X size={20} />
             </button>
@@ -2433,8 +2460,8 @@ function Storage() {
                 <span>
                   {selectedFacility.type ===
                   'cold_storage'
-                    ? 'Cold Storage'
-                    : 'Warehouse'}
+                    ? t('Cold Storage')
+                    : t('Warehouse')}
                 </span>
 
                 <h2>
@@ -2451,7 +2478,7 @@ function Storage() {
               <div className="storage-modal-section">
 
                 <h3>
-                  Location
+                  {t('Location')}
                 </h3>
 
                 <p>
@@ -2486,7 +2513,7 @@ function Storage() {
               <div className="storage-modal-section">
 
                 <h3>
-                  Capacity
+                  {t('Capacity')}
                 </h3>
 
                 <p>
@@ -2503,7 +2530,7 @@ function Storage() {
                       .capacityUnit
                   }
 
-                  {' '}available out of{' '}
+                  {' '}{t('available out of')}{' '}
 
                   {
                     selectedFacility
@@ -2526,7 +2553,7 @@ function Storage() {
                 <div className="storage-modal-section">
 
                   <h3>
-                    Storage Conditions
+                    {t('Storage Conditions')}
                   </h3>
 
                   <p>
@@ -2550,7 +2577,7 @@ function Storage() {
               <div className="storage-modal-section">
 
                 <h3>
-                  Suitable Crops
+                  {t('Suitable Crops')}
                 </h3>
 
                 <div className="storage-modal-crops">
@@ -2577,7 +2604,7 @@ function Storage() {
               <div className="storage-modal-section">
 
                 <h3>
-                  Storage Charges
+                  {t('Storage Charges')}
                 </h3>
 
                 <p>
@@ -2606,7 +2633,7 @@ function Storage() {
               <div className="storage-modal-section">
 
                 <h3>
-                  Contact
+                  {t('Contact')}
                 </h3>
 
                 <p>
@@ -2617,7 +2644,7 @@ function Storage() {
                     selectedFacility
                       .contact
                       ?.phone ||
-                    'Contact information unavailable'
+                    t('Contact information unavailable')
                   }
 
                 </p>
@@ -2628,7 +2655,7 @@ function Storage() {
               <div className="storage-modal-section">
 
                 <h3>
-                  Operating Hours
+                  {t('Operating Hours')}
                 </h3>
 
                 <p>
@@ -2658,7 +2685,7 @@ function Storage() {
                   }}
                 >
                   <Send size={17} />
-                  Request Storage
+                  {t('Request Storage')}
                 </button>
               )}
 
@@ -2682,7 +2709,7 @@ function Storage() {
 
                 <Phone size={17} />
 
-                Contact Facility
+                {t('Contact Facility')}
 
               </button>
 
@@ -2693,6 +2720,15 @@ function Storage() {
         </div>
 
       )}
+
+      <QrModal
+        open={Boolean(qrTarget)}
+        onClose={() => setQrTarget(null)}
+        entityType="storageRequest"
+        entityId={qrTarget?._id}
+        title={t('Cold Storage Check-in QR')}
+        description={t('Verify your stored lot at check-in and quality inspection. The storage history is hash-chained for trust.')}
+      />
 
     </div>
   );

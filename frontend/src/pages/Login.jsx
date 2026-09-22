@@ -4,12 +4,16 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
 
   const { login } = useAuth();
+
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -35,7 +39,7 @@ const Login = () => {
     setError('');
 
     if (!formData.email || !formData.password) {
-      setError('Please enter your email and password.');
+      setError(t('Please enter your email and password.'));
       return;
     }
 
@@ -49,7 +53,7 @@ const Login = () => {
 
       if (!data.success) {
         throw new Error(
-          data.message || 'Login failed.',
+          t(data.message) || t('Login failed.'),
         );
       }
 
@@ -64,8 +68,8 @@ const Login = () => {
       }
     } catch (loginError) {
       setError(
-        loginError.message ||
-          'Unable to login. Please try again.',
+        t(loginError.message) ||
+          t('Unable to login. Please try again.'),
       );
     } finally {
       setLoading(false);
@@ -86,18 +90,17 @@ const Login = () => {
 
           <div>
             <h1>KrishiBandhu</h1>
-            <p>Smart farming platform</p>
+            <p>{t('Smart farming platform')}</p>
           </div>
         </div>
 
         {/* Login Card */}
         <div className="login-card">
           <div className="login-header">
-            <h2>Welcome back 👋</h2>
+            <h2>{t('Welcome back 👋')}</h2>
 
             <p>
-              Login to continue to your KrishiBandhu
-              account.
+              {t('Login to continue to your KrishiBandhu account.')}
             </p>
           </div>
 
@@ -114,7 +117,7 @@ const Login = () => {
             {/* Email */}
             <div className="login-field">
               <label htmlFor="email">
-                Email address
+                {t('Email address')}
               </label>
 
               <div className="login-input-wrapper">
@@ -124,7 +127,7 @@ const Login = () => {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('Enter your email')}
                   value={formData.email}
                   onChange={handleChange}
                   autoComplete="email"
@@ -135,7 +138,7 @@ const Login = () => {
             {/* Password */}
             <div className="login-field">
               <label htmlFor="password">
-                Password
+                {t('Password')}
               </label>
 
               <div className="login-input-wrapper">
@@ -149,7 +152,7 @@ const Login = () => {
                       ? 'text'
                       : 'password'
                   }
-                  placeholder="Enter your password"
+                  placeholder={t('Enter your password')}
                   value={formData.password}
                   onChange={handleChange}
                   autoComplete="current-password"
@@ -165,8 +168,8 @@ const Login = () => {
                   }
                   aria-label={
                     showPassword
-                      ? 'Hide password'
-                      : 'Show password'
+                      ? t('Hide password')
+                      : t('Show password')
                   }
                 >
                   {showPassword ? (
@@ -185,24 +188,24 @@ const Login = () => {
               disabled={loading}
             >
               {loading ? (
-                <span>Logging in...</span>
+                <span>{t('Logging in...')}</span>
               ) : (
-                <span>Login</span>
+                <span>{t('Login')}</span>
               )}
             </button>
           </form>
 
           <div className="login-divider">
-            <span>OR</span>
+            <span>{t('OR')}</span>
           </div>
 
           <div className="login-register">
             <span>
-              Don't have an account?
+              {t("Don't have an account?")}
             </span>
 
             <Link to="/register">
-              Create an account
+              {t('Create an account')}
             </Link>
           </div>
         </div>

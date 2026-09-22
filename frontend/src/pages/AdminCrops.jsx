@@ -22,6 +22,8 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import API_URL from '../config/api';
 
 import './AdminCrops.css';
@@ -45,6 +47,8 @@ const STATUS_LABELS = {
 };
 
 function AdminCrops() {
+  const { t } = useLanguage();
+
   const { token } = useAuth();
 
   const [crops, setCrops] =
@@ -121,7 +125,7 @@ function AdminCrops() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            'Failed to fetch crop statistics.',
+            t('Failed to fetch crop statistics.'),
         );
       }
 
@@ -212,7 +216,7 @@ function AdminCrops() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            'Failed to fetch crops.',
+            t('Failed to fetch crops.'),
         );
       }
 
@@ -229,7 +233,7 @@ function AdminCrops() {
 
       setError(
         requestError.message ||
-          'Failed to fetch crops.',
+          t('Failed to fetch crops.'),
       );
 
       setCrops([]);
@@ -316,11 +320,11 @@ function AdminCrops() {
   ) => {
     const cropName =
       crop.name ||
-      'this crop';
+      t('this crop');
 
     const confirmed =
       window.confirm(
-        `Are you sure you want to delete ${cropName}? This action cannot be undone.`,
+        t('Are you sure you want to delete {0}? This action cannot be undone.', cropName),
       );
 
     if (!confirmed) {
@@ -351,7 +355,7 @@ function AdminCrops() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            'Failed to delete crop.',
+            t('Failed to delete crop.'),
         );
       }
 
@@ -379,7 +383,7 @@ function AdminCrops() {
 
       setError(
         requestError.message ||
-          'Failed to delete crop.',
+          t('Failed to delete crop.'),
       );
     } finally {
       setUpdatingCropId('');
@@ -492,12 +496,11 @@ function AdminCrops() {
 
             <div>
               <h1>
-                Crop Management
+                {t('Crop Management')}
               </h1>
 
               <p>
-                Monitor and manage crops
-                registered by farmers.
+                {t('Monitor and manage crops registered by farmers.')}
               </p>
             </div>
 
@@ -508,8 +511,8 @@ function AdminCrops() {
           <Leaf size={15} />
           <span>
             {statsLoading
-              ? 'Loading...'
-              : `${stats.total} total crops`}
+              ? t('Loading...')
+              : t('{0} total crops', stats.total)}
           </span>
         </div>
 
@@ -534,7 +537,7 @@ function AdminCrops() {
             onClick={() =>
               setError('')
             }
-            aria-label="Close error"
+            aria-label={t('Close error')}
           >
             <X size={16} />
           </button>
@@ -555,7 +558,7 @@ function AdminCrops() {
           </div>
 
           <span>
-            Total Crops
+            {t('Total Crops')}
           </span>
 
           <strong>
@@ -567,7 +570,7 @@ function AdminCrops() {
           </strong>
 
           <small>
-            All registered crops
+            {t('All registered crops')}
           </small>
         </div>
 
@@ -578,7 +581,7 @@ function AdminCrops() {
           </div>
 
           <span>
-            Planned
+            {t('Planned')}
           </span>
 
           <strong>
@@ -590,7 +593,7 @@ function AdminCrops() {
           </strong>
 
           <small>
-            Yet to be planted
+            {t('Yet to be planted')}
           </small>
         </div>
 
@@ -601,7 +604,7 @@ function AdminCrops() {
           </div>
 
           <span>
-            Growing
+            {t('Growing')}
           </span>
 
           <strong>
@@ -613,7 +616,7 @@ function AdminCrops() {
           </strong>
 
           <small>
-            Currently growing
+            {t('Currently growing')}
           </small>
         </div>
 
@@ -624,7 +627,7 @@ function AdminCrops() {
           </div>
 
           <span>
-            Ready
+            {t('Ready')}
           </span>
 
           <strong>
@@ -636,7 +639,7 @@ function AdminCrops() {
           </strong>
 
           <small>
-            Ready for harvest
+            {t('Ready for harvest')}
           </small>
         </div>
 
@@ -647,7 +650,7 @@ function AdminCrops() {
           </div>
 
           <span>
-            Harvested
+            {t('Harvested')}
           </span>
 
           <strong>
@@ -659,7 +662,7 @@ function AdminCrops() {
           </strong>
 
           <small>
-            Completed crops
+            {t('Completed crops')}
           </small>
         </div>
 
@@ -679,11 +682,11 @@ function AdminCrops() {
 
           <div>
             <h2>
-              Cultivated Area
+              {t('Cultivated Area')}
             </h2>
 
             <p>
-              Total registered area by unit.
+              {t('Total registered area by unit.')}
             </p>
           </div>
         </div>
@@ -693,7 +696,7 @@ function AdminCrops() {
 
           <div className="admin-crops-area-item">
             <span>
-              Acre
+              {t('Acre')}
             </span>
 
             <strong>
@@ -708,7 +711,7 @@ function AdminCrops() {
 
           <div className="admin-crops-area-item">
             <span>
-              Hectare
+              {t('Hectare')}
             </span>
 
             <strong>
@@ -723,7 +726,7 @@ function AdminCrops() {
 
           <div className="admin-crops-area-item">
             <span>
-              Gunta
+              {t('Gunta')}
             </span>
 
             <strong>
@@ -752,7 +755,7 @@ function AdminCrops() {
 
           <input
             type="text"
-            placeholder="Search crop, variety or farmer..."
+            placeholder={t('Search crop, variety or farmer...')}
             value={searchInput}
             onChange={(event) =>
               setSearchInput(
@@ -774,7 +777,7 @@ function AdminCrops() {
               type="button"
               className="admin-crops-clear-search"
               onClick={clearSearch}
-              aria-label="Clear search"
+              aria-label={t('Clear search')}
             >
               <X size={16} />
             </button>
@@ -787,7 +790,7 @@ function AdminCrops() {
 
           <div className="admin-crops-filter-label">
             <Filter size={15} />
-            Status
+            {t('Status')}
           </div>
 
           <select
@@ -804,10 +807,10 @@ function AdminCrops() {
                 >
                   {option ===
                   'all'
-                    ? 'All Statuses'
-                    : STATUS_LABELS[
+                    ? t('All Statuses')
+                    : t(STATUS_LABELS[
                         option
-                      ]}
+                      ])}
                 </option>
               ),
             )}
@@ -823,7 +826,7 @@ function AdminCrops() {
           disabled={loading}
         >
           <Search size={15} />
-          Search
+          {t('Search')}
         </button>
 
 
@@ -847,7 +850,7 @@ function AdminCrops() {
                 : ''
             }
           />
-          Refresh
+          {t('Refresh')}
         </button>
 
       </section>
@@ -863,22 +866,20 @@ function AdminCrops() {
 
           <div>
             <h2>
-              Registered Crops
+              {t('Registered Crops')}
             </h2>
 
             <p>
-              Showing{' '}
+              {t('Showing')}{' '}
               <strong>
                 {displayedCrops.length}
               </strong>{' '}
-              crop
-              {displayedCrops.length ===
-              1
-                ? ''
-                : 's'}
+              {displayedCrops.length === 1
+                ? t('crop')
+                : t('crops')}
               {search ||
               status !== 'all'
-                ? ' matching your filters.'
+                ? t(' matching your filters.')
                 : '.'}
             </p>
           </div>
@@ -895,7 +896,7 @@ function AdminCrops() {
             />
 
             <p>
-              Loading crops...
+              {t('Loading crops...')}
             </p>
 
           </div>
@@ -908,12 +909,11 @@ function AdminCrops() {
             </div>
 
             <h3>
-              No crops found
+              {t('No crops found')}
             </h3>
 
             <p>
-              Try changing your
-              search or status filter.
+              {t('Try changing your search or status filter.')}
             </p>
 
           </div>
@@ -926,35 +926,35 @@ function AdminCrops() {
                 <tr>
 
                   <th>
-                    Crop
+                    {t('Crop')}
                   </th>
 
                   <th>
-                    Farmer
+                    {t('Farmer')}
                   </th>
 
                   <th>
-                    Area
+                    {t('Area')}
                   </th>
 
                   <th>
-                    Status
+                    {t('Status')}
                   </th>
 
                   <th>
-                    Sowing Date
+                    {t('Sowing Date')}
                   </th>
 
                   <th>
-                    Expected Harvest
+                    {t('Expected Harvest')}
                   </th>
 
                   <th>
-                    Added
+                    {t('Added')}
                   </th>
 
                   <th>
-                    Actions
+                    {t('Actions')}
                   </th>
 
                 </tr>
@@ -992,12 +992,12 @@ function AdminCrops() {
                             <div>
                               <strong>
                                 {crop.name ||
-                                  'Unnamed crop'}
+                                  t('Unnamed crop')}
                               </strong>
 
                               <span>
                                 {crop.variety ||
-                                  'Variety not specified'}
+                                  t('Variety not specified')}
                               </span>
                             </div>
 
@@ -1015,13 +1015,13 @@ function AdminCrops() {
 
                               <strong>
                                 {owner.name ||
-                                  'Unnamed farmer'}
+                                  t('Unnamed farmer')}
                               </strong>
 
                               <span>
                                 {owner.email ||
                                   owner.phone ||
-                                  'Contact unavailable'}
+                                  t('Contact unavailable')}
                               </span>
 
                             </div>
@@ -1033,7 +1033,7 @@ function AdminCrops() {
                               />
 
                               <span>
-                                Owner unavailable
+                                {t('Owner unavailable')}
                               </span>
 
                             </div>
@@ -1056,7 +1056,7 @@ function AdminCrops() {
 
                             <span>
                               {crop.areaUnit ||
-                                'acre'}
+                                t('acre')}
                             </span>
 
                           </div>
@@ -1073,11 +1073,11 @@ function AdminCrops() {
                               crop.status,
                             )}`}
                           >
-                            {STATUS_LABELS[
+                            {t(STATUS_LABELS[
                               crop.status
                             ] ||
                               crop.status ||
-                              'Unknown'}
+                              'Unknown')}
                           </span>
 
                         </td>
@@ -1152,12 +1152,12 @@ function AdminCrops() {
                                   crop,
                                 )
                               }
-                              title="View crop"
+                              title={t('View crop')}
                             >
                               <Eye
                                 size={14}
                               />
-                              View
+                              {t('View')}
                             </button>
 
 
@@ -1172,7 +1172,7 @@ function AdminCrops() {
                                   crop,
                                 )
                               }
-                              title="Delete crop"
+                              title={t('Delete crop')}
                             >
                               {isUpdating ? (
                                 <RefreshCw
@@ -1185,7 +1185,7 @@ function AdminCrops() {
                                 />
                               )}
 
-                              Delete
+                              {t('Delete')}
                             </button>
 
                           </div>
@@ -1237,12 +1237,12 @@ function AdminCrops() {
                 <div>
                   <h2>
                     {selectedCrop.name ||
-                      'Crop Details'}
+                      t('Crop Details')}
                   </h2>
 
                   <p>
                     {selectedCrop.variety ||
-                      'Variety not specified'}
+                      t('Variety not specified')}
                   </p>
                 </div>
 
@@ -1255,7 +1255,7 @@ function AdminCrops() {
                 onClick={() =>
                   setSelectedCrop(null)
                 }
-                aria-label="Close crop details"
+                aria-label={t('Close crop details')}
               >
                 <X size={19} />
               </button>
@@ -1270,7 +1270,7 @@ function AdminCrops() {
               <div className="admin-crop-detail-section">
 
                 <h3>
-                  Farmer
+                  {t('Farmer')}
                 </h3>
 
                 {selectedCrop.owner ? (
@@ -1308,9 +1308,7 @@ function AdminCrops() {
                     />
 
                     <span>
-                      Owner information
-                      is unavailable for
-                      this crop.
+                      {t('Owner information is unavailable for this crop.')}
                     </span>
                   </div>
                 )}
@@ -1324,7 +1322,7 @@ function AdminCrops() {
 
                 <div className="admin-crop-detail-item">
                   <span>
-                    Crop
+                    {t('Crop')}
                   </span>
 
                   <strong>
@@ -1336,7 +1334,7 @@ function AdminCrops() {
 
                 <div className="admin-crop-detail-item">
                   <span>
-                    Variety
+                    {t('Variety')}
                   </span>
 
                   <strong>
@@ -1348,7 +1346,7 @@ function AdminCrops() {
 
                 <div className="admin-crop-detail-item">
                   <span>
-                    Area
+                    {t('Area')}
                   </span>
 
                   <strong>
@@ -1364,22 +1362,22 @@ function AdminCrops() {
 
                 <div className="admin-crop-detail-item">
                   <span>
-                    Status
+                    {t('Status')}
                   </span>
 
                   <strong>
-                    {STATUS_LABELS[
+                    {t(STATUS_LABELS[
                       selectedCrop.status
                     ] ||
                       selectedCrop.status ||
-                      'Unknown'}
+                      'Unknown')}
                   </strong>
                 </div>
 
 
                 <div className="admin-crop-detail-item">
                   <span>
-                    Sowing Date
+                    {t('Sowing Date')}
                   </span>
 
                   <strong>
@@ -1392,7 +1390,7 @@ function AdminCrops() {
 
                 <div className="admin-crop-detail-item">
                   <span>
-                    Expected Harvest
+                    {t('Expected Harvest')}
                   </span>
 
                   <strong>
@@ -1405,7 +1403,7 @@ function AdminCrops() {
 
                 <div className="admin-crop-detail-item">
                   <span>
-                    Created
+                    {t('Created')}
                   </span>
 
                   <strong>
@@ -1418,7 +1416,7 @@ function AdminCrops() {
 
                 <div className="admin-crop-detail-item">
                   <span>
-                    Updated
+                    {t('Updated')}
                   </span>
 
                   <strong>
@@ -1436,12 +1434,12 @@ function AdminCrops() {
               <div className="admin-crop-detail-section">
 
                 <h3>
-                  Notes
+                  {t('Notes')}
                 </h3>
 
                 <p className="admin-crop-notes">
                   {selectedCrop.notes ||
-                    'No notes added.'}
+                    t('No notes added.')}
                 </p>
 
               </div>
@@ -1476,7 +1474,7 @@ function AdminCrops() {
                   />
                 )}
 
-                Delete Crop
+                {t('Delete Crop')}
               </button>
 
 
@@ -1487,7 +1485,7 @@ function AdminCrops() {
                   setSelectedCrop(null)
                 }
               >
-                Close
+                {t('Close')}
               </button>
 
             </div>

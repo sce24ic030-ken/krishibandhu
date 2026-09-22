@@ -8,6 +8,9 @@ import {
   ShieldCheck,
   BriefcaseBusiness,
   RefreshCw,
+  ScanLine,
+  ShieldAlert,
+  Landmark,
 } from 'lucide-react';
 
 import {
@@ -17,19 +20,38 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import API_URL from '../config/api';
+
+import {
+  getControlTower,
+  getGovAnalytics,
+  getFraudFlags,
+} from '../services/analyticsService';
 
 import './AdminDashboard.css';
 
 const API_BASE_URL = API_URL;
 
 function AdminDashboard() {
+  const { t } = useLanguage();
+
   const {
     token,
     user,
   } = useAuth();
 
   const [stats, setStats] = useState(null);
+
+  const [controlTower, setControlTower] =
+    useState(null);
+
+  const [govData, setGovData] =
+    useState(null);
+
+  const [fraudData, setFraudData] =
+    useState(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -57,7 +79,7 @@ function AdminDashboard() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to fetch dashboard statistics.',
+            t('Unable to fetch dashboard statistics.'),
         );
       }
 
@@ -70,7 +92,7 @@ function AdminDashboard() {
 
       setError(
         err.message ||
-          'Unable to load dashboard statistics.',
+          t('Unable to load dashboard statistics.'),
       );
     } finally {
       setLoading(false);
@@ -80,6 +102,18 @@ function AdminDashboard() {
   useEffect(() => {
     if (token) {
       fetchStats();
+
+      getControlTower()
+        .then(setControlTower)
+        .catch(() => null);
+
+      getGovAnalytics()
+        .then(setGovData)
+        .catch(() => null);
+
+      getFraudFlags()
+        .then(setFraudData)
+        .catch(() => null);
     }
   }, [token]);
 
@@ -96,69 +130,69 @@ function AdminDashboard() {
 
   const statCards = [
     {
-      title: 'Total Users',
+      title: t('Total Users'),
       value: stats?.users ?? 0,
       description:
-        'Registered platform users',
+        t('Registered platform users'),
       icon: Users,
     },
 
     {
-      title: 'Farmers',
+      title: t('Farmers'),
       value: stats?.farmers ?? 0,
       description:
-        'Registered farmers',
+        t('Registered farmers'),
       icon: Sprout,
     },
 
     {
-      title: 'Traders',
+      title: t('Traders'),
       value: stats?.traders ?? 0,
       description:
-        'Registered traders',
+        t('Registered traders'),
       icon: BriefcaseBusiness,
     },
 
     {
-      title: 'Markets',
+      title: t('Markets'),
       value: stats?.markets ?? 0,
       description:
-        'Available market locations',
+        t('Available market locations'),
       icon: Store,
     },
 
     {
-      title: 'Crop Listings',
+      title: t('Crop Listings'),
       value: stats?.crops ?? 0,
       description:
-        'Crop records on platform',
+        t('Crop records on platform'),
       icon: Sprout,
     },
 
     {
-      title: 'Bids',
+      title: t('Bids'),
       value: stats?.bids ?? 0,
       description:
-        'Bids recorded',
+        t('Bids recorded'),
       icon: Gavel,
     },
 
     {
-      title: 'Transactions',
+      title: t('Transactions'),
       value:
         stats?.transactions ?? 0,
       description:
-        'Recorded transactions',
+        t('Recorded transactions'),
       icon: WalletCards,
     },
 
     {
-      title: 'Transaction Value',
+      title: t('Transaction Value'),
       value: formatCurrency(
         stats?.transactionAmount,
       ),
       description:
-        'Total recorded transaction value',
+        t('Total recorded transaction value'),
       icon: IndianRupee,
     },
   ];
@@ -172,17 +206,15 @@ function AdminDashboard() {
 
         <div>
           <p className="admin-dashboard-label">
-            Administration
+            {t('Administration')}
           </p>
 
           <h1>
-            Admin Dashboard
+            {t('Admin Dashboard')}
           </h1>
 
           <p>
-            Monitor and manage the
-            KrishiBandhu platform from
-            one place.
+            {t('Monitor and manage the KrishiBandhu platform from one place.')}
           </p>
         </div>
 
@@ -195,16 +227,16 @@ function AdminDashboard() {
           <div>
 
             <span>
-              Signed in as
+              {t('Signed in as')}
             </span>
 
             <strong>
               {user?.name ||
-                'System Admin'}
+                t('System Admin')}
             </strong>
 
             <small>
-              Administrator
+              {t('Administrator')}
             </small>
 
           </div>
@@ -228,7 +260,7 @@ function AdminDashboard() {
           >
             <RefreshCw size={15} />
 
-            Retry
+            {t('Retry')}
           </button>
 
         </div>
@@ -293,12 +325,11 @@ function AdminDashboard() {
 
             <div>
               <h2>
-                User Overview
+                {t('User Overview')}
               </h2>
 
               <p>
-                Current platform user
-                distribution
+                {t('Current platform user distribution')}
               </p>
             </div>
 
@@ -315,7 +346,7 @@ function AdminDashboard() {
                 <span className="admin-user-dot farmer" />
 
                 <span>
-                  Farmers
+                  {t('Farmers')}
                 </span>
 
               </div>
@@ -335,7 +366,7 @@ function AdminDashboard() {
                 <span className="admin-user-dot trader" />
 
                 <span>
-                  Traders
+                  {t('Traders')}
                 </span>
 
               </div>
@@ -355,7 +386,7 @@ function AdminDashboard() {
                 <span className="admin-user-dot admin" />
 
                 <span>
-                  Administrators
+                  {t('Administrators')}
                 </span>
 
               </div>
@@ -380,12 +411,11 @@ function AdminDashboard() {
 
             <div>
               <h2>
-                Platform Overview
+                {t('Platform Overview')}
               </h2>
 
               <p>
-                Current operational
-                records
+                {t('Current operational records')}
               </p>
             </div>
 
@@ -397,7 +427,7 @@ function AdminDashboard() {
 
             <div>
               <span>
-                Markets
+                {t('Markets')}
               </span>
 
               <strong>
@@ -409,7 +439,7 @@ function AdminDashboard() {
 
             <div>
               <span>
-                Crop Listings
+                {t('Crop Listings')}
               </span>
 
               <strong>
@@ -421,7 +451,7 @@ function AdminDashboard() {
 
             <div>
               <span>
-                Bids
+                {t('Bids')}
               </span>
 
               <strong>
@@ -433,7 +463,7 @@ function AdminDashboard() {
 
             <div>
               <span>
-                Transactions
+                {t('Transactions')}
               </span>
 
               <strong>
@@ -442,6 +472,338 @@ function AdminDashboard() {
                   : stats?.transactions ?? 0}
               </strong>
             </div>
+
+          </div>
+
+        </section>
+
+      </div>
+
+      {/* ==========================================
+          Analytics: control tower, gov, fraud
+      ========================================== */}
+
+      <div className="admin-analytics-grid">
+
+        {/* Tracking Control Tower */}
+
+        <section className="admin-panel">
+
+          <div className="admin-panel-header">
+
+            <div>
+              <h2>
+                {t('Tracking Control Tower')}
+              </h2>
+
+              <p>
+                {t('Trace scans, chain integrity & audit trail')}
+              </p>
+            </div>
+
+            <ScanLine size={20} />
+
+          </div>
+
+          {controlTower && (
+            <div className="admin-chain-summary">
+
+              <div className="admin-chain-metric ok">
+
+                <ShieldCheck size={18} />
+
+                <div>
+                  <strong>
+                    {controlTower.verifiedChains?.valid ?? '—'}
+                  </strong>
+
+                  <span>
+                    {t('Chains intact')}
+                  </span>
+                </div>
+
+              </div>
+
+              <div className="admin-chain-metric bad">
+
+                <ShieldAlert size={18} />
+
+                <div>
+                  <strong>
+                    {controlTower.verifiedChains?.tampered ?? '—'}
+                  </strong>
+
+                  <span>
+                    {t('Tampered')}
+                  </span>
+                </div>
+
+              </div>
+
+              <div className="admin-chain-metric">
+
+                <ScanLine size={18} />
+
+                <div>
+                  <strong>
+                    {controlTower.recentScans?.length ?? '—'}
+                  </strong>
+
+                  <span>
+                    {t('Recent scans')}
+                  </span>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          <div className="admin-audit-list">
+
+            <h3>
+              {t('Recent trace scans')}
+            </h3>
+
+            {(controlTower?.recentScans || [])
+              .length === 0 ? (
+              <p className="admin-empty-note">
+                {t('No scans recorded yet.')}
+              </p>
+            ) : (
+              (controlTower.recentScans || [])
+                .slice(0, 5)
+                .map((scan) => (
+                  <div
+                    className="admin-audit-row"
+                    key={scan._id}
+                  >
+                    <span className="admin-audit-dot" />
+
+                    <div>
+                      <strong>
+                        {t('{0} scan', scan.qrType)}
+                      </strong>
+
+                      <p>
+                        {scan.scannedBy?.name ||
+                          t('user')}{' '}
+                        ·{' '}
+                        {new Date(
+                          scan.createdAt,
+                        ).toLocaleString(
+                          'en-IN',
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))
+            )}
+
+          </div>
+
+          <div className="admin-audit-list">
+
+            <h3>
+              {t('Parchi pipeline')}
+            </h3>
+
+            {(controlTower?.parchiByStatus || [])
+              .length === 0 ? (
+              <p className="admin-empty-note">
+                {t('No parchis yet.')}
+              </p>
+            ) : (
+              controlTower.parchiByStatus.map(
+                (entry) => (
+                  <div
+                    className="admin-pipeline-row"
+                    key={entry._id}
+                  >
+                    <span>
+                      {entry._id}
+                    </span>
+
+                    <strong>
+                      {entry.count}
+                    </strong>
+                  </div>
+                ),
+              )
+            )}
+
+          </div>
+
+        </section>
+
+        {/* Government Analytics */}
+
+        <section className="admin-panel">
+
+          <div className="admin-panel-header">
+
+            <div>
+              <h2>
+                {t('Government Analytics')}
+              </h2>
+
+              <p>
+                {t('Portfolio snapshot for policy dashboards')}
+              </p>
+            </div>
+
+            <Landmark size={20} />
+
+          </div>
+
+          {govData ? (
+            <>
+              <div className="admin-gov-grid">
+
+                {[
+                  [t('Farmers'), govData.totals?.farmers ?? 0],
+                  [t('Traders'), govData.totals?.traders ?? 0],
+                  [t('Markets'), govData.totals?.markets ?? 0],
+                  [t('Listings'), govData.totals?.listings ?? 0],
+                  [t('Parchis'), govData.totals?.parchis ?? 0],
+                  [t('Transactions'), govData.totals?.transactions ?? 0],
+                ].map(([label, value]) => (
+                  <div
+                    className="admin-gov-item"
+                    key={label}
+                  >
+                    <span>{label}</span>
+
+                    <strong>{value}</strong>
+                  </div>
+                ))}
+
+              </div>
+
+              <div className="admin-audit-list">
+
+                <h3>
+                  {t('Top commodities by price observations')}
+                </h3>
+
+                {(govData.commoditySummary || [])
+                  .slice(0, 6)
+                  .map((entry) => (
+                    <div
+                      className="admin-pipeline-row"
+                      key={entry._id}
+                    >
+                      <span>
+                        {entry._id}
+                      </span>
+
+                      <strong>
+                        {formatCurrency(
+                          entry.latestAvg,
+                        )}
+                      </strong>
+                    </div>
+                  ))}
+
+              </div>
+            </>
+          ) : (
+            <p className="admin-empty-note">
+              {t('Government analytics loading…')}
+            </p>
+          )}
+
+        </section>
+
+        {/* Fraud & Anomaly Flags */}
+
+        <section className="admin-panel">
+
+          <div className="admin-panel-header">
+
+            <div>
+              <h2>
+                {t('Fraud & Anomaly Flags')}
+              </h2>
+
+              <p>
+                {t('Automatically detected risks')}
+              </p>
+            </div>
+
+            <ShieldAlert size={20} />
+
+          </div>
+
+          <div className="admin-chain-summary">
+
+            <div className="admin-chain-metric bad">
+
+              <ShieldAlert size={18} />
+
+              <div>
+                <strong>
+                  {fraudData?.total ?? '—'}
+                </strong>
+
+                <span>
+                  {t('Total flags')}
+                </span>
+              </div>
+
+            </div>
+
+            <div className="admin-chain-metric bad">
+
+              <ShieldAlert size={18} />
+
+              <div>
+                <strong>
+                  {fraudData?.tamperedChains?.length ?? 0}
+                </strong>
+
+                <span>
+                  {t('Tampered chains')}
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="admin-audit-list">
+
+            {(fraudData?.flags || []).length === 0 ? (
+              <p className="admin-empty-note">
+                {t('No anomalies detected.')}
+              </p>
+            ) : (
+              (fraudData.flags || [])
+                .slice(0, 6)
+                .map((flag, index) => (
+                  <div
+                    className="admin-flag-row"
+                    key={`${flag.code}-${index}`}
+                  >
+                    <span
+                      className={`admin-flag-severity ${flag.severity}`}
+                    >
+                      {flag.severity}
+                    </span>
+
+                    <div>
+                      <strong>
+                        {flag.message}
+                      </strong>
+
+                      <p>
+                        {flag.details?.parchi ||
+                          flag.category}
+                      </p>
+                    </div>
+                  </div>
+                ))
+            )}
 
           </div>
 
@@ -460,17 +822,11 @@ function AdminDashboard() {
         <div>
 
           <h2>
-            Administrator Access
+            {t('Administrator Access')}
           </h2>
 
           <p>
-            This dashboard is restricted
-            to users with the administrator
-            role. User, market, bid,
-            transaction and payment
-            management will be available
-            from the administrator
-            navigation.
+            {t('This dashboard is restricted to users with the administrator role. User, market, bid, transaction and payment management will be available from the administrator navigation.')}
           </p>
 
         </div>

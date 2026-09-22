@@ -5,6 +5,7 @@ import {
   IndianRupee,
   MapPin,
   Package,
+  QrCode,
   User,
   RefreshCw,
   Loader2,
@@ -15,17 +16,23 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 import API_URL from '../config/api';
+import QrModal from '../components/QrModal';
+import { useLanguage } from '../context/LanguageContext';
 
 import './Parchi.css';
 
 const API_BASE_URL = API_URL;
 
 const Parchi = () => {
+  const { t } = useLanguage();
+
   const { user, token } = useAuth();
 
   const [parchis, setParchis] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [qrTarget, setQrTarget] = useState(null);
 
   // ==========================================
   // FETCH PARCHIS
@@ -57,7 +64,7 @@ const Parchi = () => {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            'Failed to fetch Parchis.',
+            t('Failed to fetch Parchis.'),
         );
       }
 
@@ -70,7 +77,7 @@ const Parchi = () => {
 
       setError(
         err.message ||
-          'Unable to load Parchis.',
+          t('Unable to load Parchis.'),
       );
     } finally {
       setLoading(false);
@@ -130,22 +137,22 @@ const Parchi = () => {
   const getStatusLabel = (status) => {
     switch (status) {
       case 'issued':
-        return 'Issued';
+        return t('Issued');
 
       case 'payment_pending':
-        return 'Payment Pending';
+        return t('Payment Pending');
 
       case 'paid':
-        return 'Paid';
+        return t('Paid');
 
       case 'completed':
-        return 'Completed';
+        return t('Completed');
 
       case 'cancelled':
-        return 'Cancelled';
+        return t('Cancelled');
 
       default:
-        return status || 'Unknown';
+        return status || t('Unknown');
     }
   };
 
@@ -156,22 +163,22 @@ const Parchi = () => {
   const getPaymentLabel = (status) => {
     switch (status) {
       case 'pending':
-        return 'Payment Pending';
+        return t('Payment Pending');
 
       case 'initiated':
-        return 'Payment Initiated';
+        return t('Payment Initiated');
 
       case 'success':
-        return 'Payment Successful';
+        return t('Payment Successful');
 
       case 'failed':
-        return 'Payment Failed';
+        return t('Payment Failed');
 
       case 'cancelled':
-        return 'Payment Cancelled';
+        return t('Payment Cancelled');
 
       default:
-        return status || 'Unknown';
+        return status || t('Unknown');
     }
   };
 
@@ -195,11 +202,10 @@ const Parchi = () => {
           </div>
 
           <div>
-            <h1>Parchi</h1>
+            <h1>{t('Parchi')}</h1>
 
             <p>
-              Your digital sale receipts and
-              transaction records.
+              {t('Your digital sale receipts and transaction records.')}
             </p>
           </div>
 
@@ -220,7 +226,7 @@ const Parchi = () => {
             <RefreshCw size={17} />
           )}
 
-          Refresh
+          {t('Refresh')}
         </button>
 
       </div>
@@ -240,7 +246,7 @@ const Parchi = () => {
           </div>
 
           <div>
-            <span>Total Parchis</span>
+            <span>{t('Total Parchis')}</span>
 
             <strong>
               {parchis.length}
@@ -258,7 +264,7 @@ const Parchi = () => {
           </div>
 
           <div>
-            <span>Total Value</span>
+            <span>{t('Total Value')}</span>
 
             <strong>
               {formatCurrency(
@@ -286,7 +292,7 @@ const Parchi = () => {
           </div>
 
           <div>
-            <span>Completed</span>
+            <span>{t('Completed')}</span>
 
             <strong>
               {
@@ -310,7 +316,7 @@ const Parchi = () => {
           </div>
 
           <div>
-            <span>Payment Pending</span>
+            <span>{t('Payment Pending')}</span>
 
             <strong>
               {
@@ -350,7 +356,7 @@ const Parchi = () => {
           />
 
           <p>
-            Loading your Parchis...
+            {t('Loading your Parchis...')}
           </p>
 
         </div>
@@ -368,13 +374,11 @@ const Parchi = () => {
             <FileText size={42} />
 
             <h2>
-              No Parchis yet
+              {t('No Parchis yet')}
             </h2>
 
             <p>
-              Your digital sale receipts will
-              appear here after an accepted bid
-              is converted into a Parchi.
+              {t('Your digital sale receipts will appear here after an accepted bid is converted into a Parchi.')}
             </p>
 
           </div>
@@ -404,7 +408,7 @@ const Parchi = () => {
                   <div>
 
                     <span className="parchi-number-label">
-                      Parchi Number
+                      {t('Parchi Number')}
                     </span>
 
                     <h2>
@@ -431,6 +435,18 @@ const Parchi = () => {
                       )}
                     </span>
 
+                    <button
+                      type="button"
+                      className="parchi-qr-button"
+                      onClick={() =>
+                        setQrTarget(parchi)
+                      }
+                      title={t('Open Parchi QR & trace ledger')}
+                    >
+                      <QrCode size={15} />
+                      {t('Parchi QR')}
+                    </button>
+
                   </div>
 
                 </div>
@@ -450,12 +466,12 @@ const Parchi = () => {
                     <div>
 
                       <span>
-                        Crop
+                        {t('Crop')}
                       </span>
 
                       <strong>
                         {parchi.crop?.name ||
-                          'Unknown Crop'}
+                          t('Unknown Crop')}
                       </strong>
 
                       {parchi.crop?.variety && (
@@ -477,12 +493,12 @@ const Parchi = () => {
                     <div>
 
                       <span>
-                        Market
+                        {t('Market')}
                       </span>
 
                       <strong>
                         {parchi.market?.name ||
-                          'Unknown Market'}
+                          t('Unknown Market')}
                       </strong>
 
                       <small>
@@ -508,8 +524,8 @@ const Parchi = () => {
 
                       <span>
                         {user?.role === 'trader'
-                          ? 'Farmer'
-                          : 'Trader'}
+                          ? t('Farmer')
+                          : t('Trader')}
                       </span>
 
                       <strong>
@@ -537,7 +553,7 @@ const Parchi = () => {
                     <div>
 
                       <span>
-                        Issued On
+                        {t('Issued On')}
                       </span>
 
                       <strong>
@@ -563,7 +579,7 @@ const Parchi = () => {
                   <div>
 
                     <span>
-                      Quantity
+                      {t('Quantity')}
                     </span>
 
                     <strong>
@@ -578,7 +594,7 @@ const Parchi = () => {
                   <div>
 
                     <span>
-                      Price / Unit
+                      {t('Price / Unit')}
                     </span>
 
                     <strong>
@@ -594,7 +610,7 @@ const Parchi = () => {
                   <div className="parchi-total">
 
                     <span>
-                      Total Amount
+                      {t('Total Amount')}
                     </span>
 
                     <strong>
@@ -613,6 +629,15 @@ const Parchi = () => {
 
           </div>
         )}
+
+      <QrModal
+        open={Boolean(qrTarget)}
+        onClose={() => setQrTarget(null)}
+        entityType="parchi"
+        entityId={qrTarget?._id}
+        title={t('Parchi QR — {0}', qrTarget?.parchiNumber || '')}
+        description={t('Your tamper-proof digital sale receipt. Every status change is hash-chained to a shared ledger.')}
+      />
 
     </div>
   );

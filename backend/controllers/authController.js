@@ -1,7 +1,10 @@
+const crypto = require('crypto');
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
+const RefreshToken = require('../models/RefreshToken');
 
 // ==========================================
 // GENERATE JWT TOKEN
@@ -24,6 +27,121 @@ const generateToken = (user) => {
       expiresIn: '7d',
     },
   );
+};
+
+// ==========================================
+// GENERATE / ROTATE REFRESH TOKEN
+// ==========================================
+
+const createRefreshToken = async (user) => {
+  const rawToken = crypto.randomBytes(48).toString('hex');
+
+  const record = await RefreshToken.create({
+    user: user._id,
+    token: rawToken,
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+  });
+
+  return { rawToken, record };
+};
+
+const refreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'refreshToken is required.',
+      });
+    }
+
+    const record = await RefreshToken.findOne({
+      token: refreshToken,
+      revokedAt: null,
+    });
+
+    if (!record) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or revoked refresh token.',
+      });
+    }
+
+    if (record.expiresAt < new Date()) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token has expired. Please login again.',
+      });
+    }
+
+    const user = await User.findById(record.user);
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account not found or deactivated.',
+      });
+    }
+
+    // Rotate: revoke old, issue a fresh pair
+    const replacement = await createRefreshToken(user);
+
+    record.revokedAt = new Date();
+    record.replacedBy = replacement.record.token;
+    await record.save();
+
+    const token = generateToken(user);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Session refreshed.',
+      token,
+      refreshToken: replacement.rawToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        location: user.location,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error('Refresh Token Error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to refresh session.',
+    });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (refreshToken) {
+      await RefreshToken.updateOne(
+        { token: refreshToken },
+        { revokedAt: new Date() },
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out successfully.',
+    });
+  } catch (error) {
+    console.error('Logout Error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to logout.',
+    });
+  }
 };
 
 // ==========================================
@@ -128,11 +246,16 @@ const register = async (req, res) => {
     const token =
       generateToken(user);
 
+    // Create refresh token session
+    const { rawToken: refreshToken } =
+      await createRefreshToken(user);
+
     return res.status(201).json({
       success: true,
       message:
         'Registration successful.',
       token,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -241,11 +364,16 @@ const login = async (req, res) => {
     const token =
       generateToken(user);
 
+    // Create refresh token session
+    const { rawToken: refreshToken } =
+      await createRefreshToken(user);
+
     return res.status(200).json({
       success: true,
       message:
         'Login successful.',
       token,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -338,4 +466,7 @@ module.exports = {
   register,
   login,
   getMe,
+  refreshAccessToken,
+  logout,
+  createRefreshToken,
 };

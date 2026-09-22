@@ -2,12 +2,16 @@ import { useState } from 'react';
 
 import API_URL from '../config/api';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import './AddMarketForm.css';
 
 function AddMarketForm({
   onMarketAdded,
   onCancel,
 }) {
+  const { t } = useLanguage();
+
   const [formData, setFormData] = useState({
     name: '',
     district: '',
@@ -35,12 +39,12 @@ function AddMarketForm({
     setSuccess('');
 
     if (!formData.name.trim()) {
-      setError('Please enter the market name.');
+      setError(t('Please enter the market name.'));
       return;
     }
 
     if (!formData.district.trim()) {
-      setError('Please enter the district.');
+      setError(t('Please enter the district.'));
       return;
     }
 
@@ -69,13 +73,13 @@ function AddMarketForm({
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.message ||
-            'Failed to submit market.'
+          t(result.message) ||
+            t('Failed to submit market.')
         );
       }
 
       setSuccess(
-        'Market submitted successfully and is pending verification.'
+        t('Market submitted successfully and is pending verification.')
       );
 
       setFormData({
@@ -95,8 +99,8 @@ function AddMarketForm({
       );
 
       setError(
-        err.message ||
-          'Unable to submit market.'
+        t(err.message) ||
+          t('Unable to submit market.')
       );
     } finally {
       setSaving(false);
@@ -111,11 +115,10 @@ function AddMarketForm({
 
       <div className="add-market-form-header">
         <div>
-          <h2>Add Missing Market</h2>
+          <h2>{t('Add Missing Market')}</h2>
 
           <p>
-            Can't find a market? Submit it for
-            verification.
+            {t("Can't find a market? Submit it for verification.")}
           </p>
         </div>
 
@@ -124,7 +127,7 @@ function AddMarketForm({
           className="add-market-form-close"
           onClick={onCancel}
           disabled={saving}
-          aria-label="Close form"
+          aria-label={t('Close form')}
         >
           ×
         </button>
@@ -141,14 +144,14 @@ function AddMarketForm({
 
           <div className="market-form-group">
             <label htmlFor="marketName">
-              Market Name <span>*</span>
+              {t('Market Name')} <span>*</span>
             </label>
 
             <input
               id="marketName"
               name="name"
               type="text"
-              placeholder="e.g. Nashik APMC"
+              placeholder={t('e.g. Nashik APMC')}
               value={formData.name}
               onChange={handleChange}
               required
@@ -159,14 +162,14 @@ function AddMarketForm({
 
           <div className="market-form-group">
             <label htmlFor="marketDistrict">
-              District <span>*</span>
+              {t('District')} <span>*</span>
             </label>
 
             <input
               id="marketDistrict"
               name="district"
               type="text"
-              placeholder="e.g. Nashik"
+              placeholder={t('e.g. Nashik')}
               value={formData.district}
               onChange={handleChange}
               required
@@ -177,7 +180,7 @@ function AddMarketForm({
 
           <div className="market-form-group">
             <label htmlFor="marketType">
-              Market Type
+              {t('Market Type')}
             </label>
 
             <select
@@ -191,15 +194,15 @@ function AddMarketForm({
               </option>
 
               <option value="Sub-market">
-                Sub-market
+                {t('Sub-market')}
               </option>
 
               <option value="Private Market">
-                Private Market
+                {t('Private Market')}
               </option>
 
               <option value="Other">
-                Other
+                {t('Other')}
               </option>
             </select>
           </div>
@@ -208,14 +211,14 @@ function AddMarketForm({
 
           <div className="market-form-group">
             <label htmlFor="marketLocation">
-              Location
+              {t('Location')}
             </label>
 
             <input
               id="marketLocation"
               name="location"
               type="text"
-              placeholder="e.g. Nashik, Maharashtra"
+              placeholder={t('e.g. Nashik, Maharashtra')}
               value={formData.location}
               onChange={handleChange}
             />
@@ -231,10 +234,11 @@ function AddMarketForm({
           <span>ℹ️</span>
 
           <p>
-            Submitted markets are marked as
-            <strong> pending verification</strong>
-            and are not treated as official
-            markets until verified.
+            {t('Submitted markets are marked as')}{' '}
+            <strong>
+              {t('pending verification')}
+            </strong>{' '}
+            {t('and are not treated as official markets until verified.')}
           </p>
         </div>
 
@@ -269,7 +273,7 @@ function AddMarketForm({
             onClick={onCancel}
             disabled={saving}
           >
-            Cancel
+            {t('Cancel')}
           </button>
 
           <button
@@ -278,8 +282,8 @@ function AddMarketForm({
             disabled={saving}
           >
             {saving
-              ? 'Submitting...'
-              : 'Submit Market'}
+              ? t('Submitting...')
+              : t('Submit Market')}
           </button>
         </div>
       </form>

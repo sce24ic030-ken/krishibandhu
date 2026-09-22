@@ -2,8 +2,19 @@ const {
   GoogleGenAI,
 } = require('@google/genai');
 
+const {
+  groqChat,
+  isGroqConfigured,
+} = require('./groqService');
+
 const Market = require('../models/Market');
 const MarketPrice = require('../models/MarketPrice');
+const Crop = require('../models/Crop');
+const SaleListing = require('../models/SaleListing');
+const Parchi = require('../models/Parchi');
+const Transaction = require('../models/Transaction');
+const StorageFacility = require('../models/StorageFacility');
+const Backhaul = require('../models/Backhaul');
 
 /* =========================================================
    GEMINI
@@ -17,158 +28,252 @@ const ai = new GoogleGenAI({
 const GEMINI_MODEL =
   'gemini-3.6-flash';
 
+const LANGUAGE_NAMES = {
+  en: 'English',
+  mr: 'Marathi',
+  hi: 'Hindi',
+};
+
 /* =========================================================
    COMMODITY ALIASES
 ========================================================= */
 
 const commodityAliases = [
+  // ---- two-word / specific names first (avoid short-word collisions) ----
+  {
+    commodity: 'Green Gram(Moong)(Whole)',
+    keywords: ['green gram', 'moong', 'mung', 'मूग', 'मूंग'],
+  },
+  {
+    commodity: 'Black Gram(Urd Beans)(Whole)',
+    keywords: ['black gram', 'urad', 'udid', 'उडीद', 'उड़द'],
+  },
+  {
+    commodity: 'Bengal Gram(Gram)(Whole)',
+    keywords: ['bengal gram', 'gram', 'chana', 'chickpea', 'harbara', 'हरबरा', 'चना'],
+  },
+  {
+    commodity: 'Red gram/Arhar/Tur(whole)',
+    keywords: ['tur', 'toor', 'arhar', 'pigeon pea', 'tur dal', 'toor dal', 'तूर', 'अरहर'],
+  },
+  {
+    commodity: 'Bottle gourd',
+    keywords: ['bottle gourd', 'lauki', 'dudhi', 'दुधी', 'लौकी'],
+  },
+  {
+    commodity: 'Bitter gourd',
+    keywords: ['bitter gourd', 'karela', 'करले', 'करेला'],
+  },
+  {
+    commodity: 'Ridgeguard(Tori)',
+    keywords: ['ridge gourd', 'ridgeguard', 'tori', 'dodka', 'तोरी'],
+  },
+  {
+    commodity: 'Bhindi(Ladies Finger)',
+    keywords: ['bhindi', 'okra', 'lady finger', 'ladyfinger', 'भिंडी', 'भेंडी'],
+  },
+  {
+    commodity: 'Cucumbar(Kheera)',
+    keywords: ['cucumber', 'cucumbar', 'kakdi', 'kheera', 'काकडी', 'खीरा'],
+  },
+  {
+    commodity: 'Chilly Capsicum',
+    keywords: ['capsicum', 'bell pepper', 'shimla mirch', 'ढोवळी मिरची', 'शिमला मिर्च'],
+  },
+  {
+    commodity: 'Mustard Seed',
+    keywords: ['mustard', 'mustard seed', 'mohri', 'sarson', 'मोहरी', 'सरसों'],
+  },
+  {
+    commodity: 'Sesamum(Sesame,Gingelly,Til)',
+    keywords: ['sesame', 'sesamum', 'til', 'gingelly', 'तीळ', 'तिल'],
+  },
+  {
+    commodity: 'Sunflower/Sunflower Seed',
+    keywords: ['sunflower', 'सूर्यफूल', 'सूरजमुखी'],
+  },
+  {
+    commodity: 'Mousambi(Sweet Lime)',
+    keywords: ['sweet lime', 'mosambi', 'mousambi', 'मोसंबी'],
+  },
+  {
+    commodity: 'Karbuja(Musk Melon)',
+    keywords: ['musk melon', 'kharbooja', 'kharabuj', 'खरबूज'],
+  },
+  {
+    commodity: 'Water Melon',
+    keywords: ['watermelon', 'water melon', 'kalingad', 'टरबूज', 'तरबूज'],
+  },
+  {
+    commodity: 'Mango(Raw-Ripe)',
+    keywords: ['mango', 'aam', 'आंबा', 'आम'],
+  },
+  {
+    commodity: 'Ginger(Green)',
+    keywords: ['ginger', 'adrak', 'aale', 'आले', 'अदरक'],
+  },
+  {
+    commodity: 'Coriander(Leaves)',
+    keywords: ['coriander', 'dhania', 'kothimbir', 'धणे', 'धनिया'],
+  },
+  {
+    commodity: 'Methi(Leaves)',
+    keywords: ['methi', 'fenugreek', 'मेथी'],
+  },
+  {
+    commodity: 'Mint(Pudina)',
+    keywords: ['mint', 'pudina', 'पुदिना'],
+  },
+  {
+    commodity: 'Ragi(Finger Millet)',
+    keywords: ['ragi', 'nachani', 'finger millet', 'नाचणी'],
+  },
+  {
+    commodity: 'Gur(Jaggery)',
+    keywords: ['jaggery', 'gur', 'गूळ', 'गुड़'],
+  },
+  {
+    commodity: 'Sweet Potato',
+    keywords: ['sweet potato', 'ratalu', 'शकरकंद'],
+  },
+  {
+    commodity: 'Amla(Nelli Kai)',
+    keywords: ['amla', 'nelli', 'आवळा', 'आंवला'],
+  },
+  // ---- cereals ----
+  {
+    commodity: 'Wheat',
+    keywords: ['wheat', 'gehu', 'gahu', 'गहू', 'गेहूं'],
+  },
+  {
+    commodity: 'Rice',
+    keywords: ['rice', 'paddy', 'chawal', 'tandul', 'चावल', 'भात', 'धान', 'तांदूळ'],
+  },
+  {
+    commodity: 'Bajra',
+    keywords: ['bajra', 'bajri', 'बाजरी', 'बाजरा'],
+  },
+  {
+    commodity: 'Jowar',
+    keywords: ['jowar', 'jwari', 'sorghum', 'ज्वारी', 'ज्वार'],
+  },
+  {
+    commodity: 'Maize',
+    keywords: ['maize', 'corn', 'makka', 'mokka', 'मका', 'मक्का'],
+  },
+  {
+    commodity: 'Soybean',
+    keywords: ['soybean', 'soyabean', 'soya', 'सोयाबीन'],
+  },
+  {
+    commodity: 'Groundnut',
+    keywords: ['groundnut', 'peanut', 'moongfali', 'shingdana', 'शेंगदाणे', 'मूंगफली'],
+  },
+  {
+    commodity: 'Safflower',
+    keywords: ['safflower', 'kardai', 'करडई'],
+  },
+  // ---- vegetables ----
   {
     commodity: 'Tomato',
-    keywords: [
-      'tomato',
-      'tomatoes',
-      'टमाटर',
-    ],
+    keywords: ['tomato', 'tomatoes', 'टमाटर'],
   },
-
   {
     commodity: 'Onion',
-    keywords: [
-      'onion',
-      'onions',
-      'red onion',
-      'white onion',
-      'yellow onion',
-      'onion bulb',
-      'कांदा',
-    ],
+    keywords: ['onion', 'onions', 'red onion', 'white onion', 'yellow onion', 'kanda', 'कांदा', 'प्याज'],
   },
-
   {
     commodity: 'Potato',
-    keywords: [
-      'potato',
-      'potatoes',
-      'बटाटा',
-    ],
+    keywords: ['potato', 'potatoes', 'batata', 'बटाटा', 'आलू'],
   },
-
   {
     commodity: 'Brinjal',
-    keywords: [
-      'brinjal',
-      'eggplant',
-      'aubergine',
-      'वांगी',
-    ],
+    keywords: ['brinjal', 'eggplant', 'aubergine', 'vangi', 'baingan', 'वांगी', 'बैंगन'],
   },
-
   {
     commodity: 'Cabbage',
-    keywords: [
-      'cabbage',
-      'कोबी',
-    ],
+    keywords: ['cabbage', 'कोबी', 'पत्ता गोभी'],
   },
-
   {
     commodity: 'Cauliflower',
-    keywords: [
-      'cauliflower',
-      'फ्लॉवर',
-    ],
+    keywords: ['cauliflower', 'फ्लॉवर', 'फूल गोभी'],
   },
-
   {
-    commodity: 'Capsicum',
-    keywords: [
-      'capsicum',
-      'bell pepper',
-      'green pepper',
-      'shimla mirch',
-      'ढोवळी मिरची',
-    ],
+    commodity: 'Carrot',
+    keywords: ['carrot', 'gajar', 'गाजर'],
   },
-
   {
-    commodity: 'Bottle Gourd',
-    keywords: [
-      'bottle gourd',
-      'lauki',
-      'dudhi',
-      'दुधी भोपळा',
-    ],
+    commodity: 'Beetroot',
+    keywords: ['beetroot', 'beet', 'बीट', 'चुकंदर'],
   },
-
+  {
+    commodity: 'Raddish',
+    keywords: ['radish', 'raddis', 'moola', 'muli', 'मुळा', 'मूली'],
+  },
   {
     commodity: 'Pumpkin',
-    keywords: [
-      'pumpkin',
-      'squash',
-      'भोपळा',
-    ],
+    keywords: ['pumpkin', 'squash', 'भोपळा', 'कद्दू'],
   },
-
+  {
+    commodity: 'Green Peas',
+    keywords: ['green peas', 'peas', 'matar', 'वाटाणे', 'मटर'],
+  },
+  {
+    commodity: 'Spinach',
+    keywords: ['spinach', 'palak', 'पालक'],
+  },
+  {
+    commodity: 'Drumstick',
+    keywords: ['drumstick', 'shevga', 'शेवगा'],
+  },
+  // ---- fruits ----
+  {
+    commodity: 'Banana',
+    keywords: ['banana', 'केळे', 'केला'],
+  },
+  {
+    commodity: 'Apple',
+    keywords: ['apple', 'सफरचंद', 'सेब'],
+  },
+  {
+    commodity: 'Orange',
+    keywords: ['orange', 'संत्रे', 'संतरा'],
+  },
+  {
+    commodity: 'Pomegranate',
+    keywords: ['pomegranate', 'dalimb', 'अनार', 'डाळिंब'],
+  },
+  {
+    commodity: 'Grapes',
+    keywords: ['grapes', 'draksha', 'द्राक्षे', 'अंगूर'],
+  },
+  {
+    commodity: 'Papaya',
+    keywords: ['papaya', 'पपई', 'पपीता'],
+  },
+  {
+    commodity: 'Guava',
+    keywords: ['guava', 'peru', 'अमरूद'],
+  },
+  {
+    commodity: 'Lime',
+    keywords: ['lemon', 'lime', 'limbu', 'नींबू', 'लिंबू'],
+  },
   {
     commodity: 'Garlic',
-    keywords: [
-      'garlic',
-      'लसूण',
-    ],
+    keywords: ['garlic', 'lasun', 'लसूण', 'लहसुन'],
   },
-
   {
-    commodity: 'Ginger',
-    keywords: [
-      'ginger',
-      'आले',
-    ],
+    commodity: 'Chilli',
+    keywords: ['chilli', 'chili', 'mirchi', 'mirch', 'मिरची', 'मिर्च'],
   },
-
   {
-    commodity: 'Paddy',
-    keywords: [
-      'paddy',
-      'rice',
-      'धान',
-      'भात',
-    ],
+    commodity: 'Turmeric',
+    keywords: ['turmeric', 'halad', 'haldi', 'हळद', 'हल्दी'],
   },
-
   {
-    commodity: 'Amaranth',
-    keywords: [
-      'amaranth',
-      'राजगिरा',
-    ],
-  },
-
-  {
-    commodity: 'Colocasia',
-    keywords: [
-      'colocasia',
-      'arvi',
-      'arbi',
-      'अर्वी',
-    ],
-  },
-
-  {
-    commodity: 'Sorrel Leaves',
-    keywords: [
-      'sorrel',
-      'sorrel leaves',
-      'आंबट चुका',
-    ],
-  },
-
-  {
-    commodity: 'Roselle Leaves',
-    keywords: [
-      'roselle',
-      'roselle leaves',
-      'अंबाडी भाजी',
-    ],
+    commodity: 'Guar',
+    keywords: ['guar', 'गवार'],
   },
 ];
 
@@ -186,6 +291,32 @@ function normalizeText(
     .trim();
 }
 
+/* Bound a keyword so "rice" does not match inside
+   "price", "tur" inside "turmeric", etc. */
+const escapeRegExp = (value) =>
+  String(value).replace(
+    /[.*+?^${}()|[\]\\]/g,
+    '\\$&',
+  );
+
+const matchesKeyword = (
+  normalized,
+  keyword,
+) => {
+  const k = normalizeText(keyword);
+
+  if (!k) {
+    return false;
+  }
+
+  return new RegExp(
+    `(^|[^a-z0-9])${escapeRegExp(
+      k,
+    )}([^a-z0-9]|$)`,
+    'i',
+  ).test(normalized);
+};
+
 /* =========================================================
    DETECT COMMODITY
 ========================================================= */
@@ -202,10 +333,9 @@ function detectCommodity(
     const matched =
       item.keywords.some(
         (keyword) =>
-          normalized.includes(
-            normalizeText(
-              keyword,
-            ),
+          matchesKeyword(
+            normalized,
+            keyword,
           ),
       );
 
@@ -511,12 +641,574 @@ MARKET PRICE RULES:
 }
 
 /* =========================================================
+   SYSTEM GUIDE
+========================================================= */
+
+const SYSTEM_GUIDE = `
+SYSTEM GUIDE - how to use the KrishiBandhu app:
+
+The app helps farmers run the whole farming-to-sale journey and works in English, Marathi and Hindi.
+
+1) Crops: add each of your crops (name, variety, area, sowing date, expected harvest date) in the Crops page to track the lot from sowing to sale. Every crop gets a QR code for traceability.
+2) Markets & Prices: the Markets page lists live Maharashtra APMC mandis and their daily verified prices (Agmarknet/MSAMB). You can filter by district or crop (for example Wheat, Onion, Tomato, Soybean) to compare mandi rates before selling.
+3) Storage: the Storage page shows cold storages and warehouses with capacity, available space and charges, and lets the farmer request storage for produce.
+4) Sell: Sale Listings lets a farmer list produce (quantity, market, expected price). Traders place bids and the farmer accepts the best offer.
+5) Parchi: every accepted sale automatically creates a digital Parchi (sale receipt) with price, quantity, market and both parties.
+6) Passbook: the app keeps an income and expense ledger for the farm.
+7) Backhaul: arrange transport of produce between markets.
+8) Weather: the Weather page gives forecasts for planning sowing, irrigation and spraying.
+9) AI Vision: on this page a farmer can upload a crop photo; the AI checks visible quality and gives an indicative price range in rupees per kg.
+10) This chat: the farmer can ask about any feature, or ask for live data from the app (their crops, storage, today's prices, listings, parchi, passbook and more). The AI fetches real data from the app's own database and shares exactly what the app has.
+
+When the farmer asks how to do something in the app, explain using this guide with simple steps.
+` ;
+
+/* =========================================================
+   APP LIVE DATA (fetched from the app's database)
+========================================================= */
+
+const APP_TOPIC_WORDS = {
+  storage: [
+    'storage',
+    'warehouse',
+    'warehouses',
+    'godown',
+    'cold storage',
+    'facility',
+    'गोदाम',
+    'भांडार',
+    'शीतगृह',
+  ],
+  crops: [
+    'crop',
+    'crops',
+    'my farm',
+    'सोय',
+    'पीक',
+    'पिके',
+    'फसल',
+    'पेरणी',
+  ],
+  markets: [
+    'market',
+    'markets',
+    'mandi',
+    'mandis',
+    'apmc',
+    'बाजार',
+    'मंडई',
+    'मार्केट',
+  ],
+  prices: [
+    'price',
+    'prices',
+    'rate',
+    'rates',
+    'rate list',
+    'भाव',
+    'किंमत',
+    'मूल्य',
+  ],
+  listings: [
+    'listing',
+    'listings',
+    'sale listing',
+    'sell my',
+    'sell',
+    'selling',
+    'विक्री',
+    'विक्रय',
+    'लिस्टिंग',
+  ],
+  parchi: [
+    'parchi',
+    'परची',
+    'बील',
+    'receipt',
+    'bill',
+  ],
+  transactions: [
+    'transaction',
+    'transactions',
+    'passbook',
+    'income',
+    'expense',
+    'spent',
+    'व्यवहार',
+    'पासबुक',
+    'उत्पन्न',
+    'खर्च',
+  ],
+  backhaul: [
+    'backhaul',
+    'transport',
+    'transportation',
+    'logistics',
+    'वाहतूक',
+    'ट्रान्सपोर्ट',
+  ],
+};
+
+// Words that signal the farmer wants to understand or
+// navigate the app itself (how-to / guide questions).
+const APP_GUIDE_WORDS = [
+  'guide',
+  'help',
+  'how',
+  'how to',
+  'use',
+  'using',
+  'app',
+  'app feature',
+  'features',
+  'what can',
+  'कसे',
+  'कैसे',
+  'कशी',
+  'कसा',
+  'मदत',
+  'गाईड',
+  'सुविधा',
+];
+
+const gatherAppData = async (
+  message,
+  userId,
+  hasCommodity,
+) => {
+  try {
+    const normalized =
+      normalizeText(message);
+
+    const hit = (words) =>
+      words.some((word) =>
+        normalized.includes(word),
+      );
+
+    const showGuide =
+      hit(APP_GUIDE_WORDS);
+
+    const sections = [];
+
+    // ---------------- storage ----------------
+
+    if (
+      hit(
+        APP_TOPIC_WORDS.storage,
+      )
+    ) {
+      const total =
+        await StorageFacility.countDocuments(
+          {},
+        );
+
+      if (total) {
+        const facilities =
+          await StorageFacility.find(
+            {},
+          )
+            .select(
+              'name type location.district capacity capacityUnit availableCapacity storageCharges.amount',
+            )
+            .sort({ name: 1 })
+            .limit(12)
+            .lean();
+
+        const lines = facilities.map(
+          (f) =>
+            `- ${f.name}${
+              f.location?.district
+                ? ` (${f.location.district})`
+                : ''
+            }: ${
+              f.type === 'cold_storage'
+                ? 'Cold storage'
+                : 'Warehouse'
+            }, capacity ${f.capacity} ${
+              f.capacityUnit
+            }, available ${
+              f.availableCapacity ?? 0
+            } ${f.capacityUnit}, charges ₹${
+              f.storageCharges?.amount ?? 0
+            }`,
+        );
+
+        sections.push(
+          `STORAGE: the app has ${total} storage facility record(s)${
+            total > 12
+              ? ' (first 12 shown)'
+              : ''
+          }:\n${lines.join('\n')}`,
+        );
+      }
+    }
+
+    // ---------------- markets ----------------
+
+    if (
+      hit(
+        APP_TOPIC_WORDS.markets,
+      )
+    ) {
+      const total =
+        await Market.countDocuments(
+          {},
+        );
+
+      if (total) {
+        const markets =
+          await Market.find(
+            {},
+          )
+            .select(
+              'name district state',
+            )
+            .sort({ name: 1 })
+            .limit(12)
+            .lean();
+
+        const lines = markets.map(
+          (m) =>
+            `- ${m.name}${
+              m.district
+                ? ` (${m.district})`
+                : ''
+            }`,
+        );
+
+        sections.push(
+          `MARKETS: the app has ${total} market record(s)${
+            total > 12
+              ? ' (first 12 shown)'
+              : ''
+          }:\n${lines.join('\n')}`,
+        );
+      }
+    }
+
+    // ---------------- prices overview ----------------
+
+    if (
+      !hasCommodity &&
+      hit(
+        APP_TOPIC_WORDS.prices,
+      )
+    ) {
+      const total =
+        await MarketPrice.countDocuments(
+          {},
+        );
+
+      if (total) {
+        const latest =
+          await MarketPrice.findOne(
+            {},
+          )
+            .sort({ priceDate: -1 })
+            .select('priceDate')
+            .lean();
+
+        const top =
+          await MarketPrice.aggregate(
+            [
+              {
+                $group: {
+                  _id: '$commodity',
+                  avgModal: {
+                    $avg: '$modalPrice',
+                  },
+                  n: { $sum: 1 },
+                },
+              },
+              {
+                $sort: {
+                  n: -1,
+                  avgModal: -1,
+                },
+              },
+              { $limit: 6 },
+            ],
+          );
+
+        const lines = top.map(
+          (t) =>
+            `- ${t._id}: ₹${Math.round(
+              t.avgModal,
+            )} average (${t.n} observation${
+              t.n === 1 ? '' : 's'
+            })`,
+        );
+
+        sections.push(
+          `PRICES: latest price date in the app is ${
+            latest?.priceDate
+              ? new Date(
+                  latest.priceDate,
+                ).toISOString()
+                  .slice(0, 10)
+              : 'unknown'
+          }, with ${total} total price observation(s). Top commodities by observations:\n${lines.join(
+            '\n',
+          )}`,
+        );
+      }
+    }
+
+    // ---------------- user crops ----------------
+
+    if (
+      userId &&
+      hit(
+        APP_TOPIC_WORDS.crops,
+      )
+    ) {
+      const total =
+        await Crop.countDocuments({
+          owner: userId,
+        });
+
+      if (total) {
+        const crops =
+          await Crop.find({
+            owner: userId,
+          })
+            .select(
+              'name variety area areaUnit status expectedHarvestDate',
+            )
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean();
+
+        const lines = crops.map(
+          (c) =>
+            `- ${c.name}${
+              c.variety
+                ? ` (${c.variety})`
+                : ''
+            }: ${c.area} ${c.areaUnit}, status ${
+              c.status
+            }${
+              c.expectedHarvestDate
+                ? `, expected harvest ${new Date(
+                    c.expectedHarvestDate,
+                  )
+                    .toISOString()
+                    .slice(0, 10)}`
+                : ''
+            }`,
+        );
+
+        sections.push(
+          `CROPS: this farmer has ${total} crop record(s):\n${lines.join(
+            '\n',
+          )}`,
+        );
+      }
+    }
+
+    // ---------------- user listings ----------------
+
+    if (
+      userId &&
+      hit(
+        APP_TOPIC_WORDS.listings,
+      )
+    ) {
+      const total =
+        await SaleListing.countDocuments({
+          farmer: userId,
+        });
+
+      if (total) {
+        const listings =
+          await SaleListing.find({
+            farmer: userId,
+          })
+            .populate('crop', 'name')
+            .sort({ listedAt: -1 })
+            .limit(5)
+            .lean();
+
+        const lines = listings.map(
+          (l) =>
+            `- ${
+              l.crop?.name || 'Crop'
+            }: ${l.quantity} ${l.unit}, asking ₹${
+              l.askingPrice
+            }, status ${l.status}`,
+        );
+
+        sections.push(
+          `SALE_LISTINGS: this farmer has ${total} listing record(s):\n${lines.join(
+            '\n',
+          )}`,
+        );
+      }
+    }
+
+    // ---------------- user parchi ----------------
+
+    if (
+      userId &&
+      hit(
+        APP_TOPIC_WORDS.parchi,
+      )
+    ) {
+      const total =
+        await Parchi.countDocuments({
+          farmer: userId,
+        });
+
+      if (total) {
+        const parchis =
+          await Parchi.find({
+            farmer: userId,
+          })
+            .select(
+              'parchiNumber quantity createdAt',
+            )
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .lean();
+
+        const lines = parchis.map(
+          (p) =>
+            `- ${p.parchiNumber}: ${p.quantity} qty, dated ${
+              p.createdAt
+                ? new Date(
+                    p.createdAt,
+                  )
+                    .toISOString()
+                    .slice(0, 10)
+                : 'unknown'
+            }`,
+        );
+
+        sections.push(
+          `PARCHI: this farmer has ${total} parchi record(s):\n${lines.join(
+            '\n',
+          )}`,
+        );
+      }
+    }
+
+    // ---------------- transactions ----------------
+
+    if (
+      hit(
+        APP_TOPIC_WORDS.transactions,
+      )
+    ) {
+      const total =
+        await Transaction.countDocuments(
+          {},
+        );
+
+      if (total) {
+        const sums =
+          await Transaction.aggregate(
+            [
+              {
+                $group: {
+                  _id: '$type',
+                  total: {
+                    $sum: '$amount',
+                  },
+                  n: { $sum: 1 },
+                },
+              },
+            ],
+          );
+
+        const income = sums.find(
+          (s) => s._id === 'income',
+        );
+        const expense = sums.find(
+          (s) => s._id === 'expense',
+        );
+
+        sections.push(
+          `TRANSACTIONS: the app has ${total} passbook record(s): income ₹${
+            income?.total ?? 0
+          } (${income?.n ?? 0}), expense ₹${
+            expense?.total ?? 0
+          } (${expense?.n ?? 0})`,
+        );
+      }
+    }
+
+    // ---------------- user backhaul ----------------
+
+    if (
+      userId &&
+      hit(
+        APP_TOPIC_WORDS.backhaul,
+      )
+    ) {
+      const total =
+        await Backhaul.countDocuments({
+          $or: [
+            { farmer: userId },
+            { trader: userId },
+          ],
+        });
+
+      sections.push(
+        `BACKHAUL: this user has ${total} transport record(s).`,
+      );
+    }
+
+    if (!sections.length) {
+      return { appContext: '', showGuide };
+    }
+
+    return {
+      appContext: `
+APP LIVE DATA (fetched just now from the KrishiBandhu app database - use these numbers exactly, never invent any additional record, and if something is missing say it is not in the app yet):
+
+${sections.join('\n\n')}
+`,
+      showGuide: true,
+    };
+  } catch (error) {
+    console.error(
+      'Gather app data error:',
+      error,
+    );
+
+    return { appContext: '', showGuide: false };
+  }
+};
+
+/* =========================================================
    SYSTEM INSTRUCTION
 ========================================================= */
 
 function buildSystemInstruction(
   marketContext,
+  language,
+  systemGuide,
+  appContext,
 ) {
+  const languageName =
+    LANGUAGE_NAMES[language] ||
+    'English';
+
+  const languageDirective = (
+    language && language !== 'en'
+  )
+    ? `
+LANGUAGE:
+
+- Respond entirely in ${languageName}.
+- Use simple, clear ${languageName} that a rural
+  farmer easily understands.
+- Keep numbers, prices, dates and market names
+  exactly as provided.
+- Do not mix languages unless quoting a term.
+`
+    : '';
+
   return `
 You are KrishiBandhu AI, an agricultural assistant
 for farmers.
@@ -538,6 +1230,30 @@ GENERAL RULES:
 9. Never fabricate market prices.
 10. Never fabricate weather information.
 11. Never claim an estimated selling price is guaranteed.
+
+ANSWER FORMAT - always follow:
+
+1. Keep sentences short and simple for a farmer.
+2. Never answer with one long unbroken paragraph of text.
+3. Structure every answer with small emoji headers and
+   bullet lists. Use these emojis as section markers:
+   🌱 crops, 📈 or 💰 prices and money, 🏬 storage and
+   warehouses, 📋 listings and parchi, 🚚 transport and
+   backhaul, 🌤 weather, ⚠️ cautions, ✅ summary, 📌 tips
+   and next steps.
+4. Prefer bullet lists (use - symbols) for facts and
+   numbered steps (1. 2. 3.) for any how-to guidance.
+5. Bold important numbers, for example **₹3,777**.
+6. When explaining how to use an app feature, give clear
+   numbered steps and name the exact app page (Crops,
+   Markets, Storage, Sale Listings, Parchi, Passbook,
+   Backhaul, Weather, AI Assistant).
+7. After answering, act as a guide through the whole app:
+   when it fits, end with a short ✅ one-line summary
+   (such as "✅ Done - I showed your crop schedule.") and
+   then a 📌 one-line follow-up question offering the
+   natural next step (such as "📌 Want me to check what
+   price this crop fetches at your market?").
 
 MARKET PRICE RULES:
 
@@ -570,8 +1286,10 @@ If discussing crop-image analysis:
 - Do not claim a definitive disease diagnosis.
 - Any market-price estimate based on image quality is indicative only.
 - Actual selling prices can differ.
-
+${systemGuide}
+${languageDirective}
 ${marketContext}
+${appContext}
 `;
 }
 
@@ -641,6 +1359,8 @@ function buildChatContents(
 async function generateAIResponse(
   message,
   history = [],
+  language,
+  userId,
 ) {
   if (
     !message ||
@@ -716,10 +1436,32 @@ async function generateAIResponse(
       marketData,
     );
 
-  const systemInstruction =
-    buildSystemInstruction(
-      marketContext,
+  const {
+      appContext,
+      showGuide,
+    } = await gatherAppData(
+      message,
+      userId,
+      Boolean(
+        marketData?.commodity,
+      ),
     );
+
+    if (appContext) {
+      console.log(
+        '📊 App data context added',
+      );
+    }
+
+    const systemInstruction =
+      buildSystemInstruction(
+        marketContext,
+        language,
+        showGuide
+          ? SYSTEM_GUIDE
+          : '',
+        appContext,
+      );
 
   const contents =
     buildChatContents(
@@ -728,45 +1470,112 @@ async function generateAIResponse(
     );
 
   try {
-    const response =
-      await ai.models.generateContent({
-        model:
-          GEMINI_MODEL,
+    /*
+      PRIMARY: Groq — rotates across all configured
+      chat keys (LLM_API_KEYS + WHISPER_API_KEYS)
+      whenever a rate limit or 5xx occurs.
+    */
 
-        contents,
+    if (isGroqConfigured()) {
+      try {
+        const groqResponse =
+          await groqChat({
+            systemInstruction,
 
-        config: {
-          systemInstruction,
+            contents,
 
-          temperature: 0.4,
+            temperature: 0.4,
 
-          maxOutputTokens: 1200,
-        },
-      });
+            maxTokens: 1200,
+          });
 
-    const responseText =
-      response?.text;
+        console.log(
+          '✅ Groq response received',
+        );
 
-    if (
-      !responseText ||
-      typeof responseText !==
-        'string'
-    ) {
-      throw new Error(
-        'Gemini returned an empty response.',
-      );
+        console.log(
+          '========================================',
+        );
+        console.log('');
+
+        return groqResponse;
+      } catch (groqError) {
+        console.error(
+          '❌ Groq failed — falling back to Gemini:',
+          groqError.message,
+        );
+      }
     }
 
-    console.log(
-      '✅ Gemini response received',
-    );
+    /*
+      FALLBACK: Gemini — try the configured model, then
+      gemini-flash-latest (different capacity pool).
+    */
 
-    console.log(
-      '========================================',
-    );
-    console.log('');
+    const geminiFallbackModels = [
+      GEMINI_MODEL,
+      'gemini-flash-latest',
+    ];
 
-    return responseText.trim();
+    let lastGeminiError = null;
+
+    for (
+      const fallbackModel of geminiFallbackModels
+    ) {
+      try {
+        const response =
+          await ai.models.generateContent({
+            model:
+              fallbackModel,
+
+            contents,
+
+            config: {
+              systemInstruction,
+
+              temperature: 0.4,
+
+              maxOutputTokens: 1200,
+            },
+          });
+
+        const responseText =
+          response?.text;
+
+        if (
+          !responseText ||
+          typeof responseText !==
+            'string'
+        ) {
+          throw new Error(
+            'Gemini returned an empty response.',
+          );
+        }
+
+        console.log(
+          `✅ Gemini response received (${fallbackModel})`,
+        );
+
+        console.log(
+          '========================================',
+        );
+        console.log('');
+
+        return responseText.trim();
+      } catch (geminiModelError) {
+        lastGeminiError =
+          geminiModelError;
+
+        console.error(
+          `❌ Gemini ${fallbackModel} failed:`,
+          geminiModelError.message,
+        );
+      }
+    }
+
+    throw lastGeminiError || new Error(
+      'Gemini returned an empty response.',
+    );
   } catch (error) {
     console.error('');
     console.error(

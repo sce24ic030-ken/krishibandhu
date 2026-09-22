@@ -1826,6 +1826,32 @@
   color: #365a48;
 }
 
+.storage-request-qr {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  margin-top: 10px;
+  padding: 7px 12px;
+
+  border: 1px solid #bcdacd;
+  border-radius: 8px;
+
+  background: #eef7f2;
+  color: #1c5c3b;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.storage-request-qr:hover {
+  background: #e2f1e8;
+}
+
 .storage-card-actions {
   display: flex;
   align-items: center;

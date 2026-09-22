@@ -5,9 +5,13 @@ import AddMarketForm from '../components/AddMarketForm';
 
 import API_URL from '../config/api';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import './Market.css';
 
 function Market() {
+  const { t, lang } = useLanguage();
+
   const [activeTab, setActiveTab] = useState('markets');
 
   const [markets, setMarkets] = useState([]);
@@ -57,7 +61,7 @@ function Market() {
       console.error('Fetch markets error:', error);
 
       setMarketError(
-        error.message || 'Unable to load markets.',
+        t(error.message) || t('Unable to load markets.'),
       );
     } finally {
       setLoadingMarkets(false);
@@ -99,8 +103,8 @@ function Market() {
       );
 
       setPriceError(
-        error.message ||
-          'Unable to load market prices.',
+        t(error.message) ||
+          t('Unable to load market prices.'),
       );
     } finally {
       setLoadingPrices(false);
@@ -300,9 +304,14 @@ function Market() {
       return '—';
     }
 
-    return new Date(date).toLocaleDateString(
-      'en-IN',
-      {
+    const dateLocale =
+      lang === 'mr'
+        ? 'mr-IN'
+        : lang === 'hi'
+          ? 'hi-IN'
+          : 'en-IN';
+
+    return new Date(date).toLocaleDateString(dateLocale, {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
@@ -320,8 +329,8 @@ function Market() {
   return (
     <main className="dashboard">
       <PageHeader
-        title="Market"
-        description="Explore agricultural markets and commodity prices across Maharashtra."
+        title={t('Market')}
+        description={t('Explore agricultural markets and commodity prices across Maharashtra.')}
       />
 
       <div className="market-page-card">
@@ -332,11 +341,10 @@ function Market() {
 
         <div className="market-page-header">
           <div>
-            <h2>Market Information</h2>
+            <h2>{t('Market Information')}</h2>
 
             <p>
-              Find Maharashtra markets and
-              latest agricultural prices.
+              {t('Find Maharashtra markets and latest agricultural prices.')}
             </p>
           </div>
 
@@ -348,7 +356,7 @@ function Market() {
                 setShowAddMarketForm(true)
               }
             >
-              + Add Missing Market
+              + {t('Add Missing Market')}
             </button>
           )}
         </div>
@@ -375,9 +383,9 @@ function Market() {
             </span>
 
             <span>
-              <strong>Market Places</strong>
+              <strong>{t('Market Places')}</strong>
               <small>
-                Explore agricultural markets
+                {t('Explore agricultural markets')}
               </small>
             </span>
           </button>
@@ -398,9 +406,9 @@ function Market() {
             </span>
 
             <span>
-              <strong>Items & Prices</strong>
+              <strong>{t('Items & Prices')}</strong>
               <small>
-                View latest commodity prices
+                {t('View latest commodity prices')}
               </small>
             </span>
           </button>
@@ -430,18 +438,16 @@ function Market() {
                 <div className="market-section-heading">
                   <div>
                     <h2>
-                      Maharashtra Markets
+                      {t('Maharashtra Markets')}
                     </h2>
 
                     <p>
-                      Agricultural market places
-                      registered in KrishiBandhu.
+                      {t('Agricultural market places registered in KrishiBandhu.')}
                     </p>
                   </div>
 
                   <span className="market-count-badge">
-                    {filteredMarkets.length}{' '}
-                    markets
+                    {t('{0} markets', filteredMarkets.length)}
                   </span>
                 </div>
 
@@ -451,13 +457,13 @@ function Market() {
 
                       <div className="market-search">
                         <label htmlFor="marketSearch">
-                          Search Markets
+                          {t('Search Markets')}
                         </label>
 
                         <input
                           id="marketSearch"
                           type="text"
-                          placeholder="Search market or district..."
+                          placeholder={t('Search market or district...')}
                           value={marketSearch}
                           onChange={(event) =>
                             setMarketSearch(
@@ -469,7 +475,7 @@ function Market() {
 
                       <div className="market-district-filter">
                         <label htmlFor="districtFilter">
-                          District
+                          {t('District')}
                         </label>
 
                         <select
@@ -482,7 +488,7 @@ function Market() {
                           }
                         >
                           <option value="All">
-                            All Districts
+                            {t('All Districts')}
                           </option>
 
                           {districts.map(
@@ -503,7 +509,7 @@ function Market() {
                 {loadingMarkets && (
                   <div className="market-message">
                     <p>
-                      Loading markets...
+                      {t('Loading markets...')}
                     </p>
                   </div>
                 )}
@@ -519,8 +525,7 @@ function Market() {
                   filteredMarkets.length === 0 && (
                     <div className="market-message">
                       <p>
-                        No markets match your
-                        search.
+                        {t('No markets match your search.')}
                       </p>
                     </div>
                   )}
@@ -542,19 +547,17 @@ function Market() {
                                 </h2>
 
                                 <p>
-                                  {market.location ||
-                                    market.district}
-                                  , Maharashtra
+                                  {t('{0}, Maharashtra', market.location || market.district)}
                                 </p>
                               </div>
 
                               {market.isOfficial ? (
                                 <span className="official-badge">
-                                  ✓ Official
+                                  ✓ {t('Official')}
                                 </span>
                               ) : (
                                 <span className="pending-badge">
-                                  Pending
+                                  {t('Pending')}
                                 </span>
                               )}
                             </div>
@@ -587,18 +590,16 @@ function Market() {
                 <div className="market-section-heading">
                   <div>
                     <h2>
-                      Commodity Prices
+                      {t('Commodity Prices')}
                     </h2>
 
                     <p>
-                      Latest available prices
-                      from official MSAMB data.
+                      {t('Latest available prices from official MSAMB data.')}
                     </p>
                   </div>
 
                   <span className="market-count-badge">
-                    {filteredPrices.length}{' '}
-                    records
+                    {t('{0} records', filteredPrices.length)}
                   </span>
                 </div>
 
@@ -608,13 +609,13 @@ function Market() {
 
                       <div className="market-search">
                         <label htmlFor="priceSearch">
-                          Search Items
+                          {t('Search Items')}
                         </label>
 
                         <input
                           id="priceSearch"
                           type="text"
-                          placeholder="Search commodity, variety or market..."
+                          placeholder={t('Search commodity, variety or market...')}
                           value={priceSearch}
                           onChange={(event) =>
                             setPriceSearch(
@@ -626,7 +627,7 @@ function Market() {
 
                       <div className="market-district-filter">
                         <label htmlFor="priceDistrictFilter">
-                          District
+                          {t('District')}
                         </label>
 
                         <select
@@ -639,7 +640,7 @@ function Market() {
                           }
                         >
                           <option value="All">
-                            All Districts
+                            {t('All Districts')}
                           </option>
 
                           {districts.map(
@@ -657,7 +658,7 @@ function Market() {
 
                       <div className="market-commodity-filter">
                         <label htmlFor="commodityFilter">
-                          Commodity
+                          {t('Commodity')}
                         </label>
 
                         <select
@@ -670,7 +671,7 @@ function Market() {
                           }
                         >
                           <option value="All">
-                            All Commodities
+                            {t('All Commodities')}
                           </option>
 
                           {commodities.map(
@@ -688,7 +689,7 @@ function Market() {
 
                       <div className="market-market-filter">
                         <label htmlFor="marketFilter">
-                          Market
+                          {t('Market')}
                         </label>
 
                         <select
@@ -701,7 +702,7 @@ function Market() {
                           }
                         >
                           <option value="All">
-                            All Markets
+                            {t('All Markets')}
                           </option>
 
                           {marketNames.map(
@@ -722,7 +723,7 @@ function Market() {
                 {loadingPrices && (
                   <div className="market-message">
                     <p>
-                      Loading market prices...
+                      {t('Loading market prices...')}
                     </p>
                   </div>
                 )}
@@ -736,15 +737,15 @@ function Market() {
                 {!loadingPrices &&
                   !priceError && (
                     <div className="market-results-info">
-                      Showing{' '}
+                      {t('Showing')}{' '}
                       <strong>
                         {filteredPrices.length}
                       </strong>{' '}
-                      price records from{' '}
+                      {t('price records from')}{' '}
                       <strong>
                         {marketPrices.length}
                       </strong>{' '}
-                      available records
+                      {t('available records')}
                     </div>
                   )}
 
@@ -753,8 +754,7 @@ function Market() {
                   filteredPrices.length === 0 && (
                     <div className="market-message">
                       <p>
-                        No commodity prices match
-                        your filters.
+                        {t('No commodity prices match your filters.')}
                       </p>
                     </div>
                   )}
@@ -783,23 +783,19 @@ function Market() {
                               {price.market
                                 ?.isOfficial && (
                                 <span className="official-badge">
-                                  ✓ Official
+                                  ✓ {t('Official')}
                                 </span>
                               )}
                             </div>
 
                             <div className="market-price-location">
                               📍{' '}
-                              {
-                                price.market
-                                  ?.district
-                              }
-                              , Maharashtra
+                              {t('{0}, Maharashtra', price.market?.district)}
                             </div>
 
                             {price.variety && (
                               <div className="market-price-variety">
-                                Variety:{' '}
+                                {t('Variety:')}{' '}
                                 <strong>
                                   {price.variety}
                                 </strong>
@@ -809,7 +805,7 @@ function Market() {
                             <div className="market-price-grid">
                               <div className="market-price-item">
                                 <span>
-                                  Minimum
+                                  {t('Minimum')}
                                 </span>
 
                                 <strong>
@@ -821,7 +817,7 @@ function Market() {
 
                               <div className="market-price-item market-price-modal">
                                 <span>
-                                  Modal
+                                  {t('Modal')}
                                 </span>
 
                                 <strong>
@@ -833,7 +829,7 @@ function Market() {
 
                               <div className="market-price-item">
                                 <span>
-                                  Maximum
+                                  {t('Maximum')}
                                 </span>
 
                                 <strong>
@@ -846,11 +842,7 @@ function Market() {
 
                             <div className="market-price-footer">
                               <span>
-                                📦 Arrival:{' '}
-                                {price.arrivalQuantity ??
-                                  '—'}{' '}
-                                {price.unit ||
-                                  'quintal'}
+                                {t('📦 Arrival: {0} {1}', price.arrivalQuantity ?? '—', price.unit || 'quintal')}
                               </span>
 
                               <span>
@@ -862,7 +854,7 @@ function Market() {
                             </div>
 
                             <div className="market-price-source">
-                              Source:{' '}
+                              {t('Source:')}{' '}
                               <strong>
                                 {price.source ||
                                   '—'}

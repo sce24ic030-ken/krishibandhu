@@ -1,0 +1,516 @@
+/* QrModal styles — matches the app's card/modal language */
+
+.qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+
+  display: grid;
+  place-items: center;
+
+  padding: 20px;
+
+  background: rgba(23, 32, 27, 0.55);
+
+  backdrop-filter: blur(4px);
+}
+
+.qr-modal {
+  width: min(520px, 100%);
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  padding: 24px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-md);
+}
+
+.qr-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.qr-modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+
+  color: var(--text-primary);
+}
+
+.qr-modal-header p {
+  margin-top: 5px;
+
+  font-size: 12.5px;
+  line-height: 1.55;
+
+  color: var(--text-secondary);
+}
+
+.qr-close-btn {
+  display: grid;
+  place-items: center;
+
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: var(--background);
+  color: var(--text-secondary);
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.qr-close-btn:hover {
+  background: #fdeaea;
+  color: var(--danger);
+}
+
+/* ---------- Tabs ---------- */
+
+.qr-mode-tabs {
+  display: flex;
+  gap: 6px;
+
+  margin-top: 18px;
+  padding: 4px;
+
+  background: var(--background);
+
+  border-radius: 10px;
+}
+
+.qr-mode-tabs button {
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 9px 10px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+  color: var(--text-secondary);
+
+  font-size: 12.5px;
+  font-weight: 600;
+
+  transition: all 0.2s ease;
+}
+
+.qr-mode-tabs button.active {
+  background: var(--surface);
+  color: var(--primary);
+
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- Show QR ---------- */
+
+.qr-display {
+  margin-top: 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.qr-image-wrap {
+  padding: 14px;
+
+  background: #ffffff;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.qr-image-wrap img {
+  width: 220px;
+  height: 220px;
+}
+
+.qr-token-text {
+  max-width: 100%;
+
+  font-size: 10.5px;
+
+  overflow-wrap: anywhere;
+
+  color: var(--text-muted);
+
+  text-align: center;
+}
+
+.qr-copy-btn {
+  padding: 8px 14px;
+
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  background: var(--surface);
+  color: var(--primary);
+
+  font-size: 12px;
+  font-weight: 600;
+
+  transition: background 0.2s ease;
+}
+
+.qr-copy-btn:hover {
+  background: var(--primary-light);
+}
+
+.qr-display-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- Scan ---------- */
+
+.qr-scan-area {
+  margin-top: 18px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.qr-camera-view {
+  width: 100%;
+  min-height: 200px;
+
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  background: #10150f;
+}
+
+.qr-camera-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 14px;
+
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+
+  background: var(--primary-light);
+  color: var(--primary);
+
+  font-size: 13px;
+  font-weight: 600;
+
+  transition: background 0.2s ease;
+}
+
+.qr-camera-btn:hover {
+  background: #e0efe6;
+}
+
+.qr-token-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  color: var(--text-secondary);
+}
+
+.qr-token-label textarea {
+  padding: 10px;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  font-size: 12px;
+
+  resize: vertical;
+
+  color: var(--text-primary);
+
+  background: var(--surface);
+}
+
+.qr-verify-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: var(--primary);
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  transition: background 0.2s ease;
+}
+
+.qr-verify-btn:hover {
+  background: var(--primary-dark);
+}
+
+.qr-verify-btn:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+.qr-offline-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding: 10px 12px;
+
+  background: #fff7e6;
+
+  border: 1px solid #f3dfae;
+  border-radius: 9px;
+}
+
+.qr-offline-note p {
+  font-size: 12px;
+
+  color: #7a5a10;
+}
+
+.qr-offline-note button {
+  padding: 6px 10px;
+
+  border: 1px solid #e3c87e;
+  border-radius: 7px;
+
+  background: #fff;
+
+  color: #7a5a10;
+
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* ---------- Error ---------- */
+
+.qr-error {
+  margin-top: 14px;
+  padding: 11px 13px;
+
+  background: #fdeeee;
+
+  border: 1px solid #f3caca;
+  border-radius: 9px;
+
+  font-size: 12.5px;
+  line-height: 1.5;
+
+  color: var(--danger);
+}
+
+/* ---------- Result ---------- */
+
+.qr-result {
+  margin-top: 16px;
+}
+
+.qr-result-verified {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 11px 13px;
+
+  background: #eefaf1;
+
+  border: 1px solid #cdeed6;
+  border-radius: 9px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  color: var(--success);
+}
+
+.qr-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+
+  margin-top: 14px;
+}
+
+.qr-summary-item {
+  padding: 10px 12px;
+
+  background: var(--background);
+
+  border-radius: 9px;
+}
+
+.qr-summary-item span {
+  display: block;
+
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  color: var(--text-muted);
+}
+
+.qr-summary-item strong {
+  display: block;
+
+  margin-top: 3px;
+
+  font-size: 13.5px;
+
+  color: var(--text-primary);
+
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Timeline ---------- */
+
+.qr-timeline {
+  margin-top: 16px;
+
+  padding: 14px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.qr-timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  color: var(--text-primary);
+}
+
+.chain-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  margin-left: auto;
+
+  padding: 3px 8px;
+
+  border-radius: 20px;
+
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.chain-badge.ok {
+  background: #eefaf1;
+  color: var(--success);
+}
+
+.chain-badge.bad {
+  background: #fdeeee;
+  color: var(--danger);
+}
+
+.qr-no-events {
+  margin-top: 10px;
+
+  font-size: 12px;
+
+  color: var(--text-muted);
+}
+
+.qr-event-list {
+  margin-top: 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.qr-event {
+  display: flex;
+  gap: 10px;
+}
+
+.qr-event-dot {
+  width: 9px;
+  height: 9px;
+
+  margin-top: 4px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: var(--primary);
+}
+
+.qr-event strong {
+  font-size: 12.5px;
+  text-transform: capitalize;
+
+  color: var(--text-primary);
+}
+
+.qr-event p {
+  margin-top: 2px;
+
+  font-size: 11.5px;
+
+  color: var(--text-secondary);
+}
+
+.qr-ledger-note {
+  margin-top: 12px;
+  padding-top: 10px;
+
+  border-top: 1px dashed var(--border);
+
+  font-size: 11.5px;
+
+  color: var(--text-muted);
+}
+
+.spin {
+  animation: qr-spin 0.8s linear infinite;
+}
+
+@keyframes qr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

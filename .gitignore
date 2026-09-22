@@ -1,0 +1,34 @@
+# ============================================================
+# KrishiBandhu — .gitignore
+# Keep secrets and build artifacts OUT of the repo.
+# ============================================================
+
+# ── dependencies ──
+node_modules/
+
+# ── build / runtime output ──
+frontend/dist/
+backend/uploads/
+*.log
+npm-debug.log*
+
+# ── secrets (NEVER commit .env) ──
+.env
+.env.local
+.env.*
+!.env.example
+
+# ── test / coverage ──
+coverage/
+
+# ── editor / OS ──
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ── local tool / screenshot artifacts ──
+.claude-flow/
+.playwright-mcp/
+.serena/
+qb-*.png

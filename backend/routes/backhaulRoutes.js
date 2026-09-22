@@ -3,6 +3,7 @@ const express = require('express');
 const {
   getAvailableBackhaul,
   getMyBackhaul,
+  getAllBackhaul,
   createBackhaul,
   selectTraderTransport,
   updateBackhaulStatus,
@@ -39,6 +40,16 @@ router.get(
 router.get(
   '/mine',
   getMyBackhaul,
+);
+
+/* =========================================================
+   GET ALL TRANSPORT RECORDS (ADMIN)
+========================================================= */
+
+router.get(
+  '/admin/all',
+  requireRole('admin'),
+  getAllBackhaul,
 );
 
 /* =========================================================

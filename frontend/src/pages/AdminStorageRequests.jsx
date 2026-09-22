@@ -21,6 +21,8 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 
+import { useLanguage } from '../context/LanguageContext';
+
 import API_URL from '../config/api';
 
 import './AdminStorageRequests.css';
@@ -28,6 +30,8 @@ import './AdminStorageRequests.css';
 const API_BASE_URL = API_URL;
 
 function AdminStorageRequests() {
+  const { t } = useLanguage();
+
   const { token } = useAuth();
 
   const [
@@ -98,7 +102,7 @@ function AdminStorageRequests() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              'Unable to fetch storage requests.',
+              t('Unable to fetch storage requests.'),
           );
         }
 
@@ -115,7 +119,7 @@ function AdminStorageRequests() {
 
         setError(
           err.message ||
-            'Unable to load storage requests.',
+            t('Unable to load storage requests.'),
         );
       } finally {
         setLoading(false);
@@ -169,7 +173,7 @@ function AdminStorageRequests() {
       completed: 'Completed',
     };
 
-    return (
+    return t(
       labels[status] ||
       status
     );
@@ -357,7 +361,7 @@ function AdminStorageRequests() {
         if (!response.ok) {
           throw new Error(
             data.message ||
-              `Unable to ${status} storage request.`,
+              t('Unable to {0} storage request.', status),
           );
         }
 
@@ -376,7 +380,7 @@ function AdminStorageRequests() {
 
         setError(
           err.message ||
-            'Unable to update storage request.',
+            t('Unable to update storage request.'),
         );
       } finally {
         setActionLoading('');
@@ -393,17 +397,15 @@ function AdminStorageRequests() {
         <div>
 
           <p className="admin-storage-label">
-            Administration
+            {t('Administration')}
           </p>
 
           <h1>
-            Storage Requests
+            {t('Storage Requests')}
           </h1>
 
           <p>
-            Review and manage farmer
-            storage requests across
-            KrishiBandhu.
+            {t('Review and manage farmer storage requests across KrishiBandhu.')}
           </p>
 
         </div>
@@ -425,7 +427,7 @@ function AdminStorageRequests() {
             }
           />
 
-          Refresh
+          {t('Refresh')}
         </button>
 
       </div>
@@ -445,7 +447,7 @@ function AdminStorageRequests() {
               setError('')
             }
           >
-            Dismiss
+            {t('Dismiss')}
           </button>
 
         </div>
@@ -484,7 +486,7 @@ function AdminStorageRequests() {
             </strong>
 
             <span>
-              All Requests
+              {t('All Requests')}
             </span>
 
           </div>
@@ -521,7 +523,7 @@ function AdminStorageRequests() {
             </strong>
 
             <span>
-              Pending
+              {t('Pending')}
             </span>
 
           </div>
@@ -558,7 +560,7 @@ function AdminStorageRequests() {
             </strong>
 
             <span>
-              Approved
+              {t('Approved')}
             </span>
 
           </div>
@@ -595,7 +597,7 @@ function AdminStorageRequests() {
             </strong>
 
             <span>
-              Rejected
+              {t('Rejected')}
             </span>
 
           </div>
@@ -624,7 +626,7 @@ function AdminStorageRequests() {
                 event.target.value,
               )
             }
-            placeholder="Search farmer, crop or facility..."
+            placeholder={t('Search farmer, crop or facility...')}
           />
 
         </div>
@@ -641,23 +643,23 @@ function AdminStorageRequests() {
           className="admin-storage-filter"
         >
           <option value="all">
-            All Statuses
+            {t('All Statuses')}
           </option>
 
           <option value="pending">
-            Pending
+            {t('Pending')}
           </option>
 
           <option value="approved">
-            Approved
+            {t('Approved')}
           </option>
 
           <option value="rejected">
-            Rejected
+            {t('Rejected')}
           </option>
 
           <option value="completed">
-            Completed
+            {t('Completed')}
           </option>
         </select>
 
@@ -672,19 +674,19 @@ function AdminStorageRequests() {
           <div>
 
             <h2>
-              Farmer Requests
+              {t('Farmer Requests')}
             </h2>
 
             <p>
               {filteredRequests.length}
               {' '}
-              request
+              {t('request')}
               {filteredRequests.length !==
               1
                 ? 's'
                 : ''}
               {' '}
-              shown
+              {t('shown')}
             </p>
 
           </div>
@@ -704,7 +706,7 @@ function AdminStorageRequests() {
             />
 
             <strong>
-              Loading storage requests...
+              {t('Loading storage requests...')}
             </strong>
 
           </div>
@@ -717,12 +719,11 @@ function AdminStorageRequests() {
             />
 
             <strong>
-              No storage requests found
+              {t('No storage requests found')}
             </strong>
 
             <span>
-              Try changing the status
-              filter or search term.
+              {t('Try changing the status filter or search term.')}
             </span>
 
           </div>
@@ -777,7 +778,7 @@ function AdminStorageRequests() {
                         </div>
 
                         <p className="admin-storage-request-id">
-                          Request ID:{' '}
+                          {t('Request ID:')}{' '}
                           {
                             request._id
                           }
@@ -794,7 +795,7 @@ function AdminStorageRequests() {
                           )
                         }
                       >
-                        Review
+                        {t('Review')}
                       </button>
 
                     </div>
@@ -810,7 +811,7 @@ function AdminStorageRequests() {
                         <div>
 
                           <span>
-                            Farmer
+                            {t('Farmer')}
                           </span>
 
                           <strong>
@@ -818,7 +819,7 @@ function AdminStorageRequests() {
                               request
                                 .farmer
                                 ?.name ||
-                              'Unknown farmer'
+                              t('Unknown farmer')
                             }
                           </strong>
 
@@ -844,7 +845,7 @@ function AdminStorageRequests() {
                         <div>
 
                           <span>
-                            Storage Facility
+                            {t('Storage Facility')}
                           </span>
 
                           <strong>
@@ -852,7 +853,7 @@ function AdminStorageRequests() {
                               request
                                 .storageFacility
                                 ?.name ||
-                              'Unknown facility'
+                              t('Unknown facility')
                             }
                           </strong>
 
@@ -887,7 +888,7 @@ function AdminStorageRequests() {
                         <div>
 
                           <span>
-                            Quantity
+                            {t('Quantity')}
                           </span>
 
                           <strong>
@@ -903,7 +904,7 @@ function AdminStorageRequests() {
                             {
                               request.quantityInKg
                             }{' '}
-                            kg total
+                            {t('kg total')}
                           </small>
 
                         </div>
@@ -919,7 +920,7 @@ function AdminStorageRequests() {
                         <div>
 
                           <span>
-                            Storage Period
+                            {t('Storage Period')}
                           </span>
 
                           <strong>
@@ -934,7 +935,7 @@ function AdminStorageRequests() {
                             {
                               request.durationMonths
                             }{' '}
-                            month
+                            {t('month')}
                             {
                               request.durationMonths !==
                               1
@@ -956,7 +957,7 @@ function AdminStorageRequests() {
                         <div>
 
                           <span>
-                            Estimated Cost
+                            {t('Estimated Cost')}
                           </span>
 
                           <strong>
@@ -973,7 +974,7 @@ function AdminStorageRequests() {
                                 request.estimatedMonthlyCost,
                               )
                             }
-                            /month
+                            {t('/month')}
                           </small>
 
                         </div>
@@ -986,7 +987,7 @@ function AdminStorageRequests() {
                       <div className="admin-storage-notes">
 
                         <strong>
-                          Farmer Note
+                          {t('Farmer Note')}
                         </strong>
 
                         <span>
@@ -1032,11 +1033,11 @@ function AdminStorageRequests() {
               <div>
 
                 <p>
-                  Storage Request
+                  {t('Storage Request')}
                 </p>
 
                 <h2>
-                  Review Request
+                  {t('Review Request')}
                 </h2>
 
               </div>
@@ -1078,7 +1079,7 @@ function AdminStorageRequests() {
                         .crop
                     }
                     {' '}
-                    storage
+                    {t('storage')}
                   </strong>
 
                   <span>
@@ -1098,7 +1099,7 @@ function AdminStorageRequests() {
                 <div>
 
                   <span>
-                    Farmer
+                    {t('Farmer')}
                   </span>
 
                   <strong>
@@ -1115,7 +1116,7 @@ function AdminStorageRequests() {
                 <div>
 
                   <span>
-                    Quantity
+                    {t('Quantity')}
                   </span>
 
                   <strong>
@@ -1134,7 +1135,7 @@ function AdminStorageRequests() {
                 <div>
 
                   <span>
-                    Start Date
+                    {t('Start Date')}
                   </span>
 
                   <strong>
@@ -1151,7 +1152,7 @@ function AdminStorageRequests() {
                 <div>
 
                   <span>
-                    Duration
+                    {t('Duration')}
                   </span>
 
                   <strong>
@@ -1159,7 +1160,7 @@ function AdminStorageRequests() {
                       selectedRequest
                         .durationMonths
                     }{' '}
-                    month
+                    {t('month')}
                     {
                       selectedRequest
                         .durationMonths !==
@@ -1174,7 +1175,7 @@ function AdminStorageRequests() {
                 <div>
 
                   <span>
-                    Monthly Cost
+                    {t('Monthly Cost')}
                   </span>
 
                   <strong>
@@ -1191,7 +1192,7 @@ function AdminStorageRequests() {
                 <div>
 
                   <span>
-                    Total Cost
+                    {t('Total Cost')}
                   </span>
 
                   <strong>
@@ -1211,7 +1212,7 @@ function AdminStorageRequests() {
                 <div className="admin-storage-modal-note">
 
                   <span>
-                    Farmer Note
+                    {t('Farmer Note')}
                   </span>
 
                   <p>
@@ -1226,7 +1227,7 @@ function AdminStorageRequests() {
               <div className="admin-storage-admin-note">
 
                 <label htmlFor="admin-note">
-                  Admin Note
+                  {t('Admin Note')}
                 </label>
 
                 <textarea
@@ -1242,7 +1243,7 @@ function AdminStorageRequests() {
                         .value,
                     )
                   }
-                  placeholder="Add a note for the farmer..."
+                  placeholder={t('Add a note for the farmer...')}
                   rows={4}
                   maxLength={500}
                   disabled={
@@ -1277,7 +1278,7 @@ function AdminStorageRequests() {
                   )
                 }
               >
-                Close
+                {t('Close')}
               </button>
 
               {selectedRequest.status ===
@@ -1311,7 +1312,7 @@ function AdminStorageRequests() {
                       />
                     )}
 
-                    Reject
+                    {t('Reject')}
 
                   </button>
 
@@ -1343,7 +1344,7 @@ function AdminStorageRequests() {
                       />
                     )}
 
-                    Approve
+                    {t('Approve')}
 
                   </button>
                 </>

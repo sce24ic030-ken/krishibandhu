@@ -5,6 +5,9 @@ const Bid = require('../models/Bid');
 const SaleListing = require('../models/SaleListing');
 const Transaction = require('../models/Transaction');
 
+const ledgerService = require('../services/ledgerService');
+const auditService = require('../services/auditService');
+
 /*
  * ==========================================
  * Generate Parchi Number
@@ -206,6 +209,23 @@ const createParchi = async (
         )
         .populate('crop')
         .populate('market');
+
+    // Append to the tamper-proof hash chain
+    await ledgerService.appendLedger({
+      entityType: 'parchi',
+      entityId: String(parchi._id),
+      action: 'parchi.issued',
+      data: {
+        parchiNumber,
+        bid: String(bid._id),
+        farmer: String(bid.crop.owner),
+        trader: String(bid.buyer._id),
+        quantity: bid.quantity,
+        pricePerUnit: bid.pricePerUnit,
+        totalAmount: bid.totalAmount,
+      },
+      actor: req.user._id,
+    });
 
     return res.status(201).json({
       success: true,
@@ -485,6 +505,19 @@ const updateParchiBankDetails = async (
 
     await parchi.save();
 
+    // Hash-chain the bank-details sharing
+    await ledgerService.appendLedger({
+      entityType: 'parchi',
+      entityId: String(parchi._id),
+      action: 'parchi.bank_details_shared',
+      data: {
+        paymentStatus: parchi.paymentStatus,
+        hasAccount: Boolean(parchi.bankDetails?.accountNumber),
+        hasUpi: Boolean(parchi.bankDetails?.upiId),
+      },
+      actor: req.user._id,
+    });
+
     const populatedParchi =
       await Parchi.findById(
         parchi._id,
@@ -651,6 +684,19 @@ const submitParchiTransfer = async (
 
     await parchi.save();
 
+    // Hash-chain the trader's transfer declaration
+    await ledgerService.appendLedger({
+      entityType: 'parchi',
+      entityId: String(parchi._id),
+      action: 'parchi.transfer_submitted',
+      data: {
+        amount: numericAmount,
+        transferReference: transferReference.trim(),
+        paymentReference,
+      },
+      actor: req.user._id,
+    });
+
     const populatedParchi =
       await Parchi.findById(
         parchi._id,
@@ -789,6 +835,19 @@ const uploadParchiReceipt = async (
       'payment_pending';
 
     await parchi.save();
+
+    // Hash-chain the receipt upload
+    await ledgerService.appendLedger({
+      entityType: 'parchi',
+      entityId: String(parchi._id),
+      action: 'parchi.receipt_uploaded',
+      data: {
+        fileName: req.file.originalname,
+        fileUrl: `/uploads/parchi-receipts/${req.file.filename}`,
+        aiVerificationStatus: 'not_checked',
+      },
+      actor: req.user._id,
+    });
 
     const populatedParchi =
       await Parchi.findById(
@@ -1038,6 +1097,20 @@ const confirmParchiPayment = async (
 
       await parchi.save();
 
+      // Hash-chain the farmer's rejection
+      await ledgerService.appendLedger({
+        entityType: 'parchi',
+        entityId: String(parchi._id),
+        action: 'parchi.payment_rejected',
+        data: {
+          note:
+            typeof note === 'string'
+              ? note.trim()
+              : '',
+        },
+        actor: req.user._id,
+      });
+
       return res.status(200).json({
         success: true,
         message:
@@ -1219,6 +1292,21 @@ const confirmParchiPayment = async (
       transaction._id;
 
     await parchi.save();
+
+    // Hash-chain the settlement confirmation —
+    // this is the trusted "payment received" event.
+    await ledgerService.appendLedger({
+      entityType: 'parchi',
+      entityId: String(parchi._id),
+      action: 'parchi.payment_confirmed',
+      data: {
+        paymentStatus: 'success',
+        totalAmount: transactionAmount,
+        paymentReference: parchi.paymentReference || '',
+        transactionId: String(transaction._id),
+      },
+      actor: req.user._id,
+    });
 
     /*
      * ==========================================
@@ -1407,6 +1495,28 @@ const updateParchiPaymentStatus = async (
     }
 
     await parchi.save();
+
+    // Hash-chain the admin adjustment
+    await ledgerService.appendLedger({
+      entityType: 'parchi',
+      entityId: String(parchi._id),
+      action: 'parchi.payment_admin_adjusted',
+      data: {
+        paymentStatus,
+        paymentReference:
+          parchi.paymentReference || null,
+      },
+      actor: req.user._id,
+    });
+
+    await auditService.recordAudit({
+      actor: req.user,
+      action: 'parchi.payment_status.updated',
+      targetType: 'parchi',
+      targetId: String(parchi._id),
+      after: { paymentStatus },
+      req,
+    });
 
     return res.status(200).json({
       success: true,

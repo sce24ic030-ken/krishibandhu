@@ -13,21 +13,35 @@ import {
   Package,
   RefreshCw,
   X,
+  ScanLine,
+  ShieldCheck,
+  History,
 } from 'lucide-react';
 
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_URL from '../config/api';
+
+import QrModal from '../components/QrModal';
+
+import { getMyScans } from '../services/traceService';
 
 import './TraderDashboard.css';
 
 function TraderDashboard() {
   const { user, token } = useAuth();
 
+  const { t } = useLanguage();
+
   const [listings, setListings] = useState([]);
   const [bids, setBids] = useState([]);
+
+  const [parchis, setParchis] = useState([]);
+  const [myScans, setMyScans] = useState([]);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const [loadingListings, setLoadingListings] = useState(true);
   const [loadingBids, setLoadingBids] = useState(true);
@@ -45,7 +59,7 @@ function TraderDashboard() {
   const [bidError, setBidError] = useState('');
   const [bidSuccess, setBidSuccess] = useState('');
 
-  const traderName = user?.name || 'Trader';
+  const traderName = user?.name || t('Trader');
 
   /*
    * ==========================================
@@ -77,7 +91,7 @@ function TraderDashboard() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Failed to load sale listings',
+            t('Failed to load sale listings'),
         );
       }
 
@@ -90,7 +104,7 @@ function TraderDashboard() {
 
       setListingError(
         error.message ||
-          'Unable to load available crops.',
+          t('Unable to load available crops.'),
       );
     } finally {
       setLoadingListings(false);
@@ -127,7 +141,7 @@ function TraderDashboard() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Failed to load your bids',
+            t('Failed to load your bids'),
         );
       }
 
@@ -140,7 +154,7 @@ function TraderDashboard() {
 
       setBidListError(
         error.message ||
-          'Unable to load your bids.',
+          t('Unable to load your bids.'),
       );
     } finally {
       setLoadingBids(false);
@@ -156,6 +170,21 @@ function TraderDashboard() {
   useEffect(() => {
     fetchListings();
     fetchBids();
+
+    // Fulfilment + trace history
+    if (token) {
+      Promise.all([
+        fetch(`${API_URL}/parchi`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => r.json())
+          .then((d) => setParchis(d.data || []))
+          .catch(() => null),
+        getMyScans()
+          .then((d) => setMyScans(d.scans || []))
+          .catch(() => null),
+      ]);
+    }
   }, [token]);
 
   /*
@@ -219,7 +248,7 @@ function TraderDashboard() {
 
     if (!Number.isFinite(quantity) || quantity <= 0) {
       setBidError(
-        'Please enter a valid quantity.',
+        t('Please enter a valid quantity.'),
       );
       return;
     }
@@ -229,7 +258,7 @@ function TraderDashboard() {
       Number(selectedListing.quantity || 0)
     ) {
       setBidError(
-        `You cannot bid for more than ${selectedListing.quantity} ${selectedListing.unit}.`,
+        t('You cannot bid for more than {0} {1}.', selectedListing.quantity, selectedListing.unit),
       );
       return;
     }
@@ -239,14 +268,14 @@ function TraderDashboard() {
       pricePerUnit <= 0
     ) {
       setBidError(
-        'Please enter a valid bid price.',
+        t('Please enter a valid bid price.'),
       );
       return;
     }
 
     if (!token) {
       setBidError(
-        'Your login session has expired. Please login again.',
+        t('Your login session has expired. Please login again.'),
       );
       return;
     }
@@ -278,12 +307,12 @@ function TraderDashboard() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Failed to place bid.',
+            t('Failed to place bid.'),
         );
       }
 
       setBidSuccess(
-        'Your bid has been placed successfully.',
+        t('Your bid has been placed successfully.'),
       );
 
       // Immediately refresh the real bids list.
@@ -300,7 +329,7 @@ function TraderDashboard() {
 
       setBidError(
         error.message ||
-          'Unable to place your bid.',
+          t('Unable to place your bid.'),
       );
     } finally {
       setSubmittingBid(false);
@@ -331,30 +360,47 @@ function TraderDashboard() {
 
   const stats = [
     {
-      title: 'Available Crops',
+      title: t('Available Crops'),
       value: String(listings.length),
-      subtitle: 'Crops available for bidding',
+      subtitle: t('Crops available for bidding'),
       icon: ShoppingBasket,
     },
     {
-      title: 'Active Bids',
+      title: t('Active Bids'),
       value: String(activeBids.length),
-      subtitle: 'Bids currently active',
+      subtitle: t('Bids currently active'),
       icon: Gavel,
     },
     {
-      title: 'Purchases',
+      title: t('Purchases'),
       value: '0',
-      subtitle: 'Completed purchases',
+      subtitle: t('Completed purchases'),
       icon: Handshake,
     },
     {
-      title: 'Pending Payments',
+      title: t('Pending Payments'),
       value: '₹0',
-      subtitle: 'Payments awaiting completion',
+      subtitle: t('Payments awaiting completion'),
       icon: CreditCard,
     },
   ];
+
+  /* ==========================================
+     Fulfilment & trace aggregates
+  ========================================= */
+
+  const completedParchis = parchis.filter(
+    (parchi) =>
+      parchi.paymentStatus === 'success' ||
+      parchi.status === 'paid',
+  );
+
+  const pendingParchis = parchis.filter(
+    (parchi) =>
+      parchi.paymentStatus !== 'success' &&
+      parchi.status !== 'paid' &&
+      parchi.status !== 'cancelled',
+  );
 
   return (
     <div className="trader-dashboard">
@@ -367,16 +413,15 @@ function TraderDashboard() {
 
         <div>
           <p className="trader-dashboard-label">
-            Trader Dashboard
+            {t('Trader Dashboard')}
           </p>
 
           <h1>
-            Welcome, {traderName} 👋
+            {t('Welcome, {0} 👋', traderName)}
           </h1>
 
           <p className="trader-dashboard-description">
-            Manage your crop purchases, bids, parchis
-            and payments from one place.
+            {t('Manage your crop purchases, bids, parchis and payments from one place.')}
           </p>
         </div>
 
@@ -388,13 +433,13 @@ function TraderDashboard() {
 
           <div>
             <span>
-              Account Status
+              {t('Account Status')}
             </span>
 
             <strong>
               {user?.isVerified
-                ? 'Verified Trader'
-                : 'Verification Pending'}
+                ? t('Verified Trader')
+                : t('Verification Pending')}
             </strong>
           </div>
 
@@ -450,6 +495,120 @@ function TraderDashboard() {
 
 
       {/* ==========================================
+          Trust & Traceability
+      ========================================== */}
+
+      <section className="trader-panel">
+
+        <div className="trader-panel-header">
+
+          <div>
+            <h2>
+              {t('Trust & Traceability')}
+            </h2>
+
+            <p>
+              {t('Verify lots before bidding and track fulfilment')}
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}
+          >
+            <ShieldCheck size={20} color="#2f6f52" />
+          </div>
+
+        </div>
+
+        <div className="trader-trace-grid">
+
+          <div className="trader-trace-card">
+
+            <div className="trader-trace-icon">
+              <ShieldCheck size={22} />
+            </div>
+
+            <div>
+              <span>{t('Buyer Trust Badge')}</span>
+
+              <strong>
+                {user?.isVerified
+                  ? t('Verified Trader')
+                  : t('Verification Pending')}
+              </strong>
+
+              <p>
+                {parchis.length > 0
+                  ? t('{0} of {1} parchis settled on time.', completedParchis.length, parchis.length)
+                  : t('No settlement history yet — complete your first purchase.')}
+              </p>
+            </div>
+
+          </div>
+
+          <div className="trader-trace-card">
+
+            <div className="trader-trace-icon">
+              <ScanLine size={22} />
+            </div>
+
+            <div>
+              <span>{t('Buyer Traceability Scan')}</span>
+
+              <strong>
+                {t(myScans.length === 1
+                  ? '{0} verified scan'
+                  : '{0} verified scans', myScans.length)}
+              </strong>
+
+              <p>
+                {t('Scan a lot QR to verify origin and quality before you bid.')}
+              </p>
+
+              <button
+                type="button"
+                className="trader-scan-btn"
+                onClick={() => setScannerOpen(true)}
+              >
+                <ScanLine size={15} />
+                {t('Open Scanner')}
+              </button>
+            </div>
+
+          </div>
+
+          <div className="trader-trace-card">
+
+            <div className="trader-trace-icon">
+              <History size={22} />
+            </div>
+
+            <div>
+              <span>{t('Fulfilment History')}</span>
+
+              <strong>
+                {t(parchis.length === 1
+                  ? '{0} parchi'
+                  : '{0} parchis', parchis.length)}
+              </strong>
+
+              <p>
+                {t('{0} completed · {1} in progress.', completedParchis.length, pendingParchis.length)}
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* ==========================================
           Available Crops
       ========================================== */}
 
@@ -459,11 +618,11 @@ function TraderDashboard() {
 
           <div>
             <h2>
-              Available Crops
+              {t('Available Crops')}
             </h2>
 
             <p>
-              Crops listed by farmers
+              {t('Crops listed by farmers')}
             </p>
           </div>
 
@@ -479,7 +638,7 @@ function TraderDashboard() {
               type="button"
               onClick={fetchListings}
               disabled={loadingListings}
-              title="Refresh listings"
+              title={t('Refresh listings')}
               style={{
                 border: 'none',
                 background: 'transparent',
@@ -522,11 +681,11 @@ function TraderDashboard() {
             </div>
 
             <h3>
-              Loading available crops...
+              {t('Loading available crops...')}
             </h3>
 
             <p>
-              Fetching the latest farmer listings.
+              {t('Fetching the latest farmer listings.')}
             </p>
 
           </div>
@@ -545,7 +704,7 @@ function TraderDashboard() {
             </div>
 
             <h3>
-              Unable to load listings
+              {t('Unable to load listings')}
             </h3>
 
             <p>
@@ -557,7 +716,7 @@ function TraderDashboard() {
               className="trader-primary-button"
               onClick={fetchListings}
             >
-              Try Again
+              {t('Try Again')}
             </button>
 
           </div>
@@ -578,19 +737,18 @@ function TraderDashboard() {
               </div>
 
               <h3>
-                No crops available yet
+                {t('No crops available yet')}
               </h3>
 
               <p>
-                Farmer crop listings will appear
-                here when they become available.
+                {t('Farmer crop listings will appear here when they become available.')}
               </p>
 
               <Link
                 to="/market"
                 className="trader-primary-button"
               >
-                Find Crops
+                {t('Find Crops')}
               </Link>
 
             </div>
@@ -627,7 +785,7 @@ function TraderDashboard() {
 
                       <h3>
                         {listing.crop?.name ||
-                          'Unknown Crop'}
+                          t('Unknown Crop')}
                       </h3>
 
                       {listing.crop?.variety && (
@@ -669,7 +827,7 @@ function TraderDashboard() {
 
                       <span>
                         {listing.market?.name ||
-                          'Market not specified'}
+                          t('Market not specified')}
                       </span>
                     </div>
 
@@ -682,12 +840,12 @@ function TraderDashboard() {
 
                     <div>
                       <span>
-                        Farmer
+                        {t('Farmer')}
                       </span>
 
                       <strong>
                         {listing.farmer?.name ||
-                          'Farmer'}
+                          t('Farmer')}
                       </strong>
                     </div>
 
@@ -699,7 +857,7 @@ function TraderDashboard() {
                       }
                     >
                       <Gavel size={16} />
-                      Place Bid
+                      {t('Place Bid')}
                     </button>
 
                   </div>
@@ -727,11 +885,11 @@ function TraderDashboard() {
 
             <div>
               <h2>
-                Active Bids
+                {t('Active Bids')}
               </h2>
 
               <p>
-                Your current crop bids
+                {t('Your current crop bids')}
               </p>
             </div>
 
@@ -751,11 +909,11 @@ function TraderDashboard() {
               </div>
 
               <h3>
-                Loading your bids...
+                {t('Loading your bids...')}
               </h3>
 
               <p>
-                Fetching your latest marketplace bids.
+                {t('Fetching your latest marketplace bids.')}
               </p>
 
             </div>
@@ -774,7 +932,7 @@ function TraderDashboard() {
               </div>
 
               <h3>
-                Unable to load bids
+                {t('Unable to load bids')}
               </h3>
 
               <p>
@@ -786,7 +944,7 @@ function TraderDashboard() {
                 className="trader-primary-button"
                 onClick={fetchBids}
               >
-                Try Again
+                {t('Try Again')}
               </button>
 
             </div>
@@ -807,12 +965,11 @@ function TraderDashboard() {
                 </div>
 
                 <h3>
-                  No active bids
+                  {t('No active bids')}
                 </h3>
 
                 <p>
-                  Your pending bids will appear
-                  here after you place an offer.
+                  {t('Your pending bids will appear here after you place an offer.')}
                 </p>
 
                 {listings.length > 0 && (
@@ -823,7 +980,7 @@ function TraderDashboard() {
                       openBidModal(listings[0])
                     }
                   >
-                    Place a Bid
+                    {t('Place a Bid')}
                   </button>
                 )}
 
@@ -879,7 +1036,7 @@ function TraderDashboard() {
                           }}
                         >
                           {bid.crop?.name ||
-                            'Unknown Crop'}
+                            t('Unknown Crop')}
                         </h3>
 
                         {bid.crop?.variety && (
@@ -926,7 +1083,7 @@ function TraderDashboard() {
                             fontSize: '10px',
                           }}
                         >
-                          Market
+                          {t('Market')}
                         </span>
 
                         <strong
@@ -938,7 +1095,7 @@ function TraderDashboard() {
                           }}
                         >
                           {bid.market?.name ||
-                            'Market'}
+                            t('Market')}
                         </strong>
                       </div>
 
@@ -951,7 +1108,7 @@ function TraderDashboard() {
                             fontSize: '10px',
                           }}
                         >
-                          Quantity
+                          {t('Quantity')}
                         </span>
 
                         <strong
@@ -964,7 +1121,7 @@ function TraderDashboard() {
                         >
                           {bid.quantity}{' '}
                           {bid.saleListing?.unit ||
-                            'unit'}
+                            t('unit')}
                         </strong>
                       </div>
 
@@ -977,7 +1134,7 @@ function TraderDashboard() {
                             fontSize: '10px',
                           }}
                         >
-                          Bid Price
+                          {t('Bid Price')}
                         </span>
 
                         <strong
@@ -1021,7 +1178,7 @@ function TraderDashboard() {
                           fontWeight: 700,
                         }}
                       >
-                        Total Bid
+                        {t('Total Bid')}
                       </span>
 
                       <strong
@@ -1062,11 +1219,11 @@ function TraderDashboard() {
 
             <div>
               <h2>
-                Recent Purchases
+                {t('Recent Purchases')}
               </h2>
 
               <p>
-                Your latest crop purchases
+                {t('Your latest crop purchases')}
               </p>
             </div>
 
@@ -1080,7 +1237,7 @@ function TraderDashboard() {
             <Clock3 size={20} />
 
             <span>
-              No purchases recorded yet.
+              {t('No purchases recorded yet.')}
             </span>
 
           </div>
@@ -1100,11 +1257,11 @@ function TraderDashboard() {
 
           <div>
             <h2>
-              Recent Parchis
+              {t('Recent Parchis')}
             </h2>
 
             <p>
-              Latest transaction parchis
+              {t('Latest transaction parchis')}
             </p>
           </div>
 
@@ -1118,7 +1275,7 @@ function TraderDashboard() {
           <ReceiptText size={20} />
 
           <span>
-            No parchis generated yet.
+            {t('No parchis generated yet.')}
           </span>
 
         </div>
@@ -1140,12 +1297,11 @@ function TraderDashboard() {
         <div className="trader-payment-content">
 
           <h2>
-            Payment Center
+            {t('Payment Center')}
           </h2>
 
           <p>
-            Your payment records, pending payments
-            and transaction QR codes will appear here.
+            {t('Your payment records, pending payments and transaction QR codes will appear here.')}
           </p>
 
         </div>
@@ -1155,7 +1311,7 @@ function TraderDashboard() {
           to="/passbook"
           className="trader-payment-button"
         >
-          View Payments
+          {t('View Payments')}
         </Link>
 
       </section>
@@ -1189,11 +1345,11 @@ function TraderDashboard() {
 
               <div>
                 <p>
-                  Marketplace
+                  {t('Marketplace')}
                 </p>
 
                 <h2 id="place-bid-title">
-                  Place Your Bid
+                  {t('Place Your Bid')}
                 </h2>
               </div>
 
@@ -1202,7 +1358,7 @@ function TraderDashboard() {
                 className="trader-modal-close"
                 onClick={closeBidModal}
                 disabled={submittingBid}
-                aria-label="Close bid modal"
+                aria-label={t('Close bid modal')}
               >
                 <X size={20} />
               </button>
@@ -1214,12 +1370,12 @@ function TraderDashboard() {
 
               <div>
                 <span>
-                  Crop
+                  {t('Crop')}
                 </span>
 
                 <strong>
                   {selectedListing.crop?.name ||
-                    'Unknown Crop'}
+                    t('Unknown Crop')}
                 </strong>
 
                 {selectedListing.crop?.variety && (
@@ -1232,19 +1388,19 @@ function TraderDashboard() {
 
               <div>
                 <span>
-                  Market
+                  {t('Market')}
                 </span>
 
                 <strong>
                   {selectedListing.market?.name ||
-                    'Market not specified'}
+                    t('Market not specified')}
                 </strong>
               </div>
 
 
               <div>
                 <span>
-                  Available
+                  {t('Available')}
                 </span>
 
                 <strong>
@@ -1256,7 +1412,7 @@ function TraderDashboard() {
 
               <div>
                 <span>
-                  Asking Price
+                  {t('Asking Price')}
                 </span>
 
                 <strong>
@@ -1281,7 +1437,7 @@ function TraderDashboard() {
                 <div className="trader-form-group">
 
                   <label htmlFor="bid-quantity">
-                    Quantity
+                    {t('Quantity')}
                   </label>
 
                   <div className="trader-input-with-suffix">
@@ -1309,7 +1465,7 @@ function TraderDashboard() {
                   </div>
 
                   <small>
-                    Maximum available:{' '}
+                    {t('Maximum available:')}{' '}
                     {selectedListing.quantity}{' '}
                     {selectedListing.unit}
                   </small>
@@ -1320,7 +1476,7 @@ function TraderDashboard() {
                 <div className="trader-form-group">
 
                   <label htmlFor="bid-price">
-                    Your Price
+                    {t('Your Price')}
                   </label>
 
                   <div className="trader-input-with-prefix">
@@ -1347,7 +1503,7 @@ function TraderDashboard() {
                   </div>
 
                   <small>
-                    Per {selectedListing.unit}
+                    {t('Per {0}', selectedListing.unit)}
                   </small>
 
                 </div>
@@ -1358,10 +1514,10 @@ function TraderDashboard() {
               <div className="trader-form-group">
 
                 <label htmlFor="bid-message">
-                  Message
+                  {t('Message')}
                   <span>
                     {' '}
-                    (optional)
+                    {t('(optional)')}
                   </span>
                 </label>
 
@@ -1375,7 +1531,7 @@ function TraderDashboard() {
                       event.target.value,
                     )
                   }
-                  placeholder="Add a message for the farmer..."
+                  placeholder={t('Add a message for the farmer...')}
                   disabled={submittingBid}
                 />
 
@@ -1385,7 +1541,7 @@ function TraderDashboard() {
               <div className="trader-bid-total">
 
                 <span>
-                  Total Bid Amount
+                  {t('Total Bid Amount')}
                 </span>
 
                 <strong>
@@ -1424,7 +1580,7 @@ function TraderDashboard() {
                   onClick={closeBidModal}
                   disabled={submittingBid}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </button>
 
                 <button
@@ -1435,8 +1591,8 @@ function TraderDashboard() {
                   <Gavel size={16} />
 
                   {submittingBid
-                    ? 'Placing Bid...'
-                    : 'Place Bid'}
+                    ? t('Placing Bid...')
+                    : t('Place Bid')}
                 </button>
 
               </div>
@@ -1448,6 +1604,13 @@ function TraderDashboard() {
         </div>
 
       )}
+
+      <QrModal
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        title={t('Traceability Scanner')}
+        description={t('Scan a lot / parchi QR to verify authenticity before you buy.')}
+      />
 
     </div>
   );
