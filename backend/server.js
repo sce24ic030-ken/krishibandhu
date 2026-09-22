@@ -47,6 +47,11 @@ const {
 
 const app = express();
 
+// Behind Render's reverse proxy: trust the single proxy hop so
+// express-rate-limit accepts X-Forwarded-For and keys on the real
+// client IP instead of the proxy IP (fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
+app.set('trust proxy', 1);
+
 connectDB();
 
 const PORT = process.env.PORT || 5000;
