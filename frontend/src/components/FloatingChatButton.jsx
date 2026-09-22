@@ -158,6 +158,18 @@ function FloatingChatButton() {
   const [chatLoading, setChatLoading] =
     useState(false);
 
+  /* ----- chat history language sync ----- */
+
+  const chatMessagesRef =
+    useRef(chatMessages);
+
+  const chatLanguageRef =
+    useRef(lang);
+
+  const [translatingHistory,
+    setTranslatingHistory] =
+    useState(false);
+
   /* ----- voice state ----- */
 
   const [isRecording, setIsRecording] =
@@ -259,6 +271,137 @@ function FloatingChatButton() {
 
     inputRef.current?.focus();
   }, [open]);
+
+  // Keep a fresh copy of the conversation for the
+  // language-switch translator (avoids stale closures).
+  useEffect(() => {
+    chatMessagesRef.current =
+      chatMessages;
+  }, [chatMessages]);
+
+  // When the app language switches (EN / मराठी / हिंदी),
+  // translate the whole existing conversation so the
+  // history follows the new language.
+  useEffect(() => {
+    const targetLang = lang;
+
+    if (
+      targetLang ===
+      chatLanguageRef.current
+    ) {
+      return;
+    }
+
+    const messagesNow =
+      chatMessagesRef.current;
+
+    if (!messagesNow.length) {
+      chatLanguageRef.current =
+        targetLang;
+      return;
+    }
+
+    let cancelled = false;
+
+    setTranslatingHistory(true);
+
+    (async () => {
+      try {
+        const response =
+          await fetch(
+            `${API_URL}/ai/translate`,
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+
+                Authorization: `Bearer ${
+                  localStorage.getItem(
+                    'krishibandhu_token',
+                  ) || ''
+                }`,
+              },
+
+              body: JSON.stringify({
+                messages:
+                  messagesNow.map(
+                    (item) => ({
+                      role:
+                        item.role,
+                      content:
+                        item.content,
+                    }),
+                  ),
+
+                language:
+                  targetLang,
+              }),
+            },
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success ||
+          !Array.isArray(
+            data.translations,
+          )
+        ) {
+          throw new Error(
+            data.message ||
+              'translate failed',
+          );
+        }
+
+        if (cancelled) return;
+
+        setChatMessages(
+          (previous) =>
+            previous.map(
+              (item, index) => ({
+                ...item,
+
+                content:
+                  data.translations[
+                    index
+                  ] ??
+                  item.content,
+              }),
+            ),
+        );
+
+        chatLanguageRef.current =
+          targetLang;
+      } catch (error) {
+        console.error(
+          'Chat history translation failed:',
+          error,
+        );
+
+        // Keep the history as-is, but never get
+        // stuck re-trying on every re-render.
+        if (!cancelled) {
+          chatLanguageRef.current =
+            targetLang;
+        }
+      } finally {
+        if (!cancelled) {
+          setTranslatingHistory(
+            false,
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   // Stop any active recording when the popup closes.
   useEffect(() => {
@@ -903,7 +1046,13 @@ function FloatingChatButton() {
               </strong>
 
               <span>
-                {t('Smart farming platform')}
+                {translatingHistory
+                  ? lang === 'mr'
+                    ? 'चॅट भाषांतरित होत आहे…'
+                    : lang === 'hi'
+                      ? 'चैट अनुवाद हो रहा है…'
+                      : 'Translating chat…'
+                  : t('Smart farming platform')}
               </span>
             </div>
 

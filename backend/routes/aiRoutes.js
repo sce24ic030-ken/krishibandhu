@@ -5,6 +5,7 @@ const multer = require('multer');
 const {
   chatWithAI,
   sendTranscribedText,
+  translateChat,
 } = require('../controllers/aiController');
 
 const {
@@ -28,6 +29,14 @@ const uploadAudio = multer({
 
 // Chat with KrishiBandhu AI
 router.post('/chat', protect, chatWithAI);
+
+// Translate existing chat history when the app
+// language switches (EN / मराठी / हिंदी)
+router.post(
+  '/translate',
+  protect,
+  translateChat,
+);
 
 // Transcribe a recorded voice note
 router.post(

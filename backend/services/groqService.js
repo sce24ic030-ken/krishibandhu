@@ -58,11 +58,39 @@ function isGroqConfigured() {
   return getGroqKeys().length > 0;
 }
 
-function getGroqModel() {
-  const model =
+/*
+  Default model candidates. GROQ_MODEL is tried first when
+  it is set to something usable; a bogus value (like the
+  old default 'groq/compound', which does not exist on
+  Groq) is skipped so we never waste attempts on a 404.
+*/
+const GROQ_MODEL_CANDIDATES = [
+  'llama-3.1-8b-instant',
+  'llama-3.3-70b-versatile',
+  'llama3-70b-8192',
+  'llama3-8b-8192',
+];
+
+function getGroqModels() {
+  const envModel =
     (process.env.GROQ_MODEL || '').trim();
 
-  return model || 'groq/compound';
+  const models = [];
+
+  if (
+    envModel &&
+    envModel !== 'groq/compound'
+  ) {
+    models.push(envModel);
+  }
+
+  for (const candidate of GROQ_MODEL_CANDIDATES) {
+    if (!models.includes(candidate)) {
+      models.push(candidate);
+    }
+  }
+
+  return models;
 }
 
 /*
@@ -133,8 +161,9 @@ async function groqChat({
     throw error;
   }
 
-  const chatModel =
-    model || getGroqModel();
+  const chatModels = model
+    ? [model]
+    : getGroqModels();
 
   const messages = [];
 
@@ -161,17 +190,29 @@ async function groqChat({
     );
   }
 
-  const payload = {
-    model: chatModel,
-    messages,
-    temperature,
-    max_tokens: maxTokens,
-  };
-
   const startIndex =
     rotationCursor % keys.length;
 
   const attempts = [];
+
+  /*
+    Hard budget: dead or misconfigured keys must never
+    stall a chat. The whole Groq pool gets a few seconds
+    before we bail to the fallback provider.
+  */
+
+  const budgetMs =
+    Number(
+      process.env.GROQ_BUDGET_MS,
+    ) || 4000;
+
+  const deadline =
+    Date.now() + budgetMs;
+
+  const sleep = (ms) =>
+    new Promise((resolve) =>
+      setTimeout(resolve, ms),
+    );
 
   for (
     let offset = 0;
@@ -184,125 +225,168 @@ async function groqChat({
 
     const apiKey = keys[index];
 
-    try {
-      const controller =
-        new AbortController();
+    for (
+      const chatModel of chatModels
+    ) {
+      if (Date.now() > deadline) {
+        attempts.push(
+          `budget exceeded with ${Math.max(keys.length - offset - 1, 0)} key(s) left`,
+        );
 
-      const timer = setTimeout(
-        () => controller.abort(),
-        REQUEST_TIMEOUT_MS,
-      );
+        break;
+      }
 
-      let response;
+      const payload = {
+        model: chatModel,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+      };
 
       try {
-        response = await fetch(
-          GROQ_API_URL,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type':
-                'application/json',
+        const controller =
+          new AbortController();
 
-              Authorization: `Bearer ${apiKey}`,
-            },
+        /*
+          A single hung request must never blow past the
+          pool budget — the effective per-attempt timeout
+          is capped by however much budget is left.
+        */
 
-            body: JSON.stringify(
-              payload,
-            ),
+        const remainingMs =
+          Math.max(deadline - Date.now(), 0);
 
-            signal: controller.signal,
-          },
+        const timer = setTimeout(
+          () => controller.abort(),
+          Math.min(
+            REQUEST_TIMEOUT_MS,
+            remainingMs || 1,
+          ),
         );
-      } finally {
-        clearTimeout(timer);
-      }
 
-      /*
-        Rate limited or server side failure:
-        rotate to the next key and retry.
-      */
-
-      if (
-        response.status === 429 ||
-        response.status >= 500
-      ) {
-        let detail = '';
+        let response;
 
         try {
-          const errorBody =
-            await response.json();
+          response = await fetch(
+            GROQ_API_URL,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type':
+                  'application/json',
 
-          detail =
-            errorBody?.error?.message ||
-            '';
-        } catch {
-          /* ignore parse failures */
+                Authorization: `Bearer ${apiKey}`,
+              },
+
+              body: JSON.stringify(
+                payload,
+              ),
+
+              signal: controller.signal,
+            },
+          );
+        } finally {
+          clearTimeout(timer);
         }
 
+        /*
+          Rate limited or server-side failure:
+          rotate to the next key and retry.
+        */
+
+        if (
+          response.status === 429 ||
+          response.status >= 500
+        ) {
+          let detail = '';
+
+          try {
+            const errorBody =
+              await response.json();
+
+            detail =
+              errorBody?.error?.message ||
+              '';
+          } catch {
+            /* ignore parse failures */
+          }
+
+          rotationCursor = index + 1;
+
+          attempts.push(
+            `key#${index + 1}: HTTP ${response.status} ${detail}`.trim(),
+          );
+
+          // Give the rate limiter a moment
+          // before trying the next key.
+          if (
+            response.status === 429
+          ) {
+            await sleep(600);
+          }
+
+          break; // next key
+        }
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          rotationCursor = index + 1;
+
+          attempts.push(
+            `key#${index + 1} model ${chatModel}: HTTP ${response.status} ${data?.error?.message || ''}`.trim(),
+          );
+
+          continue; // next model on this key
+        }
+
+        const responseText =
+          data?.choices?.[0]
+            ?.message?.content;
+
+        if (
+          !responseText ||
+          typeof responseText !== 'string' ||
+          !responseText.trim()
+        ) {
+          rotationCursor = index + 1;
+
+          attempts.push(
+            `key#${index + 1} model ${chatModel}: empty response`,
+          );
+
+          continue;
+        }
+
+        /*
+          Success — advance the cursor so the
+          next chat starts on a different key.
+        */
+
+        rotationCursor = index + 1;
+
+        return responseText.trim();
+      } catch (error) {
         rotationCursor = index + 1;
 
         attempts.push(
-          `key#${index + 1}: HTTP ${response.status} ${detail}`.trim(),
+          `key#${index + 1} model ${chatModel}: ${
+            error.name === 'AbortError'
+              ? 'timeout'
+              : error.message
+          }`,
         );
-
-        continue;
       }
+    }
 
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        rotationCursor = index + 1;
-
-        attempts.push(
-          `key#${index + 1}: HTTP ${response.status} ${data?.error?.message || ''}`.trim(),
-        );
-
-        continue;
-      }
-
-      const responseText =
-        data?.choices?.[0]
-          ?.message?.content;
-
-      if (
-        !responseText ||
-        typeof responseText !== 'string' ||
-        !responseText.trim()
-      ) {
-        rotationCursor = index + 1;
-
-        attempts.push(
-          `key#${index + 1}: empty response`,
-        );
-
-        continue;
-      }
-
-      /*
-        Success — advance the cursor so the
-        next chat starts on a different key.
-      */
-
-      rotationCursor = index + 1;
-
-      return responseText.trim();
-    } catch (error) {
-      rotationCursor = index + 1;
-
-      attempts.push(
-        `key#${index + 1}: ${
-          error.name === 'AbortError'
-            ? 'timeout'
-            : error.message
-        }`,
-      );
+    if (Date.now() > deadline) {
+      break;
     }
   }
 
   const failedError = new Error(
-    `All Groq keys failed (${chatModel}). Attempts: ${attempts.join(' | ')}`,
+    `All Groq keys failed. Attempts: ${attempts.join(' | ')}`,
   );
 
   failedError.code =
@@ -315,5 +399,5 @@ module.exports = {
   groqChat,
   isGroqConfigured,
   getGroqKeys,
-  getGroqModel,
+  getGroqModels,
 };

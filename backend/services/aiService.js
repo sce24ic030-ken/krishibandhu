@@ -1353,6 +1353,331 @@ function buildChatContents(
 }
 
 /* =========================================================
+   PROVIDER HELPERS (resilient key rotation)
+=========================================================
+   Production truth (verified 2026-09-22):
+   - The real GEMINI_API_KEY works with gemini-3.6-flash
+     and gemini-flash-latest.
+   - The Groq key pool returns "no access" (404) for every
+     model, so Groq is treated as a bounded secondary
+     attempt that must never stall a chat.
+========================================================= */
+
+function getGeminiKeys() {
+  const sources = [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEYS,
+  ];
+
+  const keys = [];
+
+  for (const source of sources) {
+    if (!source) {
+      continue;
+    }
+
+    for (const key of source.split(',')) {
+      const clean = key.trim();
+
+      if (clean && !keys.includes(clean)) {
+        keys.push(clean);
+      }
+    }
+  }
+
+  return keys;
+}
+
+function getGeminiModels() {
+  const envModel =
+    (process.env.GEMINI_MODEL || '').trim();
+
+  const base =
+    envModel || 'gemini-3.6-flash';
+
+  const models = [base];
+
+  if (!models.includes('gemini-flash-latest')) {
+    models.push('gemini-flash-latest');
+  }
+
+  return models;
+}
+
+async function geminiGenerateText({
+  systemInstruction,
+  contents,
+  temperature = 0.4,
+  maxOutputTokens = 1200,
+}) {
+  const keys = getGeminiKeys();
+
+  if (!keys.length) {
+    throw new Error('No Gemini keys configured.');
+  }
+
+  const models = getGeminiModels();
+
+  const attempts = [];
+
+  for (const apiKey of keys) {
+    const client = new GoogleGenAI({
+      apiKey,
+    });
+
+    for (const model of models) {
+      try {
+        const response = await client.models.generateContent({
+          model,
+
+          contents,
+
+          config: {
+            systemInstruction,
+            temperature,
+            maxOutputTokens,
+          },
+        });
+
+        const responseText = response?.text;
+
+        if (
+          !responseText ||
+          typeof responseText !== 'string' ||
+          !responseText.trim()
+        ) {
+          attempts.push(
+            `key=${apiKey.slice(0, 6)}… model=${model}: empty response`,
+          );
+
+          continue;
+        }
+
+        console.log(
+          `✅ Gemini response received (model=${model})`,
+        );
+
+        console.log(
+          '========================================',
+        );
+        console.log('');
+
+        return responseText.trim();
+      } catch (error) {
+        attempts.push(
+          `key=${apiKey.slice(0, 6)}… model=${model}: ${error?.message || error}`,
+        );
+      }
+    }
+  }
+
+  const failedError = new Error(
+    `All Gemini keys failed. Attempts: ${attempts.join(' | ')}`,
+  );
+
+  failedError.code = 'GEMINI_ALL_KEYS_FAILED';
+
+  throw failedError;
+}
+
+/*
+  Last-resort, never-throw response. If every provider
+  key is congested, the farmer still gets a useful,
+  honest reply in their language instead of a broken
+  "Unable to get a response from AI" card.
+*/
+
+function gracefulFallback(language) {
+  const responses = {
+    en: `⚠️ KrishiBandhu AI is temporarily busy and could not reach the response service just now. No worries — your question was not lost.
+
+**Please try again** in a few seconds. If it keeps failing, check your internet connection.
+✅ You can also use **Market**, **Weather**, **Crops** and **Passbook** pages directly while the AI recovers.
+
+📌 Want me to retry answering your question? Just type it again.`,
+    mr: `⚠️ कृषिबंधू एआय सध्या तात्पुरते व्यस्त आहे आणि या क्षणी प्रतिसाद सेवेपर्यंत पोहोचू शकले नाही. काळजी करू नका — तुमचा प्रश्न हरवला नाही.
+
+**कृपया काही सेकंदांनी पुन्हा प्रयत्न करा.** तरीही अपयश आल्यास, तुमचे इंटरनेट कनेक्शन तपासा.
+✅ दरम्यान तुम्ही **मार्केट**, **हवामान**, **पिके** आणि **पासबुक** पेज थेट वापरू शकता.
+
+📌 मला तुमच्या प्रश्नाचे उत्तर पुन्हा देण्याचा प्रयत्न करायचा आहे का? फक्त तो पुन्हा टाइप करा.`,
+    hi: `⚠️ कृषिबंधु AI अभी अस्थायी रूप से व्यस्त है और इस समय उत्तर सेवा तक नहीं पहुंच पाया। चिंता न करें — आपका प्रश्न खोया नहीं है।
+
+**कृपया कुछ सेकंड बाद फिर से प्रयास करें।** फिर भी असफल होने पर अपना इंटरनेट कनेक्शन जांचें।
+✅ इस बीच आप **मार्केट**, **मौसम**, **फसलें** और **पासबुक** पेज सीधे उपयोग कर सकते हैं।
+
+📌 क्या मैं आपके प्रश्न का उत्तर फिर से देने का प्रयास करूं? बस इसे दोबारा टाइप करें।`,
+  };
+
+  return responses[language] || responses.en;
+}
+
+/* =========================================================
+   TRANSLATE CHAT HISTORY
+=========================================================
+   Batch-translates the existing conversation into the
+   target language so the history follows the app's
+   language switch (EN / मराठी / हिंदी).
+========================================================= */
+
+function buildTranslationPrompt(messages, languageName) {
+  const lines = messages
+    .map((item, index) => {
+      const who =
+        item.role === 'assistant'
+          ? 'assistant'
+          : 'user';
+
+      return `${index + 1}. [${who}] ${(item.content || '').trim()}`;
+    })
+    .filter(Boolean);
+
+  return `Translate each numbered message below into ${languageName}. Follow these rules strictly:
+
+1. Return ONLY a plain JSON array of strings, in the same order and with the same count as the input. No explanations, no code fences, no numbering.
+   Example: ["translated line 1", "translated line 2"]
+2. Keep every emoji, number, price, date and markdown symbol (**bold**, - bullets, 1. steps) unchanged.
+3. Translate the full meaning of each message naturally, like a rural farmer would speak.
+4. If a message is already in ${languageName}, return it unchanged.
+
+MESSAGES:
+${lines.join('\n')}
+
+OUTPUT (JSON array only):`;
+}
+
+async function translateChatHistory({
+  messages = [],
+  language = 'en',
+}) {
+  const languageName =
+    LANGUAGE_NAMES[language] ||
+    'English';
+
+  const contentMessages = messages
+    .filter(
+      (item) =>
+        item &&
+        typeof item.content === 'string' &&
+        item.content.trim(),
+    )
+    .map((item) => ({
+      role:
+        item.role === 'assistant'
+          ? 'model'
+          : 'user',
+
+      parts: [
+        {
+          text: item.content.trim(),
+        },
+      ],
+    }));
+
+  // Nothing to translate — return empty array.
+  if (contentMessages.length === 0) {
+    return [];
+  }
+
+  const prompt =
+    buildTranslationPrompt(
+      messages,
+      languageName,
+    );
+
+  const translationContents = [
+    {
+      role: 'user',
+      parts: [
+        {
+          text: prompt,
+        },
+      ],
+    },
+  ];
+
+  let rawText = '';
+
+  try {
+    // Primary: Gemini (proven working in production).
+    rawText = await geminiGenerateText({
+      contents: translationContents,
+      temperature: 0.15,
+      maxOutputTokens: 2000,
+    });
+  } catch (geminiError) {
+    console.error(
+      '❌ Translation Gemini failed:',
+      geminiError.message,
+    );
+
+    // Secondary: Groq (bounded) — usually not available
+    // in production, but harmless to try.
+    try {
+      if (isGroqConfigured()) {
+        rawText = await groqChat({
+          contents: translationContents,
+          temperature: 0.15,
+          maxTokens: 2000,
+        });
+      }
+    } catch (groqError) {
+      console.error(
+        '❌ Translation Groq failed:',
+        groqError.message,
+      );
+    }
+  }
+
+  // Parse the JSON array out of the model reply.
+  let translated = null;
+
+  if (rawText) {
+    const match =
+      rawText.match(/\[[\s\S]*\]/);
+
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[0]);
+
+        if (Array.isArray(parsed)) {
+          translated = parsed.map((line) =>
+            typeof line === 'string'
+              ? line
+              : String(line ?? ''),
+          );
+        }
+      } catch (error) {
+        console.error(
+          'Translation JSON parse failed:',
+          error.message,
+        );
+      }
+    }
+  }
+
+  // Align results with the ORIGINAL messages (same index).
+  const result = messages.map((item, index) => {
+    const hasContent =
+      item &&
+      typeof item.content === 'string' &&
+      item.content.trim();
+
+    if (!hasContent) {
+      return '';
+    }
+
+    const value = translated?.[index];
+
+    return typeof value === 'string' && value.trim()
+      ? value.trim()
+      : item.content;
+  });
+
+  return result;
+}
+
+/* =========================================================
    GENERATE AI RESPONSE
 ========================================================= */
 
@@ -1471,133 +1796,106 @@ async function generateAIResponse(
 
   try {
     /*
-      PRIMARY: Groq — rotates across all configured
-      chat keys (LLM_API_KEYS + WHISPER_API_KEYS)
-      whenever a rate limit or 5xx occurs.
+      RESILIENT PIPELINE — a real response is ALWAYS
+      produced:
+
+      1. Gemini first (proven working in production:
+         GEMINI_API_KEY + gemini-3.6-flash).
+      2. Groq (bounded budget) as a secondary attempt.
+      3. A second round of the same attempts, to ride
+         out a transient provider hiccup.
+      4. A graceful, language-aware fallback message if
+         every provider is congested — never a broken
+         "Unable to get a response from AI" card.
     */
 
-    if (isGroqConfigured()) {
-      try {
-        const groqResponse =
-          await groqChat({
-            systemInstruction,
+    const attempts = [
+      () =>
+        geminiGenerateText({
+          systemInstruction,
 
-            contents,
+          contents,
 
-            temperature: 0.4,
+          temperature: 0.4,
 
-            maxTokens: 1200,
-          });
-
-        console.log(
-          '✅ Groq response received',
-        );
-
-        console.log(
-          '========================================',
-        );
-        console.log('');
-
-        return groqResponse;
-      } catch (groqError) {
-        console.error(
-          '❌ Groq failed — falling back to Gemini:',
-          groqError.message,
-        );
-      }
-    }
-
-    /*
-      FALLBACK: Gemini — try the configured model, then
-      gemini-flash-latest (different capacity pool).
-    */
-
-    const geminiFallbackModels = [
-      GEMINI_MODEL,
-      'gemini-flash-latest',
+          maxOutputTokens: 1200,
+        }),
     ];
 
-    let lastGeminiError = null;
+    if (isGroqConfigured()) {
+      attempts.push(() =>
+        groqChat({
+          systemInstruction,
+
+          contents,
+
+          temperature: 0.4,
+
+          maxTokens: 1200,
+        }),
+      );
+    }
+
+    let lastError = null;
 
     for (
-      const fallbackModel of geminiFallbackModels
+      let round = 0;
+      round < 2;
+      round += 1
     ) {
-      try {
-        const response =
-          await ai.models.generateContent({
-            model:
-              fallbackModel,
+      for (
+        const attempt of attempts
+      ) {
+        try {
+          const response =
+            await attempt();
 
-            contents,
+          return response;
+        } catch (attemptError) {
+          lastError = attemptError;
 
-            config: {
-              systemInstruction,
-
-              temperature: 0.4,
-
-              maxOutputTokens: 1200,
-            },
-          });
-
-        const responseText =
-          response?.text;
-
-        if (
-          !responseText ||
-          typeof responseText !==
-            'string'
-        ) {
-          throw new Error(
-            'Gemini returned an empty response.',
+          console.error(
+            `❌ Provider attempt failed (round ${round + 1}):`,
+            attemptError.message,
           );
         }
+      }
 
-        console.log(
-          `✅ Gemini response received (${fallbackModel})`,
-        );
+      /*
+        Give a transient provider hiccup a moment
+        to clear before the next round.
+      */
 
-        console.log(
-          '========================================',
-        );
-        console.log('');
-
-        return responseText.trim();
-      } catch (geminiModelError) {
-        lastGeminiError =
-          geminiModelError;
-
-        console.error(
-          `❌ Gemini ${fallbackModel} failed:`,
-          geminiModelError.message,
+      if (round === 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 800),
         );
       }
     }
 
-    throw lastGeminiError || new Error(
-      'Gemini returned an empty response.',
+    console.error(
+      '⚠️ All AI providers congested — using graceful fallback:',
+      lastError?.message,
     );
+
+    console.log(
+      '========================================',
+    );
+    console.log('');
+
+    return gracefulFallback(language);
   } catch (error) {
-    console.error('');
+    /*
+      Defensive: even an unexpected failure returns a
+      usable answer instead of a broken chat card.
+    */
+
     console.error(
-      '========================================',
-    );
-    console.error(
-      '❌ Gemini AI Error',
-    );
-    console.error(
-      '========================================',
-    );
-    console.error(
+      'AI service error:',
       error,
     );
-    console.error(
-      '========================================',
-    );
-    console.error('');
 
-    throw new Error(
-      'Unable to get a response from AI.',
-    );
+    return gracefulFallback(language);
   }
 }
 
@@ -1607,4 +1905,5 @@ async function generateAIResponse(
 
 module.exports = {
   generateAIResponse,
+  translateChatHistory,
 };

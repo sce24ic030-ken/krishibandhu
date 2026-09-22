@@ -1,4 +1,4 @@
-const { generateAIResponse } = require('../services/aiService');
+const { generateAIResponse, translateChatHistory } = require('../services/aiService');
 
 const { transcribeAudio } = require('../services/whisperService');
 
@@ -125,7 +125,70 @@ const sendTranscribedText = async (
   }
 };
 
+const translateChat = async (req, res) => {
+  try {
+    const {
+      messages = [],
+      language = 'en',
+    } = req.body;
+
+    if (!Array.isArray(messages)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Messages must be an array.',
+      });
+    }
+
+    const validLanguages = [
+      'en',
+      'mr',
+      'hi',
+    ];
+
+    const targetLanguage =
+      validLanguages.includes(language)
+        ? language
+        : 'en';
+
+    const translations =
+      await translateChatHistory({
+        messages,
+        language: targetLanguage,
+      });
+
+    return res.status(200).json({
+      success: true,
+      translations,
+    });
+  } catch (error) {
+    console.error(
+      'AI Translate Error:',
+      error,
+    );
+
+    // Never break the chat: return the original
+    // messages so the history just stays as-is.
+    return res.status(200).json({
+      success: false,
+      message:
+        'Unable to translate messages.',
+      translations: Array.isArray(
+        req.body?.messages,
+      )
+        ? req.body.messages.map(
+            (item) =>
+              (item &&
+                item.content) ||
+              '',
+          )
+        : [],
+    });
+  }
+};
+
 module.exports = {
   chatWithAI,
   sendTranscribedText,
+  translateChat,
 };
