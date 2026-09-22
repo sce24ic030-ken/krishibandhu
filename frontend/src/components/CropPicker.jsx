@@ -65,8 +65,16 @@ function CropPicker({
   };
 
   const handlePick = (name) => {
-    setQuery(name);
     setShowAll(false);
+
+    // catalog mode — the card's + action
+    // opens the add form for that crop
+    if (onAdd) {
+      onAdd(name);
+      return;
+    }
+
+    setQuery(name);
 
     if (onSelect) {
       onSelect(name);
