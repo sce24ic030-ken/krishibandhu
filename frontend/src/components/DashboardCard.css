@@ -57,6 +57,10 @@
 
   border-radius: 7px;
 
+  text-decoration: none;
+
+  cursor: pointer;
+
   transition:
     background 0.2s ease,
     color 0.2s ease;

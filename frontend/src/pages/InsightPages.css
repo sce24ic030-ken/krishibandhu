@@ -1,0 +1,315 @@
+/* ==========================================
+   Shared styles — farmer insight pages
+   (Alerts / Net Realization / Credit Score)
+========================================== */
+
+.insight-page .insight-section {
+  margin-top: 22px;
+}
+
+.insight-section-head {
+  margin-bottom: 12px;
+}
+
+.insight-section-head h2 {
+  margin: 0;
+
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.insight-section-head p {
+  margin: 4px 0 0;
+
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* ---------- cards ---------- */
+
+.insight-card {
+  padding: 16px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+  gap: 12px;
+}
+
+.insight-stat {
+  padding: 16px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.insight-stat-label {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.insight-stat-value {
+  margin-top: 6px;
+
+  color: var(--text-primary);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.insight-stat-value.good {
+  color: #237651;
+}
+
+.insight-stat-value.bad {
+  color: #b42318;
+}
+
+/* ---------- list rows ---------- */
+
+.insight-row {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding: 13px 15px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  margin-bottom: 10px;
+
+  text-decoration: none;
+}
+
+.insight-row-icon {
+  flex-shrink: 0;
+
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+}
+
+.insight-row-icon.warning {
+  background: #fdeeee;
+  color: #b42318;
+}
+
+.insight-row-icon.good {
+  background: #eaf8ef;
+  color: #237651;
+}
+
+.insight-row-icon.caution {
+  background: #fff4e0;
+  color: #966700;
+}
+
+.insight-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.insight-row-title {
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.insight-row-meta {
+  margin-top: 3px;
+
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.insight-row-arrow {
+  flex-shrink: 0;
+
+  margin-top: 8px;
+
+  color: var(--primary);
+}
+
+/* ---------- forms ---------- */
+
+.insight-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+
+  gap: 12px;
+}
+
+.insight-field label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.insight-field input,
+.insight-field select {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 10px 12px;
+
+  background: var(--background);
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.insight-field input:focus,
+.insight-field select:focus {
+  outline: none;
+
+  border-color: var(--primary);
+
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.insight-result {
+  margin-top: 14px;
+
+  padding: 15px 17px;
+
+  border-radius: 12px;
+
+  background: #eaf8ef;
+  color: #1f5d43;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ---------- score ring ---------- */
+
+.score-hero {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 20px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.score-circle {
+  flex-shrink: 0;
+
+  width: 96px;
+  height: 96px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #eaf8ef;
+  color: #237651;
+
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.score-circle.bad {
+  background: #fdeeee;
+  color: #b42318;
+}
+
+.score-info .score-grade {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.score-info .score-sub {
+  margin-top: 5px;
+
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* ---------- factor checklist ---------- */
+
+.factor-row {
+  display: flex;
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 12px 4px;
+
+  border-bottom: 1px solid #eef2ef;
+}
+
+.factor-row:last-child {
+  border-bottom: none;
+}
+
+.factor-row .factor-label {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.factor-row .factor-points {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.factor-row .factor-points.good {
+  color: #237651;
+}
+
+.factor-row .factor-points.missed {
+  color: #b42318;
+}

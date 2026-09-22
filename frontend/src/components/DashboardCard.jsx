@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import './DashboardCard.css';
 
 function DashboardCard({
@@ -6,6 +8,7 @@ function DashboardCard({
   value,
   description,
   action,
+  to,
 }) {
   return (
     <article className="dashboard-card">
@@ -16,11 +19,19 @@ function DashboardCard({
           {icon}
         </div>
 
-        {action && (
-          <button className="card-action">
-            {action}
-          </button>
-        )}
+        {action &&
+          (to ? (
+            <Link
+              className="card-action"
+              to={to}
+            >
+              {action}
+            </Link>
+          ) : (
+            <button className="card-action">
+              {action}
+            </button>
+          ))}
 
       </div>
 

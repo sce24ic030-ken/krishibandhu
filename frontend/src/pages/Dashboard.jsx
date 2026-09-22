@@ -164,6 +164,7 @@ function Dashboard() {
                 : t('Checking mandi prices for planting conditions.')
           }
           action={t('View')}
+          to="/weather"
         />
 
         <DashboardCard
@@ -180,6 +181,7 @@ function Dashboard() {
               : t('Current indicative market price.')
           }
           action={t('Markets')}
+          to="/market"
         />
 
         <DashboardCard
@@ -200,6 +202,7 @@ function Dashboard() {
               : t('Estimated amount after selling costs.')
           }
           action={t('Calculate')}
+          to="/net-realization"
         />
 
         <DashboardCard
@@ -214,6 +217,7 @@ function Dashboard() {
           }
           description={t('Compare prices across nearby mandis.')}
           action={t('Compare')}
+          to="/market"
         />
 
         <DashboardCard
@@ -226,6 +230,7 @@ function Dashboard() {
               : t('No outstanding alerts right now.')
           }
           action={t('View all')}
+          to="/alerts"
         />
 
         <DashboardCard
@@ -254,6 +259,7 @@ function Dashboard() {
               : t('Your recent agricultural transactions.')
           }
           action={creditScore ? t('Score basis') : t('Open')}
+          to={creditScore ? '/credit-score' : '/passbook'}
         />
 
       </section>

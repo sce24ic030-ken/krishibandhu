@@ -21,6 +21,9 @@ import Passbook from './pages/Passbook';
 import Parchi from './pages/Parchi';
 import Storage from './pages/Storage';
 import Settings from './pages/Settings';
+import Alerts from './pages/Alerts';
+import NetRealization from './pages/NetRealization';
+import CreditScore from './pages/CreditScore';
 import Backhaul from './pages/Backhaul';
 import TraderBackhaul from './pages/TraderBackhaul';
 
@@ -276,6 +279,51 @@ function App() {
             >
               <MainLayout>
                 <Dashboard />
+              </MainLayout>
+            </RoleRoute>
+          }
+        />
+
+        <Route
+          path="/alerts"
+          element={
+            <RoleRoute
+              allowedRoles={[
+                'farmer',
+              ]}
+            >
+              <MainLayout>
+                <Alerts />
+              </MainLayout>
+            </RoleRoute>
+          }
+        />
+
+        <Route
+          path="/net-realization"
+          element={
+            <RoleRoute
+              allowedRoles={[
+                'farmer',
+              ]}
+            >
+              <MainLayout>
+                <NetRealization />
+              </MainLayout>
+            </RoleRoute>
+          }
+        />
+
+        <Route
+          path="/credit-score"
+          element={
+            <RoleRoute
+              allowedRoles={[
+                'farmer',
+              ]}
+            >
+              <MainLayout>
+                <CreditScore />
               </MainLayout>
             </RoleRoute>
           }
