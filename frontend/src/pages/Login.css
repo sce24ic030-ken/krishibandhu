@@ -269,3 +269,19 @@
     margin-bottom: 22px;
   }
 }
+
+/* Short screens (small phones / landscape): the card can be taller than
+   the viewport — allow vertical scrolling instead of clipping, and drop
+   the decorative shapes so they don't extend the scroll area. */
+@media (max-height: 720px) {
+  .login-page {
+    overflow-x: clip;
+    overflow-y: auto;
+    align-items: flex-start;
+    padding: 28px 16px;
+  }
+
+  .login-background-shape {
+    display: none;
+  }
+}

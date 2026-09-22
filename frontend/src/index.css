@@ -48,6 +48,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Fit-any-device guard: no element may push the page wider than the
+   viewport (overflow: clip does NOT create a scroll container, so the
+   sticky navbar keeps working). Tables etc. scroll inside their own
+   wrappers. */
+html,
+body {
+  overflow-x: clip;
+}
+
 button,
 input,
 select,

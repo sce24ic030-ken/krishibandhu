@@ -443,3 +443,19 @@
     gap: 17px;
   }
 }
+
+/* Short screens (small phones / landscape): the card can be much taller
+   than the viewport — allow vertical scrolling instead of clipping, and
+   drop the decorative shapes so they don't extend the scroll area. */
+@media (max-height: 720px) {
+  .register-page {
+    overflow-x: clip;
+    overflow-y: auto;
+    align-items: flex-start;
+    padding: 28px 15px;
+  }
+
+  .register-background-shape {
+    display: none;
+  }
+}
