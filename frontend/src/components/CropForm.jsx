@@ -7,11 +7,14 @@ import API_URL from '../config/api';
 
 import { useLanguage } from '../context/LanguageContext';
 
+import CropPicker from './CropPicker';
+
 import './CropForm.css';
 
 function CropForm({
   crop,
   token,
+  initialName = '',
   onCropAdded,
   onCropUpdated,
   onCancel,
@@ -36,8 +39,48 @@ function CropForm({
   const [error, setError] =
     useState('');
 
+  const [priceMap, setPriceMap] =
+    useState({});
+
   const isEditing =
     Boolean(crop);
+
+  // ==========================================
+  // Live mandi prices (for the picker tags)
+  // ==========================================
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/market-prices`,
+        ).then((r) => r.json());
+
+        const map = {};
+
+        (res.data || []).forEach((entry) => {
+          const name = String(
+            entry.commodity || '',
+          ).toLowerCase();
+
+          if (name) {
+            map[name] = {
+              price: Number(
+                entry.modalPrice || 0,
+              ).toLocaleString('en-IN'),
+              unit: entry.unit || 'quintal',
+            };
+          }
+        });
+
+        setPriceMap(map);
+      } catch {
+        // prices are optional
+      }
+    };
+
+    load();
+  }, []);
 
 
   // ==========================================
@@ -74,7 +117,7 @@ function CropForm({
       });
     } else {
       setFormData({
-        name: '',
+        name: initialName || '',
         variety: '',
         area: '',
         areaUnit: 'acre',
@@ -86,7 +129,7 @@ function CropForm({
     }
 
     setError('');
-  }, [crop]);
+  }, [crop, initialName]);
 
 
   // ==========================================
@@ -321,27 +364,31 @@ function CropForm({
 
         <div className="crop-form-grid">
 
-          {/* Crop Name */}
+          {/* Crop Name — pick from the list */}
 
-          <div className="form-group">
+          <div className="form-group form-group-full">
 
             <label htmlFor="name">
               {t('Crop Name')}{' '}
               <span>*</span>
             </label>
 
-            <input
-              id="name"
-              name="name"
-              type="text"
-              placeholder={t('e.g. Tomato')}
-              value={
-                formData.name
+            <CropPicker
+              value={formData.name}
+              onValueChange={(name) =>
+                setFormData((previous) => ({
+                  ...previous,
+                  name,
+                }))
               }
-              onChange={
-                handleChange
+              onSelect={(name) =>
+                setFormData((previous) => ({
+                  ...previous,
+                  name,
+                }))
               }
-              required
+              priceMap={priceMap}
+              compact
             />
 
           </div>

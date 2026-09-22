@@ -5,6 +5,7 @@ import {
 
 import PageHeader from '../components/PageHeader';
 import CropForm from '../components/CropForm';
+import CropPicker from '../components/CropPicker';
 import QrModal from '../components/QrModal';
 
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +45,49 @@ function Crops() {
 
   const [qrTarget, setQrTarget] =
     useState(null);
+
+  const [priceMap, setPriceMap] =
+    useState({});
+
+  const [catalogPreset, setCatalogPreset] =
+    useState('');
+
+  // ==========================================
+  // Live mandi prices (tags on the catalog)
+  // ==========================================
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/market-prices`,
+        ).then((r) => r.json());
+
+        const map = {};
+
+        (res.data || []).forEach((entry) => {
+          const name = String(
+            entry.commodity || '',
+          ).toLowerCase();
+
+          if (name) {
+            map[name] = {
+              price: Number(
+                entry.modalPrice || 0,
+              ).toLocaleString('en-IN'),
+              unit: entry.unit || 'quintal',
+            };
+          }
+        });
+
+        setPriceMap(map);
+      } catch {
+        // prices are optional
+      }
+    };
+
+    load();
+  }, []);
 
   // ==========================================
   // Fetch Farmer's Crops
@@ -127,6 +171,8 @@ function Crops() {
       ],
     );
 
+    setCatalogPreset('');
+
     setShowForm(false);
   };
 
@@ -160,7 +206,18 @@ function Crops() {
     );
 
     setEditingCrop(null);
+    setCatalogPreset('');
     setShowForm(false);
+  };
+
+  // ==========================================
+  // Catalog → add a specific crop
+  // ==========================================
+
+  const handleCatalogAdd = (name) => {
+    setCatalogPreset(name);
+    setEditingCrop(null);
+    setShowForm(true);
   };
 
   // ==========================================
@@ -169,6 +226,7 @@ function Crops() {
 
   const handleCancel = () => {
     setEditingCrop(null);
+    setCatalogPreset('');
     setShowForm(false);
   };
 
@@ -239,6 +297,41 @@ function Crops() {
   };
 
   // ==========================================
+  // Derived stats
+  // ==========================================
+
+  const areaAcres = crops.reduce(
+    (sum, crop) => {
+      const a = Number(crop.area) || 0;
+
+      if (crop.areaUnit === 'hectare') {
+        return sum + a * 2.47105;
+      }
+
+      if (crop.areaUnit === 'gunta') {
+        return sum + a * 0.0247;
+      }
+
+      return sum + a;
+    },
+    0,
+  );
+
+  const statusCounts = crops.reduce(
+    (acc, crop) => {
+      acc[crop.status] =
+        (acc[crop.status] || 0) + 1;
+      return acc;
+    },
+    {},
+  );
+
+  const formatArea = (n) =>
+    n >= 100
+      ? Math.round(n).toLocaleString('en-IN')
+      : (Math.round(n * 100) / 100).toLocaleString('en-IN');
+
+  // ==========================================
   // Render
   // ==========================================
 
@@ -253,6 +346,7 @@ function Crops() {
       {showForm ? (
 
         <CropForm
+          initialName={catalogPreset}
           crop={editingCrop}
           token={token}
           onCropAdded={
@@ -269,6 +363,56 @@ function Crops() {
       ) : (
 
         <div className="crops-page-card">
+
+          {/* ==================================
+              Stats strip
+          ================================== */}
+
+          {!loading &&
+            !error &&
+            crops.length > 0 && (
+              <div className="crops-stats">
+
+                <div className="crops-stat">
+                  <strong>
+                    {crops.length}
+                  </strong>
+                  <span>
+                    {crops.length === 1
+                      ? t('crop')
+                      : t('crops')}
+                  </span>
+                </div>
+
+                <div className="crops-stat">
+                  <strong>
+                    {formatArea(areaAcres)}
+                  </strong>
+                  <span>
+                    {t('acres')}
+                  </span>
+                </div>
+
+                <div className="crops-stat">
+                  <strong>
+                    {statusCounts.growing || 0}
+                  </strong>
+                  <span>
+                    {t('growing')}
+                  </span>
+                </div>
+
+                <div className="crops-stat">
+                  <strong>
+                    {statusCounts.ready || 0}
+                  </strong>
+                  <span>
+                    {t('ready')}
+                  </span>
+                </div>
+
+              </div>
+            )}
 
           {/* ==================================
               Header
@@ -304,6 +448,7 @@ function Crops() {
               className="primary-button"
               onClick={() => {
                 setEditingCrop(null);
+                setCatalogPreset('');
                 setShowForm(true);
               }}
             >
@@ -543,6 +688,35 @@ function Crops() {
               </div>
 
             )}
+
+          {/* ==================================
+              All crops catalog
+          ================================== */}
+
+          <div className="crops-catalog">
+
+            <div className="crops-section-header crops-catalog-header">
+
+              <div>
+
+                <h2>
+                  {t('All Crops')}
+                </h2>
+
+                <p>
+                  {t('Choose any crop from the list to add it to your farm.')}
+                </p>
+
+              </div>
+
+            </div>
+
+            <CropPicker
+              onAdd={handleCatalogAdd}
+              priceMap={priceMap}
+            />
+
+          </div>
 
         </div>
 

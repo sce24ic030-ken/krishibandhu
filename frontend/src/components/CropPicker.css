@@ -1,0 +1,277 @@
+/* =========================================
+   Crop Picker
+========================================= */
+
+.crop-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------- search ---------- */
+
+.crop-picker-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.crop-picker-search-icon {
+  position: absolute;
+  left: 13px;
+  color: #87928b;
+  pointer-events: none;
+}
+
+.crop-picker-search input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d9e2dc;
+  border-radius: 10px;
+  padding: 11px 38px 11px 38px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #26332c;
+  background: #ffffff;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.crop-picker-search input:focus {
+  border-color: #2f7d5a;
+  box-shadow: 0 0 0 3px rgba(47, 125, 90, 0.1);
+}
+
+.crop-picker-clear {
+  position: absolute;
+  right: 9px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #eef2ef;
+  color: #647169;
+  cursor: pointer;
+}
+
+.crop-picker-clear:hover {
+  background: #e2e9e4;
+  color: #26332c;
+}
+
+/* ---------- category chips ---------- */
+
+.crop-picker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.crop-picker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d9e2dc;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4a5850;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.crop-picker-chip span {
+  font-size: 14px;
+}
+
+.crop-picker-chip:hover {
+  border-color: #bcdacd;
+  background: #f4f9f6;
+}
+
+.crop-picker-chip.is-active {
+  border-color: #2f7d5a;
+  background: #2f7d5a;
+  color: #ffffff;
+}
+
+/* ---------- grid ---------- */
+
+.crop-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.crop-pick-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid #e2e9e4;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 11px 12px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.crop-pick-card:hover {
+  transform: translateY(-2px);
+  border-color: #bcdacd;
+  box-shadow: 0 6px 18px rgba(31, 61, 48, 0.08);
+}
+
+.crop-pick-card.is-selected {
+  border-color: #2f7d5a;
+  background: #f0f8f3;
+  box-shadow: 0 0 0 2px rgba(47, 125, 90, 0.18);
+}
+
+.crop-pick-emoji {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #edf7f1;
+  font-size: 20px;
+}
+
+.crop-pick-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crop-pick-info strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #17231d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crop-pick-info small {
+  font-size: 11px;
+  color: #87928b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crop-pick-price {
+  margin-top: 2px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  color: #28734d;
+  background: #e9f7ee;
+  border-radius: 6px;
+  padding: 2px 6px;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+.crop-pick-add {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #2f7d5a;
+  color: #ffffff;
+}
+
+.crop-pick-check {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #2f7d5a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* ---------- show more ---------- */
+
+.crop-picker-more {
+  align-self: center;
+  border: 1px solid #cfe0d6;
+  background: #f4f9f6;
+  color: #28734d;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.crop-picker-more:hover {
+  background: #e9f4ed;
+}
+
+/* ---------- empty ---------- */
+
+.crop-picker-empty {
+  padding: 18px;
+  border-radius: 12px;
+  background: #f7faf8;
+  border: 1px dashed #d5e0da;
+  text-align: center;
+}
+
+.crop-picker-empty p {
+  margin: 0;
+  color: #647169;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ---------- compact (inside form) ---------- */
+
+.crop-picker-compact .crop-pick-card {
+  padding: 9px 10px;
+}
+
+.crop-picker-compact .crop-pick-emoji {
+  width: 32px;
+  height: 32px;
+  font-size: 17px;
+}
+
+.crop-picker-compact .crop-pick-info strong {
+  font-size: 13px;
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 600px) {
+  .crop-picker-grid {
+    grid-template-columns: 1fr;
+  }
+}
