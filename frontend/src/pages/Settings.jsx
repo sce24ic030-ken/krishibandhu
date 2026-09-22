@@ -44,7 +44,7 @@ function Settings() {
             t('Tamper-proof hash-chained ledger for every Parchi'),
             t('Offline QR scanning — queued and synced automatically'),
             t('Admin control tower, government analytics & fraud flags'),
-            t('AI Nursery Assistant (Gemini)'),
+            t('AI farming assistant — crops, markets & weather'),
             t('Weather & sowing alerts'),
             t('Market prices + price-trend forecast'),
             t('Credit score for farmers'),
@@ -84,9 +84,9 @@ function Settings() {
               password: 'Farmer123',
             },
             {
-              role: 'Trader',
-              email: 'trader@krishibandhu.com',
-              password: 'Trader123',
+              role: 'Trader (Swetha)',
+              email: 'swetha@krishibandhu.com',
+              password: 'Swetha123',
             },
             {
               role: 'Admin',

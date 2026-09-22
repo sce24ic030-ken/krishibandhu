@@ -1,8 +1,4 @@
 const {
-  GoogleGenAI,
-} = require('@google/genai');
-
-const {
   groqChat,
   isGroqConfigured,
 } = require('./groqService');
@@ -17,16 +13,12 @@ const StorageFacility = require('../models/StorageFacility');
 const Backhaul = require('../models/Backhaul');
 
 /* =========================================================
-   GEMINI
+   GEMINI — direct REST client with bounded timeouts.
+   (The @google/genai SDK retries 503s internally with its
+   own long backoff, which stalls chat for 40s+ under load.
+   A raw REST call + AbortController keeps every attempt
+   within a hard per-request budget.)
 ========================================================= */
-
-const ai = new GoogleGenAI({
-  apiKey:
-    process.env.GEMINI_API_KEY,
-});
-
-const GEMINI_MODEL =
-  'gemini-3.6-flash';
 
 const LANGUAGE_NAMES = {
   en: 'English',
@@ -1409,43 +1401,142 @@ async function geminiGenerateText({
   contents,
   temperature = 0.4,
   maxOutputTokens = 1200,
+  timeoutMs,
 }) {
   const keys = getGeminiKeys();
 
   if (!keys.length) {
-    throw new Error('No Gemini keys configured.');
+    throw new Error(
+      'No Gemini keys configured.',
+    );
   }
 
   const models = getGeminiModels();
 
   const attempts = [];
 
+  const perAttemptTimeout =
+    timeoutMs ||
+    Number(
+      process.env.GEMINI_TIMEOUT_MS,
+    ) ||
+    25000;
+
+  const requestContents = contents.map(
+    (item) => ({
+      role:
+        item.role === 'model'
+          ? 'model'
+          : 'user',
+
+      parts:
+        Array.isArray(item.parts) &&
+        item.parts.length
+          ? item.parts
+          : [
+              {
+                text: String(
+                  item.text ?? '',
+                ),
+              },
+            ],
+    }),
+  );
+
   for (const apiKey of keys) {
-    const client = new GoogleGenAI({
-      apiKey,
-    });
-
     for (const model of models) {
+      const controller =
+        new AbortController();
+
+      const timer = setTimeout(
+        () => controller.abort(),
+        perAttemptTimeout,
+      );
+
       try {
-        const response = await client.models.generateContent({
-          model,
+        const url =
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
 
-          contents,
+        const body = {
+          contents: requestContents,
 
-          config: {
-            systemInstruction,
+          generationConfig: {
             temperature,
             maxOutputTokens,
           },
-        });
-
-        const responseText = response?.text;
+        };
 
         if (
-          !responseText ||
-          typeof responseText !== 'string' ||
-          !responseText.trim()
+          systemInstruction &&
+          typeof systemInstruction ===
+            'string' &&
+          systemInstruction.trim()
         ) {
+          body.systemInstruction = {
+            parts: [
+              {
+                text: systemInstruction.trim(),
+              },
+            ],
+          };
+        }
+
+        const response = await fetch(
+          url,
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+
+            body: JSON.stringify(
+              body,
+            ),
+
+            signal:
+              controller.signal,
+          },
+        );
+
+        const data = await response
+          .json()
+          .catch(() => ({}));
+
+        if (!response.ok) {
+          attempts.push(
+            `key=${apiKey.slice(0, 6)}… model=${model}: ${data?.error?.message || `HTTP ${response.status}`}`,
+          );
+
+          continue;
+        }
+
+        if (data?.promptFeedback?.blockReason) {
+          attempts.push(
+            `key=${apiKey.slice(0, 6)}… model=${model}: blocked (${data.promptFeedback.blockReason})`,
+          );
+
+          continue;
+        }
+
+        const parts =
+          data?.candidates?.[0]
+            ?.content?.parts || [];
+
+        const responseText = parts
+          .filter(
+            (part) =>
+              !part.thought,
+          )
+          .map(
+            (part) =>
+              part.text || '',
+          )
+          .join('')
+          .trim();
+
+        if (!responseText) {
           attempts.push(
             `key=${apiKey.slice(0, 6)}… model=${model}: empty response`,
           );
@@ -1462,11 +1553,17 @@ async function geminiGenerateText({
         );
         console.log('');
 
-        return responseText.trim();
+        return responseText;
       } catch (error) {
         attempts.push(
-          `key=${apiKey.slice(0, 6)}… model=${model}: ${error?.message || error}`,
+          `key=${apiKey.slice(0, 6)}… model=${model}: ${
+            error.name === 'AbortError'
+              ? `timeout after ${perAttemptTimeout}ms`
+              : error?.message || error
+          }`,
         );
+      } finally {
+        clearTimeout(timer);
       }
     }
   }
@@ -1475,7 +1572,8 @@ async function geminiGenerateText({
     `All Gemini keys failed. Attempts: ${attempts.join(' | ')}`,
   );
 
-  failedError.code = 'GEMINI_ALL_KEYS_FAILED';
+  failedError.code =
+    'GEMINI_ALL_KEYS_FAILED';
 
   throw failedError;
 }
@@ -1598,33 +1696,40 @@ async function translateChatHistory({
 
   let rawText = '';
 
+  /*
+    Primary: the Groq key pool (bounded budget, verified
+    live models). Secondary: Gemini via bounded REST —
+    it shares quota with the Parchi receipt service, so
+    it only runs when Groq could not answer.
+  */
+
   try {
-    // Primary: Gemini (proven working in production).
-    rawText = await geminiGenerateText({
-      contents: translationContents,
-      temperature: 0.15,
-      maxOutputTokens: 2000,
-    });
-  } catch (geminiError) {
+    if (isGroqConfigured()) {
+      rawText = await groqChat({
+        contents: translationContents,
+        temperature: 0.15,
+        maxTokens: 2000,
+      });
+    } else {
+      throw new Error('Groq not configured.');
+    }
+  } catch (groqError) {
     console.error(
-      '❌ Translation Gemini failed:',
-      geminiError.message,
+      '❌ Translation Groq failed:',
+      groqError.message,
     );
 
-    // Secondary: Groq (bounded) — usually not available
-    // in production, but harmless to try.
     try {
-      if (isGroqConfigured()) {
-        rawText = await groqChat({
-          contents: translationContents,
-          temperature: 0.15,
-          maxTokens: 2000,
-        });
-      }
-    } catch (groqError) {
+      rawText = await geminiGenerateText({
+        contents: translationContents,
+        temperature: 0.15,
+        maxOutputTokens: 2000,
+        timeoutMs: 20000,
+      });
+    } catch (geminiError) {
       console.error(
-        '❌ Translation Groq failed:',
-        groqError.message,
+        '❌ Translation Gemini failed:',
+        geminiError.message,
       );
     }
   }
@@ -1809,42 +1914,71 @@ async function generateAIResponse(
          "Unable to get a response from AI" card.
     */
 
-    const attempts = [
-      () =>
-        geminiGenerateText({
-          systemInstruction,
+    const rounds = [
+      [
+        // Primary: the Groq key pool (14 keys round-
+        // robin; qwen/allam/gpt-oss models verified live
+        // on this account). It shares no quota with the
+        // Parchi receipt service, so it runs first and
+        // keeps Gemini's tight quota in reserve.
+        ...(isGroqConfigured()
+          ? [
+              () =>
+                groqChat({
+                  systemInstruction,
 
-          contents,
+                  contents,
 
-          temperature: 0.4,
+                  temperature: 0.4,
 
-          maxOutputTokens: 1200,
-        }),
+                  maxTokens: 1200,
+                }),
+            ]
+          : []),
+
+        // Secondary: Gemini via bounded REST call.
+        () =>
+          geminiGenerateText({
+            systemInstruction,
+
+            contents,
+
+            temperature: 0.4,
+
+            maxOutputTokens: 1200,
+
+            timeoutMs: 20000,
+          }),
+      ],
+
+      // Second round: Gemini only, with a shorter
+      // budget so a still-congested service resolves
+      // quickly and the graceful fallback wins.
+      [
+        () =>
+          geminiGenerateText({
+            systemInstruction,
+
+            contents,
+
+            temperature: 0.4,
+
+            maxOutputTokens: 1200,
+
+            timeoutMs: 15000,
+          }),
+      ],
     ];
-
-    if (isGroqConfigured()) {
-      attempts.push(() =>
-        groqChat({
-          systemInstruction,
-
-          contents,
-
-          temperature: 0.4,
-
-          maxTokens: 1200,
-        }),
-      );
-    }
 
     let lastError = null;
 
     for (
       let round = 0;
-      round < 2;
+      round < rounds.length;
       round += 1
     ) {
       for (
-        const attempt of attempts
+        const attempt of rounds[round]
       ) {
         try {
           const response =
@@ -1866,7 +2000,9 @@ async function generateAIResponse(
         to clear before the next round.
       */
 
-      if (round === 0) {
+      if (
+        round < rounds.length - 1
+      ) {
         await new Promise((resolve) =>
           setTimeout(resolve, 800),
         );

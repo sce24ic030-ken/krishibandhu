@@ -59,16 +59,21 @@ function isGroqConfigured() {
 }
 
 /*
-  Default model candidates. GROQ_MODEL is tried first when
-  it is set to something usable; a bogus value (like the
-  old default 'groq/compound', which does not exist on
-  Groq) is skipped so we never waste attempts on a 404.
+  Default model candidates (verified 2026-09-22 against
+  this account's key pool via GET /openai/v1/models):
+  qwen3.8-27b and allam-2-7b answer cleanly with system
+  prompts; gpt-oss models work but reason first (kept as
+  late fallbacks); prompt-guard models are classifiers
+  (never used); whisper models don't support chat.
+  GROQ_MODEL is tried first when set to something usable;
+  a bogus value (like the old default 'groq/compound')
+  is skipped so we never waste attempts on a 404.
 */
 const GROQ_MODEL_CANDIDATES = [
-  'llama-3.1-8b-instant',
-  'llama-3.3-70b-versatile',
-  'llama3-70b-8192',
-  'llama3-8b-8192',
+  'qwen/qwen3.8-27b',
+  'allam-2-7b',
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
 ];
 
 function getGroqModels() {
@@ -204,7 +209,7 @@ async function groqChat({
   const budgetMs =
     Number(
       process.env.GROQ_BUDGET_MS,
-    ) || 4000;
+    ) || 12000;
 
   const deadline =
     Date.now() + budgetMs;

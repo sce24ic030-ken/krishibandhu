@@ -2358,7 +2358,7 @@ function AIAssistant() {
               onKeyDown={
                 handleChatKeyDown
               }
-              placeholder={t('Ask about crops, farming, market prices...')}
+              placeholder={t('Ask about crops, farming…')}
               rows={1}
               disabled={
                 chatLoading

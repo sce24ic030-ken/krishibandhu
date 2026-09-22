@@ -400,7 +400,6 @@ function FloatingChatButton() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
 
   // Stop any active recording when the popup closes.
@@ -1258,7 +1257,7 @@ function FloatingChatButton() {
               onKeyDown={
                 handleChatKeyDown
               }
-              placeholder={t('Ask about crops, farming, market prices...')}
+              placeholder={t('Ask about crops, farming…')}
               disabled={chatLoading}
             />
 
