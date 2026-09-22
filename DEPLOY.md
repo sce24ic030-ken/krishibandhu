@@ -58,6 +58,12 @@ Do this **before** Step 3, or the backend will boot but every DB call fails.
 - Chat, voice, AI image upload, weather — all call the backend through
   `VITE_API_URL` (already set in the blueprint).
 
+> **Behind a reverse proxy?** The backend sets `app.set('trust proxy', 1)`
+> (`backend/server.js`) so `express-rate-limit` accepts `X-Forwarded-For`.
+> If you ever proxy the app through nginx/another load balancer instead of
+> Render's edge, keep that line — without it the app **crash-loops** with
+> `ERR_ERL_UNEXPECTED_X_FORWARDED_FOR` (all routes return 502).
+
 ---
 
 ## How updates flow after this
