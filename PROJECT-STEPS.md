@@ -31,9 +31,9 @@ Dashboard `/dashboard` · Glut Watch `/market?tab=glut` ⭐ · Market `/market` 
 
 ## 4. ✅ Work delivered (each requirement → what was done)
 
-### A. Trader renamed to Swetha
-- `users` doc name = `Swetha`; email `swetha@krishibandhu.com`, password `Swetha123`.
-- Parchi/Bid populated names auto-update (1 parchi shows "Swetha").
+### A. Trader demo account (generic role, not a named person)
+- `users` doc name = `Trader`; email `swetha@krishibandhu.com`, password `Swetha123` (working login, unchanged).
+- Display name shows as **Trader** in the navbar greeting and in Parchi/Bid records (1 parchi populated name verified = "Trader"; no stale name snapshots anywhere).
 - Settings page demo card shows role **Trader** (login `swetha@krishibandhu.com` / `Swetha123`); label is the generic role, not the person's name.
 
 ### B. Glut engine (mandi arrival intelligence)
