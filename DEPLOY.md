@@ -5,9 +5,40 @@ Two services are wired up by `render.yaml` (a Render "Blueprint"):
 | Service | Type | URL (free tier) |
 |---|---|---|
 | `krishibandhu-api` | Node Web Service | `https://krishibandhu-api.onrender.com` |
-| `krishibandhu-frontend` | Static Site | `https://krishibandhu-frontend.onrender.com` |
+| `krishibandhu-frontend` | Static Site | `https://krishibandhu-frontend-833m.onrender.com` |
 
 ---
+
+## ⚡ Quick reference — give this to your CLI/agent next time
+
+**Context (what follows lives in `deploy/CLI-ACCESS.local.md`, which is gitignored):
+actual API keys + service IDs + URLs + one-liners for the CLI.** Read that file first.
+
+Everyday update = 3 commands (auto-redeploys both services):
+
+```powershell
+cd D:\SIH26132\KrishiBandhu\KrishiBandhu
+git add -A
+git commit -m "describe the change"
+git push origin main        # no password needed — gh CLI is logged in
+```
+
+Then verify:
+- Backend: `GET https://krishibandhu-api.onrender.com/api/health` → 200
+- Frontend: `GET https://krishibandhu-frontend-833m.onrender.com` → 200
+
+Key facts:
+- GitHub: `github.com/sce24ic030-ken/krishibandhu` (PRIVATE, branch `main`), authed via `gh`.
+- Render owner: `tea-d75viema2pns73flepe0`; API key in `deploy/CLI-ACCESS.local.md`.
+- Backend service `srv-dap0vo740ujc73b5vc60` (rootDir `backend`, `node server.js`, free, singapore).
+- Frontend service `srv-dap0vortqb8s73eueq10` (rootDir `frontend`, `npm run build` → `dist`, static).
+- Frontend env: `VITE_API_URL=https://krishibandhu-api.onrender.com/api`.
+- SPA fallback: route `/* → /index.html` (rewrite) already configured on the frontend service.
+- Secrets live in `backend\.env` (gitignored); sync to Render with `deploy/update-env.cjs`.
+
+---
+
+## Full guide (first-time setup / re-creation)
 
 ## Step 1 — Put the code on GitHub (one-time)
 
