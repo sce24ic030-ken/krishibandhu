@@ -41,7 +41,7 @@ const getBids = async (req, res) => {
 
     const bids = await Bid.find(filter)
       .populate('saleListing')
-      .populate('buyer', 'name email phone role')
+      .populate('buyer', 'name email phone role location isVerified')
       .populate('crop')
       .populate('market')
       .sort({ createdAt: -1 });
@@ -71,7 +71,7 @@ const getBidById = async (req, res) => {
       .populate('saleListing')
       .populate(
         'buyer',
-        'name email phone role',
+        'name email phone role location isVerified',
       )
       .populate('crop')
       .populate('market');
@@ -366,7 +366,7 @@ const createBid = async (req, res) => {
       .populate('saleListing')
       .populate(
         'buyer',
-        'name email phone role',
+        'name email phone role location isVerified',
       )
       .populate('crop')
       .populate('market');
@@ -475,7 +475,7 @@ const updateBidStatus = async (req, res) => {
       .populate('saleListing')
       .populate(
         'buyer',
-        'name email phone role',
+        'name email phone role location isVerified',
       )
       .populate('crop')
       .populate('market');

@@ -481,6 +481,132 @@
 }
 
 /* =========================
+   FILTER TOOLBAR
+========================= */
+
+.bids-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.bids-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bids-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #dbe5dc;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 8px 13px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #4e5c51;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.bids-tab span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #eef4ef;
+  color: #4e5c51;
+  font-size: 0.72rem;
+}
+
+.bids-tab:hover {
+  border-color: #a9cdb2;
+}
+
+.bids-tab.is-active {
+  background: #2f7d32;
+  border-color: #2f7d32;
+  color: #ffffff;
+}
+
+.bids-tab.is-active span {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.bids-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bids-sort label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #778078;
+}
+
+.bids-sort select {
+  border: 1px solid #dbe5dc;
+  border-radius: 9px;
+  background: #ffffff;
+  padding: 8px 11px;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #263f2a;
+  outline: none;
+  cursor: pointer;
+}
+
+/* =========================
+   BEST RATE + TRADER BADGES
+========================= */
+
+.bid-best-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff8e1;
+  border: 1px solid #f0d48a;
+  color: #9c6b00;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.bid-buyer-loc {
+  display: block;
+  margin-top: 5px;
+  color: #7a847c;
+  font-size: 0.76rem;
+}
+
+.bid-verified {
+  display: inline-flex;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e8f6eb;
+  color: #1f7a33;
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* =========================
    TABLET
 ========================= */
 
@@ -967,5 +1093,33 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 5px;
+  }
+}
+/* =========================
+   TOOLBAR (MOBILE)
+========================= */
+
+@media (max-width: 700px) {
+  .bids-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .bids-tabs {
+    width: 100%;
+  }
+
+  .bids-tab {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .bids-sort {
+    justify-content: space-between;
+  }
+
+  .bids-sort select {
+    flex: 1;
   }
 }

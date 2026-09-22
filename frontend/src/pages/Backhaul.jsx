@@ -155,6 +155,31 @@ function Backhaul() {
     useState('');
 
   /* =========================================
+     AVAILABLE TRUCK BROWSER
+  ========================================= */
+
+  const [browserTrucks, setBrowserTrucks] =
+    useState([]);
+
+  const [browserLoading, setBrowserLoading] =
+    useState(true);
+
+  const [browserError, setBrowserError] =
+    useState('');
+
+  const [browserSearch, setBrowserSearch] =
+    useState('');
+
+  const [browserType, setBrowserType] =
+    useState('all');
+
+  const [browserCapacity, setBrowserCapacity] =
+    useState('all');
+
+  const [browserSort, setBrowserSort] =
+    useState('capacityHigh');
+
+  /* =========================================
      LOAD MARKETS
   ========================================= */
 
@@ -215,6 +240,68 @@ function Backhaul() {
 
   useEffect(() => {
     fetchMarkets();
+  }, [token]);
+
+  /* =========================================
+     LOAD ALL AVAILABLE TRUCKS
+  ========================================= */
+
+  const loadBrowserTrucks =
+    async () => {
+      if (!token) {
+        setBrowserLoading(false);
+        return;
+      }
+
+      try {
+        setBrowserLoading(true);
+        setBrowserError('');
+
+        const response =
+          await fetch(
+            `${API_URL}/backhaul`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            },
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              t('Failed to load available trucks.'),
+          );
+        }
+
+        setBrowserTrucks(
+          Array.isArray(
+            data.data,
+          )
+            ? data.data
+            : [],
+        );
+      } catch (error) {
+        console.error(
+          'Backhaul browser error:',
+          error,
+        );
+
+        setBrowserError(
+          error.message ||
+            t('Unable to load available trucks.'),
+        );
+      } finally {
+        setBrowserLoading(false);
+      }
+    };
+
+  useEffect(() => {
+    loadBrowserTrucks();
   }, [token]);
 
   /* =========================================
@@ -406,6 +493,255 @@ function Backhaul() {
         )
       );
     };
+
+  /* =========================================
+     TRUCK BROWSER: TYPES / COST / FILTERS
+  ========================================= */
+
+  const browserTypes =
+    useMemo(() => {
+      const set =
+        new Set();
+
+      browserTrucks.forEach(
+        (truck) => {
+          const type =
+            String(
+              truck.vehicleType ||
+                '',
+            ).trim();
+
+          if (type) {
+            set.add(type);
+          }
+        },
+      );
+
+      return [
+        ...set,
+      ].sort((a, b) =>
+        a.localeCompare(b),
+      );
+    }, [browserTrucks]);
+
+  const formatCost = (
+    truck,
+  ) => {
+    if (
+      !truck.estimatedCost
+    ) {
+      return null;
+    }
+
+    const amount =
+      Number(
+        truck.estimatedCost,
+      ).toLocaleString(
+        'en-IN',
+        {
+          maximumFractionDigits: 0,
+        },
+      );
+
+    switch (
+      truck.costUnit
+    ) {
+      case 'per_kg':
+        return `₹${amount}/${t('kg')}`;
+
+      case 'per_quintal':
+        return `₹${amount}/${t('quintal')}`;
+
+      case 'per_ton':
+        return `₹${amount}/${t('ton')}`;
+
+      default:
+        return `₹${amount}`;
+    }
+  };
+
+  const browserFiltered =
+    useMemo(() => {
+      const query =
+        browserSearch
+          .trim()
+          .toLowerCase();
+
+      const capThresholds = {
+        '1t': 1000,
+        '5t': 5000,
+        '10t': 10000,
+      };
+
+      const visible =
+        browserTrucks.filter(
+          (truck) => {
+            if (
+              browserType !==
+                'all' &&
+              String(
+                truck.vehicleType ||
+                  '',
+              ).trim() !==
+                browserType
+            ) {
+              return false;
+            }
+
+            if (
+              browserCapacity !==
+              'all'
+            ) {
+              const availKg =
+                convertCapacityToKg(
+                  truck.availableCapacity,
+                  truck.capacityUnit,
+                );
+
+              if (
+                availKg <
+                (capThresholds[
+                  browserCapacity
+                ] || 0)
+              ) {
+                return false;
+              }
+            }
+
+            if (query) {
+              const haystack =
+                [
+                  truck.vehicleNumber,
+                  truck.vehicleType,
+                  truck.driverName,
+                  truck.sourceMarket
+                    ?.name,
+                  truck
+                    .sourceMarket
+                    ?.district,
+                  truck
+                    .destinationMarket
+                    ?.name,
+                  truck
+                    .destinationMarket
+                    ?.district,
+                  truck.trader
+                    ?.name,
+                ]
+                  .filter(Boolean)
+                  .join(' ')
+                  .toLowerCase();
+
+              if (
+                !haystack.includes(
+                  query,
+                )
+              ) {
+                return false;
+              }
+            }
+
+            return true;
+          },
+        );
+
+      return visible.sort(
+        (a, b) => {
+          if (
+            browserSort ===
+            'capacityHigh'
+          ) {
+            return (
+              convertCapacityToKg(
+                b.availableCapacity,
+                b.capacityUnit,
+              ) -
+              convertCapacityToKg(
+                a.availableCapacity,
+                a.capacityUnit,
+              )
+            );
+          }
+
+          if (
+            browserSort ===
+            'capacityLow'
+          ) {
+            return (
+              convertCapacityToKg(
+                a.availableCapacity,
+                a.capacityUnit,
+              ) -
+              convertCapacityToKg(
+                b.availableCapacity,
+                b.capacityUnit,
+              )
+            );
+          }
+
+          if (
+            browserSort ===
+            'costLow'
+          ) {
+            return (
+              Number(
+                a.estimatedCost ||
+                  0,
+              ) -
+              Number(
+                b.estimatedCost ||
+                  0,
+              )
+            );
+          }
+
+          return (
+            new Date(
+              a.departureDate ||
+                0,
+            ) -
+            new Date(
+              b.departureDate ||
+                0,
+            )
+          );
+        },
+      );
+    }, [
+      browserTrucks,
+      browserType,
+      browserCapacity,
+      browserSearch,
+      browserSort,
+    ]);
+
+  const browserFormatDate = (
+    date,
+  ) => {
+    if (!date) {
+      return '-';
+    }
+
+    const d = new Date(
+      date,
+    );
+
+    if (
+      Number.isNaN(
+        d.getTime(),
+      )
+    ) {
+      return '-';
+    }
+
+    return d.toLocaleDateString(
+      'en-IN',
+      {
+        day: '2-digit',
+        month: 'short',
+      },
+    );
+  };
 
   /* =========================================
      HANDLE TRANSPORT TYPE
@@ -657,6 +993,15 @@ function Backhaul() {
         );
 
         setTransports(
+          (current) =>
+            current.filter(
+              (item) =>
+                item._id !==
+                transport._id,
+            ),
+        );
+
+        setBrowserTrucks(
           (current) =>
             current.filter(
               (item) =>
@@ -1041,6 +1386,310 @@ function Backhaul() {
         </div>
 
       </div>
+
+      {/* =====================================
+          AVAILABLE TRUCKS BROWSER
+      ===================================== */}
+
+      <section className="backhaul-browser">
+
+        <div className="section-heading">
+
+          <div className="section-heading-icon">
+            <Truck size={18} />
+          </div>
+
+          <div>
+            <h2>
+              {t('Available Trucks')}
+            </h2>
+
+            <p>
+              {t('Browse all trucks available right now, no search needed.')}
+            </p>
+          </div>
+
+        </div>
+
+        {/* -------- browser controls -------- */}
+
+        <div className="browser-controls">
+
+          <input
+            type="search"
+            className="browser-search"
+            placeholder={t('Search vehicle, driver, route...')}
+            value={browserSearch}
+            onChange={(event) =>
+              setBrowserSearch(event.target.value)
+            }
+          />
+
+          <select
+            className="browser-select"
+            value={browserType}
+            onChange={(event) =>
+              setBrowserType(event.target.value)
+            }
+          >
+            <option value="all">
+              {t('All vehicle types')}
+            </option>
+
+            {browserTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="browser-select"
+            value={browserCapacity}
+            onChange={(event) =>
+              setBrowserCapacity(event.target.value)
+            }
+          >
+            <option value="all">
+              {t('Any capacity')}
+            </option>
+
+            <option value="1t">
+              {t('1 ton +')}
+            </option>
+
+            <option value="5t">
+              {t('5 tons +')}
+            </option>
+
+            <option value="10t">
+              {t('10 tons +')}
+            </option>
+          </select>
+
+          <select
+            className="browser-select"
+            value={browserSort}
+            onChange={(event) =>
+              setBrowserSort(event.target.value)
+            }
+          >
+            <option value="capacityHigh">
+              {t('Largest capacity first')}
+            </option>
+
+            <option value="capacityLow">
+              {t('Smallest capacity first')}
+            </option>
+
+            <option value="costLow">
+              {t('Lowest cost first')}
+            </option>
+
+            <option value="departureSoon">
+              {t('Earliest departure')}
+            </option>
+          </select>
+
+        </div>
+
+        {/* -------- states: error / loading / empty -------- */}
+
+        {browserError && (
+          <div className="browser-state browser-state-error">
+            <AlertCircle size={20} />
+            <span>{browserError}</span>
+          </div>
+        )}
+
+        {browserLoading && (
+          <div className="browser-state">
+            <Loader2 size={22} className="browser-spinner" />
+            <span>{t('Loading available trucks...')}</span>
+          </div>
+        )}
+
+        {!browserLoading &&
+          !browserError &&
+          browserFiltered.length === 0 && (
+            <div className="browser-state">
+              <Truck size={26} />
+              <span>{t('No trucks match your filters right now. Check back soon.')}</span>
+            </div>
+          )}
+
+        {/* -------- truck cards -------- */}
+
+        {!browserLoading &&
+          browserFiltered.length > 0 && (
+            <div className="browser-list">
+
+              {browserFiltered.map((truck) => {
+
+                const cost = formatCost(truck);
+
+                const driverPhone =
+                  truck.driverPhone ||
+                  truck.contactPhone ||
+                  '';
+
+                return (
+                  <div
+                    className="browser-card"
+                    key={truck._id}
+                  >
+
+                    <div className="browser-card-top">
+
+                      <div className="browser-vehicle-icon">
+                        <Truck size={20} />
+                      </div>
+
+                      <div className="browser-vehicle-info">
+
+                        <h3>
+                          {truck.vehicleType ||
+                            t('Truck')}{' '}
+                          <span>
+                            {truck.vehicleNumber}
+                          </span>
+                        </h3>
+
+                        <p>
+                          <UserRound size={13} />
+                          {truck.trader?.name ||
+                            t('Unknown trader')}
+                          {truck.trader?.isVerified && (
+                            <em className="browser-verified">
+                              ✓ {t('Verified')}
+                            </em>
+                          )}
+                        </p>
+
+                      </div>
+
+                      {cost && (
+                        <div className="browser-cost">
+                          <strong>{cost}</strong>
+                          <small>{t(truck.costUnit === 'total'
+                            ? 'total trip'
+                            : 'rate')}</small>
+                        </div>
+                      )}
+
+                    </div>
+
+                    <div className="browser-route">
+
+                      <div className="browser-route-point">
+                        <span>{t('From')}</span>
+                        <strong>
+                          {truck.sourceMarket?.name ||
+                            t('Unknown market')}
+                        </strong>
+                        <small>
+                          {truck.sourceMarket?.district || ''}
+                        </small>
+                      </div>
+
+                      <div className="browser-route-line">
+                        <ArrowRight size={16} />
+                      </div>
+
+                      <div className="browser-route-point">
+                        <span>{t('To')}</span>
+                        <strong>
+                          {truck.destinationMarket?.name ||
+                            t('Unknown market')}
+                        </strong>
+                        <small>
+                          {truck.destinationMarket?.district || ''}
+                        </small>
+                      </div>
+
+                    </div>
+
+                    <div className="browser-meta">
+
+                      <div>
+                        <Package size={15} />
+                        <span>{t('Capacity')}</span>
+                        <strong>
+                          {formatCapacity(
+                            truck.capacity,
+                            truck.capacityUnit,
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <Package size={15} />
+                        <span>{t('Available')}</span>
+                        <strong>
+                          {formatCapacity(
+                            truck.availableCapacity,
+                            truck.capacityUnit,
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <CalendarDays size={15} />
+                        <span>{t('Departs')}</span>
+                        <strong>
+                          {browserFormatDate(
+                            truck.departureDate,
+                          )}
+                          {truck.departureTime
+                            ? ` · ${truck.departureTime}`
+                            : ''}
+                        </strong>
+                      </div>
+
+                    </div>
+
+                    {truck.driverName && (
+                      <div className="browser-driver">
+                        <span>
+                          🚚 {truck.driverName}
+                        </span>
+                        {driverPhone && (
+                          <a
+                            className="browser-call-btn"
+                            href={`tel:${driverPhone}`}
+                          >
+                            <Phone size={14} />
+                            {t('Call driver')}
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="browser-card-actions">
+
+                      <button
+                        type="button"
+                        className="browser-book-btn"
+                        onClick={() =>
+                          handleSelectTransport(
+                            truck,
+                          )
+                        }
+                      >
+                        {t('Book this truck')}
+                      </button>
+
+                    </div>
+
+                  </div>
+                );
+
+              })}
+
+            </div>
+          )}
+
+      </section>
 
       {/* =====================================
           SEARCH CARD

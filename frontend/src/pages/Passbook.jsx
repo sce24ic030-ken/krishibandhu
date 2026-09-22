@@ -39,6 +39,11 @@ function Passbook() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
+  const [monthFilter, setMonthFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [search, setSearch] = useState('');
+
   const fetchTransactions = async () => {
     try {
       setLoading(true);
@@ -68,8 +73,127 @@ function Passbook() {
     fetchTransactions();
   }, []);
 
+  /*
+   * ==========================================
+   * Filter options (from real data)
+   * ==========================================
+   */
+
+  const monthOptions = useMemo(() => {
+    const seen = new Map();
+
+    transactions.forEach((tx) => {
+      const date = tx.transactionDate
+        ? new Date(tx.transactionDate)
+        : null;
+
+      if (date && !Number.isNaN(date.getTime())) {
+        const key = `${date.getFullYear()}-${String(
+          date.getMonth() + 1,
+        ).padStart(2, '0')}`;
+
+        if (!seen.has(key)) {
+          seen.set(
+            key,
+            date.toLocaleDateString('en-IN', {
+              month: 'long',
+              year: 'numeric',
+            }),
+          );
+        }
+      }
+    });
+
+    return [...seen.entries()].sort((a, b) =>
+      b[0].localeCompare(a[0]),
+    );
+  }, [transactions]);
+
+  const categories = useMemo(() => {
+    const set = new Set(
+      transactions
+        .map((tx) => tx.category)
+        .filter(Boolean),
+    );
+
+    return [...set].sort((a, b) =>
+      a.localeCompare(b),
+    );
+  }, [transactions]);
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return transactions.filter((tx) => {
+      if (monthFilter !== 'all') {
+        const date = tx.transactionDate
+          ? new Date(tx.transactionDate)
+          : null;
+
+        if (
+          !date ||
+          Number.isNaN(date.getTime())
+        ) {
+          return false;
+        }
+
+        const key = `${date.getFullYear()}-${String(
+          date.getMonth() + 1,
+        ).padStart(2, '0')}`;
+
+        if (key !== monthFilter) {
+          return false;
+        }
+      }
+
+      if (
+        typeFilter !== 'all' &&
+        tx.type !== typeFilter
+      ) {
+        return false;
+      }
+
+      if (
+        categoryFilter !== 'all' &&
+        tx.category !== categoryFilter
+      ) {
+        return false;
+      }
+
+      if (query) {
+        const haystack =
+          `${tx.category || ''} ${tx.description || ''}`.toLowerCase();
+
+        if (!haystack.includes(query)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [
+    transactions,
+    monthFilter,
+    typeFilter,
+    categoryFilter,
+    search,
+  ]);
+
+  const scopeLabel =
+    monthFilter === 'all'
+      ? t('All time')
+      : (monthOptions.find(
+          ([key]) => key === monthFilter,
+        )?.[1] || t('Selected month'));
+
+  /*
+   * ==========================================
+   * Totals (scoped to the active filter)
+   * ==========================================
+   */
+
   const totals = useMemo(() => {
-    const income = transactions
+    const income = filtered
       .filter((transaction) => transaction.type === 'income')
       .reduce(
         (total, transaction) =>
@@ -77,7 +201,7 @@ function Passbook() {
         0,
       );
 
-    const expense = transactions
+    const expense = filtered
       .filter((transaction) => transaction.type === 'expense')
       .reduce(
         (total, transaction) =>
@@ -90,7 +214,7 @@ function Passbook() {
       expense,
       balance: income - expense,
     };
-  }, [transactions]);
+  }, [filtered]);
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat('en-IN', {
@@ -297,6 +421,7 @@ function Passbook() {
           <div>
             <span>{t('Current Balance')}</span>
             <strong>{formatCurrency(totals.balance)}</strong>
+            <small className="passbook-scope">{scopeLabel}</small>
           </div>
         </div>
 
@@ -308,6 +433,7 @@ function Passbook() {
           <div>
             <span>{t('Total Income')}</span>
             <strong>{formatCurrency(totals.income)}</strong>
+            <small className="passbook-scope">{scopeLabel}</small>
           </div>
         </div>
 
@@ -319,6 +445,7 @@ function Passbook() {
           <div>
             <span>{t('Total Expenses')}</span>
             <strong>{formatCurrency(totals.expense)}</strong>
+            <small className="passbook-scope">{scopeLabel}</small>
           </div>
         </div>
       </section>
@@ -328,13 +455,108 @@ function Passbook() {
           <div>
             <h2>{t('Transaction History')}</h2>
             <p>
-              {transactions.length}{' '}
-              {transactions.length === 1
+              {filtered.length}{' '}
+              {filtered.length === 1
                 ? t('transaction')
                 : t('transactions')}
+              {monthFilter !== 'all' || search || typeFilter !== 'all' || categoryFilter !== 'all'
+                ? ` · ${scopeLabel}`
+                : ''}
             </p>
           </div>
         </div>
+
+        {/* ======================================
+            Filters
+        ====================================== */}
+
+        <div className="passbook-filters">
+
+          <input
+            type="search"
+            className="passbook-search"
+            placeholder={t('Search category or note...')}
+            value={search}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
+          />
+
+          <select
+            className="passbook-month-select"
+            value={monthFilter}
+            onChange={(event) =>
+              setMonthFilter(event.target.value)
+            }
+          >
+            <option value="all">{t('All months')}</option>
+
+            {monthOptions.map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+
+          <div className="passbook-type-chips">
+
+            {[
+              { key: 'all', label: t('All') },
+              { key: 'income', label: t('Income') },
+              { key: 'expense', label: t('Expense') },
+            ].map((option) => (
+
+              <button
+                type="button"
+                key={option.key}
+                className={`passbook-type-chip ${
+                  typeFilter === option.key ? 'is-active' : ''
+                }`}
+                onClick={() =>
+                  setTypeFilter(option.key)
+                }
+              >
+                {option.label}
+              </button>
+
+            ))}
+
+          </div>
+
+        </div>
+
+        {categories.length > 0 && (
+
+          <div className="passbook-cats">
+
+            <button
+              type="button"
+              className={categoryFilter === 'all' ? 'is-active' : ''}
+              onClick={() => setCategoryFilter('all')}
+            >
+              {t('All categories')}
+            </button>
+
+            {categories.map((cat) => (
+
+              <button
+                type="button"
+                key={cat}
+                className={categoryFilter === cat ? 'is-active' : ''}
+                onClick={() =>
+                  setCategoryFilter(
+                    categoryFilter === cat ? 'all' : cat,
+                  )
+                }
+              >
+                {cat}
+              </button>
+
+            ))}
+
+          </div>
+
+        )}
 
         {loading ? (
           <div className="passbook-state">
@@ -358,9 +580,17 @@ function Passbook() {
               {t('Add Transaction')}
             </button>
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="passbook-state">
+            <Wallet size={38} />
+            <h3>{t('Nothing matches your filters')}</h3>
+            <p>
+              {t('Try a different month, category or search.')}
+            </p>
+          </div>
         ) : (
           <div className="passbook-list">
-            {transactions.map((transaction) => {
+            {filtered.map((transaction) => {
               const isIncome =
                 transaction.type === 'income';
 

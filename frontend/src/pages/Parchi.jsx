@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 import {
   FileText,
@@ -33,6 +33,10 @@ const Parchi = () => {
   const [error, setError] = useState('');
 
   const [qrTarget, setQrTarget] = useState(null);
+
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const [groupByTrader, setGroupByTrader] = useState(false);
 
   // ==========================================
   // FETCH PARCHIS
@@ -181,6 +185,338 @@ const Parchi = () => {
         return status || t('Unknown');
     }
   };
+
+  // ==========================================
+  // FILTER TABS + OVERDUE + GROUPING
+  // ==========================================
+
+  const statusTabs = [
+    { key: 'all', label: t('All'), count: parchis.length },
+    {
+      key: 'issued',
+      label: t('Issued'),
+      count: parchis.filter((p) => p.status === 'issued').length,
+    },
+    {
+      key: 'payment_pending',
+      label: t('Payment Pending'),
+      count: parchis.filter((p) => p.status === 'payment_pending').length,
+    },
+    {
+      key: 'paid',
+      label: t('Paid'),
+      count: parchis.filter((p) => p.status === 'paid').length,
+    },
+    {
+      key: 'completed',
+      label: t('Completed'),
+      count: parchis.filter((p) => p.status === 'completed').length,
+    },
+    {
+      key: 'cancelled',
+      label: t('Cancelled'),
+      count: parchis.filter((p) => p.status === 'cancelled').length,
+    },
+  ];
+
+  const isOverdue = (parchi) => {
+    if (parchi.paymentStatus !== 'pending') {
+      return false;
+    }
+
+    const issued = parchi.issuedAt
+      ? new Date(parchi.issuedAt)
+      : null;
+
+    if (!issued || Number.isNaN(issued.getTime())) {
+      return false;
+    }
+
+    const days = (Date.now() - issued.getTime()) / 86400000;
+
+    return days > 3;
+  };
+
+  const filteredParchis =
+    statusFilter === 'all'
+      ? parchis
+      : parchis.filter(
+          (parchi) =>
+            parchi.status === statusFilter,
+        );
+
+  const traderGroups = (() => {
+    const map = new Map();
+
+    filteredParchis.forEach((parchi) => {
+      const name =
+        user?.role === 'trader'
+          ? parchi.farmer?.name
+          : parchi.trader?.name;
+
+      const key = name || t('Unknown');
+
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
+
+      map.get(key).push(parchi);
+    });
+
+    return [...map.entries()]
+      .map(([name, items]) => ({
+        name,
+        phone:
+          items[0].trader?.phone ||
+          items[0].farmer?.phone ||
+          '',
+        items,
+      }))
+      .sort((a, b) =>
+        a.name.localeCompare(b.name),
+      );
+  })();
+
+  const renderParchiCard = (parchi) => (
+    <div
+      className="parchi-card"
+      key={parchi._id}
+    >
+
+      {/* ================================= */}
+      {/* CARD HEADER                        */}
+      {/* ================================= */}
+
+      <div className="parchi-card-header">
+
+        <div>
+
+          <span className="parchi-number-label">
+            {t('Parchi Number')}
+          </span>
+
+          <h2>
+            {parchi.parchiNumber}
+          </h2>
+
+        </div>
+
+        <div className="parchi-status-group">
+
+          {isOverdue(parchi) && (
+
+            <span className="parchi-overdue">
+              â° {t('Overdue')}
+            </span>
+
+          )}
+
+          <span
+            className={`parchi-status parchi-status-${parchi.status}`}
+          >
+            {getStatusLabel(
+              parchi.status,
+            )}
+          </span>
+
+          <span
+            className={`parchi-payment-status parchi-payment-${parchi.paymentStatus}`}
+          >
+            {getPaymentLabel(
+              parchi.paymentStatus,
+            )}
+          </span>
+
+          <button
+            type="button"
+            className="parchi-qr-button"
+            onClick={() =>
+              setQrTarget(parchi)
+            }
+            title={t('Open Parchi QR & trace ledger')}
+          >
+            <QrCode size={15} />
+            {t('Parchi QR')}
+          </button>
+
+        </div>
+
+      </div>
+
+      {/* ================================= */}
+      {/* DETAILS GRID                       */}
+      {/* ================================= */}
+
+      <div className="parchi-details-grid">
+
+        {/* Crop */}
+
+        <div className="parchi-detail">
+
+          <Package size={18} />
+
+          <div>
+
+            <span>
+              {t('Crop')}
+            </span>
+
+            <strong>
+              {parchi.crop?.name ||
+                t('Unknown Crop')}
+            </strong>
+
+            {parchi.crop?.variety && (
+              <small>
+                {parchi.crop.variety}
+              </small>
+            )}
+
+          </div>
+
+        </div>
+
+        {/* Market */}
+
+        <div className="parchi-detail">
+
+          <MapPin size={18} />
+
+          <div>
+
+            <span>
+              {t('Market')}
+            </span>
+
+            <strong>
+              {parchi.market?.name ||
+                t('Unknown Market')}
+            </strong>
+
+            <small>
+              {parchi.market?.district ||
+                ''}
+
+              {parchi.market?.state
+                ? `, ${parchi.market.state}`
+                : ''}
+            </small>
+
+          </div>
+
+        </div>
+
+        {/* Farmer / Trader */}
+
+        <div className="parchi-detail">
+
+          <User size={18} />
+
+          <div>
+
+            <span>
+              {user?.role === 'trader'
+                ? t('Farmer')
+                : t('Trader')}
+            </span>
+
+            <strong>
+              {user?.role === 'trader'
+                ? parchi.farmer?.name
+                : parchi.trader?.name}
+            </strong>
+
+            <small>
+              {user?.role === 'trader'
+                ? parchi.farmer?.phone
+                : parchi.trader?.phone}
+            </small>
+
+          </div>
+
+        </div>
+
+        {/* Issued Date */}
+
+        <div className="parchi-detail">
+
+          <CreditCard size={18} />
+
+          <div>
+
+            <span>
+              {t('Issued On')}
+            </span>
+
+            <strong>
+              {formatDate(
+                parchi.issuedAt,
+              )}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ================================= */}
+      {/* FINANCIAL DETAILS                 */}
+      {/* ================================= */}
+
+      <div className="parchi-financial">
+
+        {/* Quantity */}
+
+        <div>
+
+          <span>
+            {t('Quantity')}
+          </span>
+
+          <strong>
+            {parchi.quantity}{' '}
+            {parchi.unit}
+          </strong>
+
+        </div>
+
+        {/* Price */}
+
+        <div>
+
+          <span>
+            {t('Price / Unit')}
+          </span>
+
+          <strong>
+            {formatCurrency(
+              parchi.pricePerUnit,
+            )}
+          </strong>
+
+        </div>
+
+        {/* Total */}
+
+        <div className="parchi-total">
+
+          <span>
+            {t('Total Amount')}
+          </span>
+
+          <strong>
+            {formatCurrency(
+              parchi.totalAmount,
+            )}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
 
   // ==========================================
   // RENDER
@@ -390,244 +726,131 @@ const Parchi = () => {
 
       {!loading &&
         parchis.length > 0 && (
-          <div className="parchi-list">
+          <>
 
-            {parchis.map((parchi) => (
+            {/* ================================ */}
+            {/* FILTER TABS + GROUP TOGGLE       */}
+            {/* ================================ */}
 
-              <div
-                className="parchi-card"
-                key={parchi._id}
-              >
+            <div className="parchi-toolbar">
 
-                {/* ================================= */}
-                {/* CARD HEADER                        */}
-                {/* ================================= */}
+              <div className="parchi-tabs">
 
-                <div className="parchi-card-header">
+                {statusTabs.map((tab) => (
 
-                  <div>
+                  <button
+                    type="button"
+                    key={tab.key}
+                    className={`parchi-tab ${
+                      statusFilter === tab.key ? 'is-active' : ''
+                    }`}
+                    onClick={() =>
+                      setStatusFilter(tab.key)
+                    }
+                  >
 
-                    <span className="parchi-number-label">
-                      {t('Parchi Number')}
-                    </span>
+                    {tab.label}
 
-                    <h2>
-                      {parchi.parchiNumber}
-                    </h2>
+                    <span>{tab.count}</span>
 
-                  </div>
+                  </button>
 
-                  <div className="parchi-status-group">
-
-                    <span
-                      className={`parchi-status parchi-status-${parchi.status}`}
-                    >
-                      {getStatusLabel(
-                        parchi.status,
-                      )}
-                    </span>
-
-                    <span
-                      className={`parchi-payment-status parchi-payment-${parchi.paymentStatus}`}
-                    >
-                      {getPaymentLabel(
-                        parchi.paymentStatus,
-                      )}
-                    </span>
-
-                    <button
-                      type="button"
-                      className="parchi-qr-button"
-                      onClick={() =>
-                        setQrTarget(parchi)
-                      }
-                      title={t('Open Parchi QR & trace ledger')}
-                    >
-                      <QrCode size={15} />
-                      {t('Parchi QR')}
-                    </button>
-
-                  </div>
-
-                </div>
-
-                {/* ================================= */}
-                {/* DETAILS GRID                       */}
-                {/* ================================= */}
-
-                <div className="parchi-details-grid">
-
-                  {/* Crop */}
-
-                  <div className="parchi-detail">
-
-                    <Package size={18} />
-
-                    <div>
-
-                      <span>
-                        {t('Crop')}
-                      </span>
-
-                      <strong>
-                        {parchi.crop?.name ||
-                          t('Unknown Crop')}
-                      </strong>
-
-                      {parchi.crop?.variety && (
-                        <small>
-                          {parchi.crop.variety}
-                        </small>
-                      )}
-
-                    </div>
-
-                  </div>
-
-                  {/* Market */}
-
-                  <div className="parchi-detail">
-
-                    <MapPin size={18} />
-
-                    <div>
-
-                      <span>
-                        {t('Market')}
-                      </span>
-
-                      <strong>
-                        {parchi.market?.name ||
-                          t('Unknown Market')}
-                      </strong>
-
-                      <small>
-                        {parchi.market?.district ||
-                          ''}
-
-                        {parchi.market?.state
-                          ? `, ${parchi.market.state}`
-                          : ''}
-                      </small>
-
-                    </div>
-
-                  </div>
-
-                  {/* Farmer / Trader */}
-
-                  <div className="parchi-detail">
-
-                    <User size={18} />
-
-                    <div>
-
-                      <span>
-                        {user?.role === 'trader'
-                          ? t('Farmer')
-                          : t('Trader')}
-                      </span>
-
-                      <strong>
-                        {user?.role === 'trader'
-                          ? parchi.farmer?.name
-                          : parchi.trader?.name}
-                      </strong>
-
-                      <small>
-                        {user?.role === 'trader'
-                          ? parchi.farmer?.phone
-                          : parchi.trader?.phone}
-                      </small>
-
-                    </div>
-
-                  </div>
-
-                  {/* Issued Date */}
-
-                  <div className="parchi-detail">
-
-                    <CreditCard size={18} />
-
-                    <div>
-
-                      <span>
-                        {t('Issued On')}
-                      </span>
-
-                      <strong>
-                        {formatDate(
-                          parchi.issuedAt,
-                        )}
-                      </strong>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-                {/* ================================= */}
-                {/* FINANCIAL DETAILS                 */}
-                {/* ================================= */}
-
-                <div className="parchi-financial">
-
-                  {/* Quantity */}
-
-                  <div>
-
-                    <span>
-                      {t('Quantity')}
-                    </span>
-
-                    <strong>
-                      {parchi.quantity}{' '}
-                      {parchi.unit}
-                    </strong>
-
-                  </div>
-
-                  {/* Price */}
-
-                  <div>
-
-                    <span>
-                      {t('Price / Unit')}
-                    </span>
-
-                    <strong>
-                      {formatCurrency(
-                        parchi.pricePerUnit,
-                      )}
-                    </strong>
-
-                  </div>
-
-                  {/* Total */}
-
-                  <div className="parchi-total">
-
-                    <span>
-                      {t('Total Amount')}
-                    </span>
-
-                    <strong>
-                      {formatCurrency(
-                        parchi.totalAmount,
-                      )}
-                    </strong>
-
-                  </div>
-
-                </div>
+                ))}
 
               </div>
 
-            ))}
+              <button
+                type="button"
+                className={`parchi-group-btn ${
+                  groupByTrader ? 'is-active' : ''
+                }`}
+                onClick={() =>
+                  setGroupByTrader(
+                    (current) => !current,
+                  )
+                }
+              >
 
-          </div>
+                {groupByTrader
+                  ? t('Ungroup')
+                  : t('Group by trader')}
+
+              </button>
+
+            </div>
+
+            {filteredParchis.length === 0 ? (
+
+              <div className="parchi-empty">
+
+                <FileText size={42} />
+
+                <h2>
+                  {t('No Parchis in this filter')}
+                </h2>
+
+                <p>
+                  {t('Try a different filter tab to see other Parchis.')}
+                </p>
+
+              </div>
+
+            ) : groupByTrader ? (
+
+              <div className="parchi-list">
+
+                {traderGroups.map((group) => (
+
+                  <div
+                    className="parchi-group"
+                    key={group.name}
+                  >
+
+                    <div className="parchi-group-header">
+
+                      <span className="parchi-group-avatar">
+                        {group.name
+                          .slice(0, 1)
+                          .toUpperCase()}
+                      </span>
+
+                      <div>
+
+                        <strong>{group.name}</strong>
+
+                        <small>{group.phone}</small>
+
+                      </div>
+
+                      <span className="parchi-group-count">
+                        {group.items.length}
+                      </span>
+
+                    </div>
+
+                    {group.items.map(
+                      renderParchiCard,
+                    )}
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            ) : (
+
+              <div className="parchi-list">
+
+                {filteredParchis.map(
+                  renderParchiCard,
+                )}
+
+              </div>
+
+            )}
+
+          </>
         )}
 
       <QrModal

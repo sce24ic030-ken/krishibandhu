@@ -400,3 +400,192 @@
     text-align: left;
   }
 }
+/* =========================================
+   Toolbar: filter tabs + group toggle
+========================================= */
+
+.parchi-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.parchi-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.parchi-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #dbe5dc;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 8px 13px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4e5c51;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.parchi-tab span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #eef4ef;
+  color: #4e5c51;
+  font-size: 11.5px;
+}
+
+.parchi-tab:hover {
+  border-color: #a9cdb2;
+}
+
+.parchi-tab.is-active {
+  background: #2f7d5a;
+  border-color: #2f7d5a;
+  color: #ffffff;
+}
+
+.parchi-tab.is-active span {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.parchi-group-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #cfe0d6;
+  border-radius: 999px;
+  background: #f4f9f6;
+  color: #28734d;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.parchi-group-btn:hover {
+  background: #e9f4ed;
+}
+
+.parchi-group-btn.is-active {
+  background: #2f7d5a;
+  border-color: #2f7d5a;
+  color: #ffffff;
+}
+
+/* =========================================
+   Grouped by trader
+========================================= */
+
+.parchi-group {
+  margin-bottom: 24px;
+}
+
+.parchi-group-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f4f9f6;
+  border: 1px solid #e2e9e4;
+}
+
+.parchi-group-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #2f7d5a;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.parchi-group-header > div {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.parchi-group-header strong {
+  font-size: 14px;
+  color: #17231d;
+}
+
+.parchi-group-header small {
+  font-size: 11.5px;
+  color: #7a847c;
+}
+
+.parchi-group-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #dbe5dc;
+  color: #28734d;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+/* =========================================
+   Overdue badge
+========================================= */
+
+.parchi-overdue {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff1e6;
+  border: 1px solid #f0cba6;
+  color: #b3541e;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* =========================================
+   Mobile
+========================================= */
+
+@media (max-width: 700px) {
+  .parchi-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parchi-tabs {
+    width: 100%;
+  }
+
+  .parchi-tab {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .parchi-group-btn {
+    justify-content: center;
+  }
+}

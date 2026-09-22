@@ -82,6 +82,10 @@ function Bids() {
 
   const [error, setError] = useState('');
 
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const [sortBy, setSortBy] = useState('newest');
+
   /*
    * ==========================================
    * Fetch Farmer Bids
@@ -252,6 +256,122 @@ function Bids() {
     (bid) => bid.status === 'rejected',
   ).length;
 
+  /*
+   * ==========================================
+   * Filter tabs
+   * ==========================================
+   */
+
+  const statusTabs = [
+    { key: 'all', label: 'All Bids', count: bids.length },
+    { key: 'pending', label: 'Pending', count: pendingCount },
+    { key: 'accepted', label: 'Accepted', count: acceptedCount },
+    { key: 'rejected', label: 'Rejected', count: rejectedCount },
+  ];
+
+  /*
+   * ==========================================
+   * Best rate per crop (pending bids)
+   * ==========================================
+   *
+   * Compares price-per-unit so a small lot at a
+   * better rate wins over a bigger lot.
+   */
+
+  const bestRates = new Map();
+
+  bids
+    .filter((bid) => bid.status === 'pending')
+    .forEach((bid) => {
+      const cropKey = String(
+        bid.crop?.name || 'unknown',
+      ).toLowerCase();
+
+      const rate = Number(bid.pricePerUnit || 0);
+
+      const current = bestRates.get(cropKey);
+
+      if (
+        !current ||
+        rate > current.rate
+      ) {
+        bestRates.set(cropKey, {
+          _id: bid._id,
+          rate,
+        });
+      }
+    });
+
+  const isBestRate = (bid) => {
+    if (bid.status !== 'pending') {
+      return false;
+    }
+
+    const best = bestRates.get(
+      String(bid.crop?.name || 'unknown').toLowerCase(),
+    );
+
+    return Boolean(best && best._id === bid._id && bids.filter(
+      (other) =>
+        String(other.crop?.name || 'unknown')
+          .toLowerCase() ===
+          String(bid.crop?.name || 'unknown')
+            .toLowerCase() &&
+        other.status === 'pending',
+    ).length > 1);
+  };
+
+  const formatBuyerLocation = (loc) => {
+    if (!loc) {
+      return '';
+    }
+
+    if (typeof loc === 'string') {
+      return loc;
+    }
+
+    const parts = [
+      loc.city,
+      loc.district,
+      loc.state,
+    ].filter(Boolean);
+
+    return parts.join(', ');
+  };
+
+  /*
+   * ==========================================
+   * Filtered + sorted list
+   * ==========================================
+   */
+
+  const filteredBids = bids
+    .filter(
+      (bid) =>
+        statusFilter === 'all' ||
+        bid.status === statusFilter,
+    )
+    .sort((a, b) => {
+      if (sortBy === 'amountHigh') {
+        return (
+          Number(b.totalAmount || 0) -
+          Number(a.totalAmount || 0)
+        );
+      }
+
+      if (sortBy === 'amountLow') {
+        return (
+          Number(a.totalAmount || 0) -
+          Number(b.totalAmount || 0)
+        );
+      }
+
+      return (
+        new Date(b.createdAt) -
+        new Date(a.createdAt)
+      );
+    });
+
   return (
     <div className="bids-page">
 
@@ -401,6 +521,71 @@ function Bids() {
 
       </div>
 
+      {/* ==========================================
+          Filters + sort
+      ========================================== */}
+
+      <div className="bids-toolbar">
+
+        <div className="bids-tabs">
+
+          {statusTabs.map((tab) => (
+
+            <button
+              type="button"
+              key={tab.key}
+              className={`bids-tab ${
+                statusFilter === tab.key
+                  ? 'is-active'
+                  : ''
+              }`}
+              onClick={() =>
+                setStatusFilter(tab.key)
+              }
+            >
+
+              {t(tab.label)}
+
+              <span>{tab.count}</span>
+
+            </button>
+
+          ))}
+
+        </div>
+
+        <div className="bids-sort">
+
+          <label htmlFor="bid-sort">
+            {t('Sort by')}
+          </label>
+
+          <select
+            id="bid-sort"
+            value={sortBy}
+            onChange={(event) =>
+              setSortBy(event.target.value)
+            }
+          >
+
+            <option value="newest">
+              {t('Newest first')}
+            </option>
+
+            <option value="amountHigh">
+              {t('Highest total')}
+            </option>
+
+            <option value="amountLow">
+              {t('Lowest total')}
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
 
       {/* ==========================================
           Error
@@ -463,6 +648,28 @@ function Bids() {
 
         </div>
 
+      ) : filteredBids.length === 0 ? (
+
+        /* ==========================================
+           Filter Empty State
+        ========================================== */
+
+        <div className="bids-state-card">
+
+          <div className="bids-empty-icon">
+            <ShoppingBag size={30} />
+          </div>
+
+          <h3>
+            {t('No {0} bids', t(statusTabs.find((tab) => tab.key === statusFilter)?.label || 'filtered'))}
+          </h3>
+
+          <p>
+            {t('Try a different filter or refresh to see new offers.')}
+          </p>
+
+        </div>
+
       ) : (
 
         /* ==========================================
@@ -471,7 +678,7 @@ function Bids() {
 
         <div className="bids-list">
 
-          {bids.map((bid) => (
+          {filteredBids.map((bid) => (
 
             <article
               className="bid-card"
@@ -516,6 +723,14 @@ function Bids() {
                   ))}
                 </span>
 
+                {isBestRate(bid) && (
+
+                  <span className="bid-best-badge">
+                    🏆 {t('Best rate')}
+                  </span>
+
+                )}
+
               </div>
 
 
@@ -548,6 +763,22 @@ function Bids() {
                       bid.buyerName ||
                       t('Unknown Buyer')}
                   </strong>
+
+                  {formatBuyerLocation(
+                    bid.buyer?.location,
+                  ) && (
+                    <small className="bid-buyer-loc">
+                      📍 {formatBuyerLocation(
+                        bid.buyer?.location,
+                      )}
+                    </small>
+                  )}
+
+                  {bid.buyer?.isVerified && (
+                    <em className="bid-verified">
+                      ✓ {t('Verified trader')}
+                    </em>
+                  )}
 
                 </div>
 
