@@ -176,7 +176,8 @@ function CreditScorePage() {
                     got >= factor.points ? 'good' : 'missed'
                   }`}
                 >
-                  +{got}/{factor.points}
+                  {got > 0 ? '+' : ''}
+                  {got}/{factor.points}
                 </span>
               </div>
             );

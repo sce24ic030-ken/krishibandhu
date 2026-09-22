@@ -282,7 +282,7 @@ function NetRealization() {
             }
           >
             {t(
-              'Gross ₹{0} − expenses ₹{1} = net ₹{2}',
+              'Gross {0} − expenses {1} = net {2}',
               formatCurrency(gross),
               formatCurrency(totalExpense),
               formatCurrency(netGain),
