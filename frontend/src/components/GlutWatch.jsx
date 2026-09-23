@@ -321,7 +321,7 @@ function GlutWatch() {
               value={mode.id}
             >
               {mode.name} —{' '}
-              {t('{0} today', [formatKg(mode.arrivalKg)])}
+              {t('{0} today', formatKg(mode.arrivalKg))}
             </option>
           ))}
         </select>
@@ -367,7 +367,7 @@ function GlutWatch() {
 
             <p>
               {target.levelLabel} ·{' '}
-              {t('{0} per quintal modal', [formatRs(target.modal)])}
+              {t('{0} per quintal modal', formatRs(target.modal))}
             </p>
           </div>
 
@@ -430,14 +430,13 @@ function GlutWatch() {
         <div className="glut-ranking-header">
           <div>
             <h3>
-              {t('Where is {0} flowing today?', [commodity])}
+              {t('Where is {0} flowing today?', commodity)}
             </h3>
 
             <p>
-              {t('{0} markets · {1} total arrival (official MSAMB ledger)', [
+              {t('{0} markets · {1} total arrival (official MSAMB ledger)',
                 data.totals.marketsReported,
-                formatKg(data.totals.totalArrivalKg),
-              ])}
+                formatKg(data.totals.totalArrivalKg))}
             </p>
           </div>
         </div>
@@ -466,7 +465,7 @@ function GlutWatch() {
                   <span className="glut-rank-name">
                     {mode.name}
                     <small>
-                      {t('{0}, Maharashtra', [mode.district])}
+                      {t('{0}, Maharashtra', mode.district)}
                     </small>
                   </span>
 
@@ -479,17 +478,17 @@ function GlutWatch() {
 
                 <div className="glut-rank-stats">
                   <span>
-                    {t('Arrived today {0}', [formatKg(mode.arrivalKg)])}
+                    {t('Arrived today {0}', formatKg(mode.arrivalKg))}
                   </span>
 
                   <span>
-                    {t('Modal {0}/q', [formatRs(mode.modal)])}
+                    {t('Modal {0}/q', formatRs(mode.modal))}
                   </span>
 
                   {mode.ratio !== null &&
                     mode.ratio !== undefined && (
                       <span>
-                        {t('vs avg {0}x', [mode.ratio])}
+                        {t('vs avg {0}x', mode.ratio)}
                       </span>
                     )}
                 </div>

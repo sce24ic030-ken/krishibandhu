@@ -42,6 +42,7 @@ Dashboard `/dashboard` · Glut Watch `/market?tab=glut` ⭐ · Market `/market` 
 - Commodity prefilled with farmer's crops; market select; trickle of markets with data.
 - Heuristic: ≥1.5× daily avg → **heavy_glut**, ≤0.6× → **thin_supply**, else **normal**.
 - Reads real MSAMB data. Live verdict: *"Already 1,92,700 kg of Tomato in Pune APMC today … 1.0x the recent daily average — normal supply."*
+- **Multilingual**: `GET /api/market-glut?commodity=…&lang=mr|hi` → server generates `levelLabel`, `headline`, `detail`, `priceNote`, `advice` in Marathi/Hindi (L10N dictionary in controller; English output unchanged). GlutWatch passes the current app language and re-fetches on switch; all client labels use `t()` (keys added to `translations.js`). Dashboard shortcut card already used `t()`.
 - Files: `backend/controllers/marketGlutController.js`, `backend/routes/marketGlutRoutes.js`, `backend/routes/adminMarketRoutes.js`, `frontend/src/components/GlutWatch.jsx` + `.css`, `frontend/src/pages/Market.jsx` + `.css`, `frontend/src/pages/Dashboard.jsx`.
 
 ### C. AI chat — never shows "Unable to get a response from AI"
@@ -77,7 +78,7 @@ Dashboard `/dashboard` · Glut Watch `/market?tab=glut` ⭐ · Market `/market` 
 
 ## 6. 📦 Git state
 
-- Commits on `main`: `f707c54` (Glut Engine + MSAMB sync) → `39dcd95` (AI resilience + history translation) → `237cb11` (real second provider + UI fixes). Working tree clean.
+- Commits on `main`: `f707c54` (Glut Engine + MSAMB sync) → `39dcd95` (AI resilience + history translation) → `237cb11` (real second provider + UI fixes) → `e487786` (Trader label + steps doc) → `05dc9b6` (docs: name Trader) → `76d25d2` (trader login swap) → `4704f00` (Glut Watch i18n, mr/hi) → current. Working tree clean.
 - Push to `main` auto-redeploys BOTH Render services.
 
 ## 7. 🔧 Environment (Render)
@@ -105,3 +106,4 @@ Dashboard `/dashboard` · Glut Watch `/market?tab=glut` ⭐ · Market `/market` 
 - PowerShell: `&&` invalid; write `.cjs` scripts instead of `node -e` (mangles `\$`); `.env` is CRLF — always `.trim()`.
 - Git via `C:\Program Files\Git\cmd\git.exe` (stderr "errors" are benign; pushes succeed).
 - Live MSAMB data spans 2026-09-21 + 2026-09-22; Tomato in 6 markets today.
+- `t()` uses rest params: pass **separate args** for multi-placeholder keys — `t('{0} @ {1}', a, b)`, NOT `t(key, [a, b])` (the array becomes one arg → `{1}` stays literal, `{0}` gets the array-joined string). Single-placeholder calls tolerate `[x]` by accident.
