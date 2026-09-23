@@ -221,43 +221,6 @@
   }
 }
 
-.login-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 25px 0 20px;
-  color: #a0aaa5;
-  font-size: 11px;
-  font-weight: 650;
-}
-
-.login-divider::before,
-.login-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #e8eeeb;
-}
-
-.login-register {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  color: #7d8984;
-}
-
-.login-register a {
-  color: #237651;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.login-register a:hover {
-  text-decoration: underline;
-}
-
 .login-footer {
   margin: 22px 0 0;
   text-align: center;

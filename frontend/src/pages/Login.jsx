@@ -7,7 +7,7 @@ import {
   Sprout,
   Store,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -204,27 +204,11 @@ const Login = () => {
             )}
           </div>
 
-          <div className="login-divider">
-            <span>{t('OR')}</span>
-          </div>
-
-          <div className="login-register">
-            <span>
-              {t(
-                "Don't have an account?",
-              )}
-            </span>
-
-            <Link to="/register">
-              {t('Create an account')}
-            </Link>
-          </div>
+          <p className="login-footer">
+            © {new Date().getFullYear()}{' '}
+            KrishiBandhu
+          </p>
         </div>
-
-        <p className="login-footer">
-          © {new Date().getFullYear()}{' '}
-          KrishiBandhu
-        </p>
       </div>
     </div>
   );
