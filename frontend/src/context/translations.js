@@ -43,6 +43,10 @@ export const TRANSLATIONS = {
     // ---------- Login / Register ----------
     'Welcome back 👋': 'पुन्हा स्वागत आहे 👋',
     'Login to continue to your KrishiBandhu account.': 'तुमच्या कृषीबंधू खात्यात सुरू ठेवण्यासाठी लॉगिन करा.',
+    'Choose your role to login.': 'लॉगिन करण्यासाठी तुमची भूमिका निवडा.',
+    'Manage markets, users & platform control': 'बाजार, वापरकर्ते आणि प्लॅटफॉर्म नियंत्रण व्यवस्थापित करा',
+    'Place bids, manage logistics & trading': 'बोली लावा, लॉजिस्टिक्स आणि व्यापार व्यवस्थापित करा',
+    'Crops, markets, parchi & farm tools': 'पिके, बाजार, पारपट्टी आणि शेती साधने',
     'Email address': 'ईमेल पत्ता',
     'Enter your email': 'तुमचा ईमेल टाका',
     'Enter your email address': 'तुमचा ईमेल पत्ता टाका',
@@ -1194,6 +1198,10 @@ export const TRANSLATIONS = {
     // ---------- Login / Register ----------
     'Welcome back 👋': 'वापसी पर स्वागत है 👋',
     'Login to continue to your KrishiBandhu account.': 'अपने कृषिबंधु खाते में जारी रखने के लिए लॉगिन करें।',
+    'Choose your role to login.': 'लॉगिन करने के लिए अपनी भूमिका चुनें।',
+    'Manage markets, users & platform control': 'बाजार, उपयोगकर्ता और प्लेटफ़ॉर्म नियंत्रण प्रबंधित करें',
+    'Place bids, manage logistics & trading': 'बोली लगाएं, लॉजिस्टिक्स और व्यापार प्रबंधित करें',
+    'Crops, markets, parchi & farm tools': 'फसलें, बाजार, पर्ची और कृषि उपकरण',
     'Email address': 'ईमेल पता',
     'Enter your email': 'अपना ईमेल दर्ज करें',
     'Enter your email address': 'अपना ईमेल पता दर्ज करें',

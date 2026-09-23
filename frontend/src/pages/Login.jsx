@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Leaf, Lock, Mail } from 'lucide-react';
+import {
+  ChevronRight,
+  Leaf,
+  Loader2,
+  ShieldCheck,
+  Sprout,
+  Store,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +15,37 @@ import { useLanguage } from '../context/LanguageContext';
 
 import './Login.css';
 
+// ==========================================
+// ROLE LOGIN — one-tap demo accounts
+// ==========================================
+
+const ROLE_ACCOUNTS = [
+  {
+    role: 'admin',
+    icon: ShieldCheck,
+    title: 'Admin',
+    description: 'Manage markets, users & platform control',
+    email: 'admin@krishibandhu.com',
+    password: 'Admin123',
+  },
+  {
+    role: 'trader',
+    icon: Store,
+    title: 'Trader',
+    description: 'Place bids, manage logistics & trading',
+    email: 'trader@krishibandhu.com',
+    password: 'Trader123',
+  },
+  {
+    role: 'farmer',
+    icon: Sprout,
+    title: 'Farmer',
+    description: 'Crops, markets, parchi & farm tools',
+    email: 'farmer@krishibandhu.com',
+    password: 'Farmer123',
+  },
+];
+
 const Login = () => {
   const navigate = useNavigate();
 
@@ -15,45 +53,26 @@ const Login = () => {
 
   const { t } = useLanguage();
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [loadingRole, setLoadingRole] =
+    useState('');
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormData((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
+  const handleRoleLogin = async (account) => {
     setError('');
 
-    if (!formData.email || !formData.password) {
-      setError(t('Please enter your email and password.'));
-      return;
-    }
-
     try {
-      setLoading(true);
+      setLoadingRole(account.role);
 
       const data = await login(
-        formData.email,
-        formData.password,
+        account.email,
+        account.password,
       );
 
       if (!data.success) {
         throw new Error(
-          t(data.message) || t('Login failed.'),
+          t(data.message) ||
+            t('Login failed.'),
         );
       }
 
@@ -61,7 +80,9 @@ const Login = () => {
 
       if (role === 'admin') {
         navigate('/admin');
-      } else if (role === 'trader') {
+      } else if (
+        role === 'trader'
+      ) {
         navigate('/trader');
       } else {
         navigate('/dashboard');
@@ -69,10 +90,12 @@ const Login = () => {
     } catch (loginError) {
       setError(
         t(loginError.message) ||
-          t('Unable to login. Please try again.'),
+          t(
+            'Unable to login. Please try again.',
+          ),
       );
     } finally {
-      setLoading(false);
+      setLoadingRole('');
     }
   };
 
@@ -90,17 +113,23 @@ const Login = () => {
 
           <div>
             <h1>KrishiBandhu</h1>
-            <p>{t('Smart farming platform')}</p>
+            <p>
+              {t('Smart farming platform')}
+            </p>
           </div>
         </div>
 
         {/* Login Card */}
         <div className="login-card">
           <div className="login-header">
-            <h2>{t('Welcome back 👋')}</h2>
+            <h2>
+              {t('Welcome back 👋')}
+            </h2>
 
             <p>
-              {t('Login to continue to your KrishiBandhu account.')}
+              {t(
+                'Choose your role to login.',
+              )}
             </p>
           </div>
 
@@ -110,90 +139,70 @@ const Login = () => {
             </div>
           )}
 
-          <form
-            className="login-form"
-            onSubmit={handleSubmit}
-          >
-            {/* Email */}
-            <div className="login-field">
-              <label htmlFor="email">
-                {t('Email address')}
-              </label>
+          {/* Role selector */}
+          <div className="login-roles">
+            {ROLE_ACCOUNTS.map(
+              (account) => {
+                const Icon =
+                  account.icon;
 
-              <div className="login-input-wrapper">
-                <Mail size={19} />
+                const isActive =
+                  loadingRole ===
+                  account.role;
 
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder={t('Enter your email')}
-                  value={formData.email}
-                  onChange={handleChange}
-                  autoComplete="email"
-                />
-              </div>
-            </div>
+                const isDisabled =
+                  loadingRole !== '';
 
-            {/* Password */}
-            <div className="login-field">
-              <label htmlFor="password">
-                {t('Password')}
-              </label>
+                return (
+                  <button
+                    type="button"
+                    key={account.role}
+                    className={`login-role login-role--${account.role}`}
+                    onClick={() =>
+                      handleRoleLogin(
+                        account,
+                      )
+                    }
+                    disabled={isDisabled}
+                  >
+                    <span className="login-role-icon">
+                      <Icon
+                        size={22}
+                        strokeWidth={2.1}
+                      />
+                    </span>
 
-              <div className="login-input-wrapper">
-                <Lock size={19} />
+                    <span className="login-role-body">
+                      <span className="login-role-title">
+                        {t(
+                          account.title,
+                        )}
+                      </span>
 
-                <input
-                  id="password"
-                  name="password"
-                  type={
-                    showPassword
-                      ? 'text'
-                      : 'password'
-                  }
-                  placeholder={t('Enter your password')}
-                  value={formData.password}
-                  onChange={handleChange}
-                  autoComplete="current-password"
-                />
+                      <span className="login-role-desc">
+                        {t(
+                          account.description,
+                        )}
+                      </span>
+                    </span>
 
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() =>
-                    setShowPassword(
-                      (previous) => !previous,
-                    )
-                  }
-                  aria-label={
-                    showPassword
-                      ? t('Hide password')
-                      : t('Show password')
-                  }
-                >
-                  {showPassword ? (
-                    <EyeOff size={19} />
-                  ) : (
-                    <Eye size={19} />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              className="login-submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <span>{t('Logging in...')}</span>
-              ) : (
-                <span>{t('Login')}</span>
-              )}
-            </button>
-          </form>
+                    <span className="login-role-action">
+                      {isActive ? (
+                        <Loader2
+                          size={19}
+                          className="login-role-spinner"
+                        />
+                      ) : (
+                        <ChevronRight
+                          size={19}
+                        />
+                      )}
+                    </span>
+                  </button>
+                );
+              },
+            )}
+          </div>
 
           <div className="login-divider">
             <span>{t('OR')}</span>
@@ -201,7 +210,9 @@ const Login = () => {
 
           <div className="login-register">
             <span>
-              {t("Don't have an account?")}
+              {t(
+                "Don't have an account?",
+              )}
             </span>
 
             <Link to="/register">
@@ -211,7 +222,8 @@ const Login = () => {
         </div>
 
         <p className="login-footer">
-          © {new Date().getFullYear()} KrishiBandhu
+          © {new Date().getFullYear()}{' '}
+          KrishiBandhu
         </p>
       </div>
     </div>
