@@ -57,20 +57,163 @@ const levelForRatio = (ratio) => {
   return 'normal';
 };
 
-const ratioToLabel = (ratio) => {
-  if (ratio >= 1.5) {
-    return 'Heavy supply';
-  }
-
-  if (ratio <= 0.6) {
-    return 'Thin supply';
-  }
-
-  return 'Normal supply';
-};
-
 const round1 = (value) =>
   Math.round(value * 10) / 10;
+
+/*
+ * =========================================
+ * Localization (en / mr / hi)
+ * Verdict copy is generated server-side so it
+ * matches the app language exactly.
+ * =========================================
+ */
+
+const fmtIn = (value) =>
+  Math.round(value || 0).toLocaleString('en-IN');
+
+const L10N = {
+  en: {
+    level: {
+      heavy_glut: 'Heavy supply',
+      normal: 'Normal supply',
+      thin_supply: 'Thin supply',
+    },
+    headline: (kg, crop, mkt) =>
+      `Already ${kg} of ${crop} in ${mkt} today`,
+    detail: (kg, crop, mkt, ratio, avg, levelLabel) => {
+      const base = `${kg} kg of ${crop} has already arrived in ${mkt} today`;
+
+      if (ratio !== null && avg) {
+        return `${base}. That is ${ratio.toFixed(1)}x the recent daily average of ${fmtIn(avg)} kg — ${levelLabel.toLowerCase()}.`;
+      }
+
+      return `${base}. This is the first day in the ledger for this market (baseline forming).`;
+    },
+    priceNote: (modal, ratio, avgArrivalKg) => {
+      if (!modal) {
+        return 'No modal price recorded today.';
+      }
+
+      const m = fmtIn(modal);
+
+      if (avgArrivalKg && ratio !== null) {
+        if (ratio >= 1.5) {
+          return `Modal ₹${m}/quintal — ${ratio}x of the recent daily arrival average; heavy supply is visibly pressing prices.`;
+        }
+
+        if (ratio <= 0.6) {
+          return `Modal ₹${m}/quintal with only ${ratio}x of the usual arrivals — thin supply supports the price.`;
+        }
+
+        return `Modal ₹${m}/quintal — arrivals close to the recent average.`;
+      }
+
+      return `Modal ₹${m}/quintal today.`;
+    },
+    advice: {
+      heavy_glut:
+        'Arrivals are far above the recent average — expect strong price pressure. If you still deliver, the mandi ledger below is your record for a price dispute.',
+      thin_supply:
+        'Arrivals are low — prices have room to hold. Do not negotiate at the day-and-open rate until you confirm the modal price from the APMC board.',
+      normal:
+        'Supply is in line with recent days. Sell at the day\u2019s modal rate and keep the ledger screenshot as your price record.',
+    },
+  },
+  mr: {
+    level: {
+      heavy_glut: 'जास्त पुरवठा',
+      normal: 'सामान्य पुरवठा',
+      thin_supply: 'कमी पुरवठा',
+    },
+    headline: (kg, crop, mkt) =>
+      `आज ${mkt} मध्ये ${crop} चे ${kg} आधीच दाखल झाले आहे`,
+    detail: (kg, crop, mkt, ratio, avg, levelLabel) => {
+      const base = `${kg} किलो ${crop} आज ${mkt} मध्ये आधीच दाखल झाले आहे`;
+
+      if (ratio !== null && avg) {
+        return `${base}. हे अलीकडील सरासरी (${fmtIn(avg)} किलो) च्या ${ratio.toFixed(1)}x इतके आहे — ${levelLabel}.`;
+      }
+
+      return `${base}. या मंडईसाठी नोंदवहीतील हा पहिला दिवस आहे (आधार तयार होत आहे).`;
+    },
+    priceNote: (modal, ratio, avgArrivalKg) => {
+      if (!modal) {
+        return 'आज मॉडेल भाव नोंदवला गेला नाही.';
+      }
+
+      const m = fmtIn(modal);
+
+      if (avgArrivalKg && ratio !== null) {
+        if (ratio >= 1.5) {
+          return `मॉडेल भाव ₹${m}/क्विंटल — अलीकडील सरासरी आवकच्या ${ratio}x; जास्त पुरवठा किमतीवर दबाव आणत आहे.`;
+        }
+
+        if (ratio <= 0.6) {
+          return `मॉडेल भाव ₹${m}/क्विंटल, नेहमीच्या आवकच्या केवळ ${ratio}x — कमी पुरवठ्यामुळे किंमत टिकून आहे.`;
+        }
+
+        return `मॉडेल भाव ₹${m}/क्विंटल — आवक अलीकडील सरासरीच्या जवळ आहे.`;
+      }
+
+      return `आज मॉडेल भाव ₹${m}/क्विंटल.`;
+    },
+    advice: {
+      heavy_glut:
+        'आवक अलीकडील सरासरीपेक्षा खूप जास्त आहे — किमतीवर तीव्र दबाव अपेक्षित. तरीही पुरवठा करत असल्यास, खालील मंडई नोंदवही तुमच्या दर-विवादासाठी पुरावा आहे.',
+      thin_supply:
+        'आवक कमी आहे — किमती टिकण्यासाठी जागा आहे. APMC मंडळाकडून मॉडेल भाव निश्चित होईपर्यंत दिवसाच्या सुरुवातीच्या दरावर वाटाघाट करू नका.',
+      normal:
+        'पुरवठा अलीकडील दिवसांप्रमाणे आहे. दिवसाच्या मॉडेल दराने विक्री करा आणि नोंदवहीचा स्क्रीनशॉट किंमत-पुरावा म्हणून जतन करा.',
+    },
+  },
+  hi: {
+    level: {
+      heavy_glut: 'भारी आपूर्ति',
+      normal: 'सामान्य आपूर्ति',
+      thin_supply: 'कम आपूर्ति',
+    },
+    headline: (kg, crop, mkt) =>
+      `आज ${mkt} में ${crop} के ${kg} पहले ही आ चुके हैं`,
+    detail: (kg, crop, mkt, ratio, avg, levelLabel) => {
+      const base = `${kg} किलो ${crop} आज ${mkt} में पहले ही आ चुके हैं`;
+
+      if (ratio !== null && avg) {
+        return `${base}. यह हाल की औसत (${fmtIn(avg)} किलो) का ${ratio.toFixed(1)}x है — ${levelLabel}।`;
+      }
+
+      return `${base}. इस मंडी के रिकॉर्ड में यह पहला दिन है (आधार बन रहा है)।`;
+    },
+    priceNote: (modal, ratio, avgArrivalKg) => {
+      if (!modal) {
+        return 'आज मॉडल भाव दर्ज नहीं हुआ।';
+      }
+
+      const m = fmtIn(modal);
+
+      if (avgArrivalKg && ratio !== null) {
+        if (ratio >= 1.5) {
+          return `मॉडल भाव ₹${m}/क्विंटल — हाल की औसत आवक का ${ratio}x; भारी आपूर्ति कीमतों पर दबाव डाल रही है।`;
+        }
+
+        if (ratio <= 0.6) {
+          return `मॉडल भाव ₹${m}/क्विंटल, सामान्य आवक का केवल ${ratio}x — कम आपूर्ति कीमत को थाम रही है।`;
+        }
+
+        return `मॉडल भाव ₹${m}/क्विंटल — आवक हाल की औसत के करीब है।`;
+      }
+
+      return `आज मॉडल भाव ₹${m}/क्विंटल।`;
+    },
+    advice: {
+      heavy_glut:
+        'आवक हाल की औसत से काफी अधिक है — कीमतों पर मजबूत दबाव की उम्मीद है। फिर भी आपूर्ति करते हैं तो नीचे दी गई मंडी रिकॉर्ड कीमत विवाद के लिए आपका सबूत है।',
+      thin_supply:
+        'आवक कम है — कीमतें टिक सकती हैं। APMC बोर्ड से मॉडल भाव की पुष्टि से पहले शुरुआती दर पर सौदा न करें।',
+      normal:
+        'आपूर्ति हाल के दिनों के अनुरूप है। दिन के मॉडल भाव पर बेचें और कीमत रिकॉर्ड के लिए दर्ज रिकॉर्ड का स्क्रीनशॉट रखें।',
+    },
+  },
+};
 
 /*
  * =========================================
@@ -84,7 +227,17 @@ const round1 = (value) =>
 
 const getMarketGlut = async (req, res) => {
   try {
-    const { commodity, market, date } = req.query;
+    const {
+      commodity,
+      market,
+      date,
+      lang,
+    } = req.query;
+
+    const locale =
+      lang === 'mr' || lang === 'hi'
+        ? L10N[lang]
+        : L10N.en;
 
     if (!commodity || !commodity.trim()) {
       return res.status(400).json({
@@ -279,9 +432,11 @@ const getMarketGlut = async (req, res) => {
             ? 'normal'
             : levelForRatio(ratio),
         levelLabel:
-          ratio === null
-            ? 'Normal supply'
-            : ratioToLabel(ratio),
+          locale.level[
+            ratio === null
+              ? 'normal'
+              : levelForRatio(ratio)
+          ],
       });
     }
 
@@ -326,27 +481,25 @@ const getMarketGlut = async (req, res) => {
           ratio,
           level: targetRow.level,
           levelLabel: targetRow.levelLabel,
-          priceNote: buildPriceNote(
+          priceNote: locale.priceNote(
             modal,
-            avgArrivalKg,
             ratio,
-            snapshotRows,
+            avgArrivalKg,
           ),
-          headline: `Already ${formatKg(arrivalKg, 'kg')} of ${commodityName} in ${marketInfo.name} today`,
-          detail: buildDetail(
+          headline: locale.headline(
+            formatKg(arrivalKg, 'kg'),
             commodityName,
             marketInfo.name,
-            arrivalKg,
-            avgArrivalKg,
+          ),
+          detail: locale.detail(
+            fmtIn(arrivalKg),
+            commodityName,
+            marketInfo.name,
             ratio,
+            avgArrivalKg,
             targetRow.levelLabel,
           ),
-          advice:
-            targetRow.level === 'heavy_glut'
-              ? 'Arrivals are far above the recent average — expect strong price pressure. If you still deliver, the mandi ledger below is your record for a price dispute.'
-              : targetRow.level === 'thin_supply'
-                ? 'Arrivals are low — prices have room to hold. Do not negotiate at the day-and-open rate until you confirm the modal price from the APMC board.'
-                : 'Supply is in line with recent days. Sell at the day\u2019s modal rate and keep the ledger screenshot as your price record.',
+          advice: locale.advice[targetRow.level],
         };
       }
     }
@@ -381,53 +534,6 @@ const getMarketGlut = async (req, res) => {
 
 function formatKg(kgValue, label) {
   return `${Math.round(kgValue).toLocaleString('en-IN')} ${label}`;
-}
-
-function buildPriceNote(modal, avgArrivalKg, ratio, rows) {
-  if (!modal) {
-    return 'No modal price recorded today.';
-  }
-
-  const parts = [];
-
-  if (avgArrivalKg && ratio !== null) {
-    if (ratio >= 1.5) {
-      parts.push(
-        `Modal ₹${Math.round(modal).toLocaleString('en-IN')}/quintal — ${ratio}x of the recent daily arrival average; heavy supply is visibly pressing prices.`,
-      );
-    } else if (ratio <= 0.6) {
-      parts.push(
-        `Modal ₹${Math.round(modal).toLocaleString('en-IN')}/quintal with only ${ratio}x of the usual arrivals — thin supply supports the price.`,
-      );
-    } else {
-      parts.push(
-        `Modal ₹${Math.round(modal).toLocaleString('en-IN')}/quintal — arrivals close to the recent average.`,
-      );
-    }
-  } else {
-    parts.push(
-      `Modal ₹${Math.round(modal).toLocaleString('en-IN')}/quintal today.`,
-    );
-  }
-
-  return parts.join(' ');
-}
-
-function buildDetail(
-  commodityName,
-  marketName,
-  arrivalKg,
-  avgArrivalKg,
-  ratio,
-  levelLabel,
-) {
-  const base = `${Math.round(arrivalKg).toLocaleString('en-IN')} kg of ${commodityName} has already arrived in ${marketName} today`;
-
-  if (avgArrivalKg && ratio !== null) {
-    return `${base}. That is ${ratio.toFixed(1)}x the recent daily average of ${Math.round(avgArrivalKg).toLocaleString('en-IN')} kg — ${levelLabel.toLowerCase()}.`;
-  }
-
-  return `${base}. This is the first day in the ledger for this market (baseline forming).`;
 }
 
 module.exports = {

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import API_URL from '../config/api';
 
 import './GlutWatch.css';
@@ -64,6 +65,7 @@ const formatRs = (value) =>
 
 function GlutWatch() {
   const { token } = useAuth();
+  const { t, lang } = useLanguage();
 
   const [commodityOptions, setCommodityOptions] =
     useState([]);
@@ -188,6 +190,10 @@ function GlutWatch() {
         commodity: crop,
       });
 
+      if (lang && lang !== 'en') {
+        params.set('lang', lang);
+      }
+
       if (market && market !== 'all') {
         params.set('market', market);
       }
@@ -201,7 +207,7 @@ function GlutWatch() {
       if (!response.ok || !result.success) {
         throw new Error(
           result.message ||
-            'Unable to load glut data.',
+            t('Unable to load glut data.'),
         );
       }
 
@@ -228,7 +234,7 @@ function GlutWatch() {
       });
     } catch (err) {
       console.error('Glut fetch error:', err);
-      setError(err.message || 'Failed to load.');
+      setError(err.message || t('Failed to load.'));
       setData(null);
     } finally {
       setLoading(false);
@@ -241,7 +247,7 @@ function GlutWatch() {
       fetchGlut(commodity, marketId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commodity, marketId]);
+  }, [commodity, marketId, lang]);
 
   /* ====================================
      Derived
@@ -275,7 +281,7 @@ function GlutWatch() {
     <div className="glut-controls">
       <div className="glut-field">
         <label htmlFor="glutCommodity">
-          🧺 Crop / commodity
+          🧺 {t('Crop / commodity')}
         </label>
 
         <select
@@ -295,7 +301,7 @@ function GlutWatch() {
 
       <div className="glut-field">
         <label htmlFor="glutMarket">
-          🏪 Market
+          🏪 {t('Market')}
         </label>
 
         <select
@@ -306,7 +312,7 @@ function GlutWatch() {
           }
         >
           <option value="all">
-            All markets (overview)
+            {t('All markets (overview)')}
           </option>
 
           {modes.map((mode) => (
@@ -315,7 +321,7 @@ function GlutWatch() {
               value={mode.id}
             >
               {mode.name} —{' '}
-              {formatKg(mode.arrivalKg)} today
+              {t('{0} today', [formatKg(mode.arrivalKg)])}
             </option>
           ))}
         </select>
@@ -331,7 +337,7 @@ function GlutWatch() {
           size={15}
           className={refreshing ? 'glut-spin' : ''}
         />
-        Refresh
+        {t('Refresh')}
       </button>
     </div>
   );
@@ -360,13 +366,13 @@ function GlutWatch() {
             </h3>
 
             <p>
-              {target.levelLabel} · {formatRs(target.modal)}
-              /quintal modal
+              {target.levelLabel} ·{' '}
+              {t('{0} per quintal modal', [formatRs(target.modal)])}
             </p>
           </div>
 
           <span className="glut-level-chip">
-            {meta.label}
+            {t(meta.label)}
           </span>
         </div>
 
@@ -377,7 +383,7 @@ function GlutWatch() {
             </span>
 
             <span className="glut-big-label">
-              already in this market today
+              {t('already in this market today')}
             </span>
           </div>
         </div>
@@ -424,14 +430,14 @@ function GlutWatch() {
         <div className="glut-ranking-header">
           <div>
             <h3>
-              Where is {commodity} flowing today?
+              {t('Where is {0} flowing today?', [commodity])}
             </h3>
 
             <p>
-              {data.totals.marketsReported}{' '}
-              markets ·{' '}
-              {formatKg(data.totals.totalArrivalKg)}{' '}
-              total arrival (official MSAMB ledger)
+              {t('{0} markets · {1} total arrival (official MSAMB ledger)', [
+                data.totals.marketsReported,
+                formatKg(data.totals.totalArrivalKg),
+              ])}
             </p>
           </div>
         </div>
@@ -460,46 +466,37 @@ function GlutWatch() {
                   <span className="glut-rank-name">
                     {mode.name}
                     <small>
-                      {mode.district}, Maharashtra
+                      {t('{0}, Maharashtra', [mode.district])}
                     </small>
                   </span>
 
                   <span
                     className={`glut-rank-level ${level.cls}`}
                   >
-                    {level.emoji} {mode.levelLabel}
+                    {level.emoji} {t(level.label)}
                   </span>
                 </div>
 
                 <div className="glut-rank-stats">
                   <span>
-                    Arrived today{' '}
-                    <strong>
-                      {formatKg(mode.arrivalKg)}
-                    </strong>
+                    {t('Arrived today {0}', [formatKg(mode.arrivalKg)])}
                   </span>
 
                   <span>
-                    Modal{' '}
-                    <strong>
-                      {formatRs(mode.modal)}/q
-                    </strong>
+                    {t('Modal {0}/q', [formatRs(mode.modal)])}
                   </span>
 
                   {mode.ratio !== null &&
                     mode.ratio !== undefined && (
                       <span>
-                        vs avg{' '}
-                        <strong>
-                          {mode.ratio}x
-                        </strong>
+                        {t('vs avg {0}x', [mode.ratio])}
                       </span>
                     )}
                 </div>
 
                 {selected && (
                   <span className="glut-rank-cta">
-                    Showing verdict{' '}
+                    {t('Showing verdict')}{' '}
                     <ArrowRight size={14} />
                   </span>
                 )}
@@ -515,20 +512,20 @@ function GlutWatch() {
     <section className="glut-watch">
       <div className="glut-header">
         <div>
-          <h2>📊 Glut Watch</h2>
+          <h2>📊 {t('Glut Watch')}</h2>
 
           <p>
-            How many kg of your crop have{' '}
-            <strong>already arrived</strong> in each
-            mandi today — before you decide where to sell.
+            {t('How many kg of your crop have')}{' '}
+            <strong>{t('already arrived')}</strong>{' '}
+            {t('in each mandi today — before you decide where to sell.')}
           </p>
         </div>
 
         {data && (
           <span className="glut-asof">
-            Ledger date:{' '}
+            {t('Ledger date:')}{' '}
             <strong>{data.asOfDate}</strong>
-            {data.isStale && ' (latest recorded)'}
+            {data.isStale && t(' (latest recorded)')}
           </span>
         )}
       </div>
@@ -538,7 +535,7 @@ function GlutWatch() {
       {loading && (
         <div className="glut-message">
           <Loader2 size={18} className="glut-spin" />
-          <p>Reading the official mandi arrival ledger...</p>
+          <p>{t('Reading the official mandi arrival ledger...')}</p>
         </div>
       )}
 
@@ -556,10 +553,9 @@ function GlutWatch() {
           <div className="glut-message">
             <PackageCheck size={18} />
             <p>
-              No official arrival records for{' '}
-              <strong>{data.commodity}</strong> yet.
-              Try another crop — MSAMB covers items like
-              Tomato, Onion, Chilli, Cotton, Soyabean.
+              {t('No official arrival records for')}{' '}
+              <strong>{data.commodity}</strong>{' '}
+              {t('yet. Try another crop — MSAMB covers items like Tomato, Onion, Chilli, Cotton, Soyabean.')}
             </p>
           </div>
         )}
@@ -581,13 +577,8 @@ function GlutWatch() {
           <div className="glut-transparency">
             <Scale size={15} />
             <p>
-              <strong>Fair-price record (grievance-ready):</strong>{' '}
-              this is the official MSAMB arrival ledger. If
-              the rate offered to you is much lower than
-              today's modal at a market with thin arrivals,
-              capture this screen — it is evidence you can
-              attach when raising a price dispute with your
-              APMC.
+              <strong>{t('Fair-price record (grievance-ready):')}</strong>{' '}
+              {t("this is the official MSAMB arrival ledger. If the rate offered to you is much lower than today's modal at a market with thin arrivals, capture this screen — it is evidence you can attach when raising a price dispute with your APMC.")}
             </p>
           </div>
         )}
