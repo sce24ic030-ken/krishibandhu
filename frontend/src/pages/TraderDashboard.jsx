@@ -780,7 +780,7 @@ function TraderDashboard() {
                       <span
                         className="trader-listing-status"
                       >
-                        {listing.status}
+                        {t(listing.status)}
                       </span>
 
                       <h3>
@@ -1056,7 +1056,7 @@ function TraderDashboard() {
                       <span
                         className="trader-listing-status"
                       >
-                        {bid.status}
+                        {t(bid.status)}
                       </span>
 
                     </div>

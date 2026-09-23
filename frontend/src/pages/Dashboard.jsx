@@ -35,10 +35,10 @@ const formatCurrency = (amount) =>
     maximumFractionDigits: 0,
   }).format(Number(amount || 0));
 
-const formatKg = (value) =>
+const formatKg = (value, unitLabel = 'kg') =>
   `${Math.round(Number(value || 0)).toLocaleString(
     'en-IN',
-  )} kg`;
+  )} ${unitLabel}`;
 
 const SIGNAL_LABELS = {
   GLUT_WARNING: 'Glut warning',
@@ -265,7 +265,7 @@ function Dashboard() {
           title={t('Mandi Glut Watch')}
           value={
             glutTotal != null
-              ? formatKg(glutTotal)
+              ? formatKg(glutTotal, t('kg'))
               : glutCommodity
                 ? '—'
                 : t('Check arrivals')
