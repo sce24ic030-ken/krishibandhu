@@ -221,13 +221,6 @@
   }
 }
 
-.login-footer {
-  margin: 22px 0 0;
-  text-align: center;
-  color: #9aa49f;
-  font-size: 12px;
-}
-
 @media (max-width: 520px) {
   .login-page {
     padding: 25px 16px;

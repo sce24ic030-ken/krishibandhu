@@ -203,11 +203,6 @@ const Login = () => {
               },
             )}
           </div>
-
-          <p className="login-footer">
-            © {new Date().getFullYear()}{' '}
-            KrishiBandhu
-          </p>
         </div>
       </div>
     </div>
